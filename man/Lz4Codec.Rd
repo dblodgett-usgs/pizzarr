@@ -10,6 +10,13 @@ Class representing a LZ4 compressor
 \details{
 LZ4 compressor for Zarr
 }
+\section{Deprecation Notice}{
+
+This codec is deprecated because the underlying \code{qs} package was archived on CRAN.
+For LZ4 compression, use \code{BloscCodec$new(cname = "lz4")} instead.
+This class will be removed in a future version.
+}
+
 \keyword{internal}
 \section{Super class}{
 \code{\link[pizzarr:Codec]{pizzarr::Codec}} -> \code{Lz4Codec}
