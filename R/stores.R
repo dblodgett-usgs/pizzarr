@@ -345,6 +345,17 @@ MemoryStore <- R6::R6Class("MemoryStore",
    )
 )
 
+#' @keywords internal
+item_to_key <- function(item) {
+  # Remove leading slash if necessary.
+  if(substr(item, 1, 1) == "/") {
+    key <- substr(item, 2, length(item))
+  } else {
+    key <- item
+  }
+  key
+}
+
 # Reference: https://github.com/manzt/zarrita.js/blob/main/packages/storage/src/fetch.ts
 
 #' @title HttpStore Class

@@ -75,78 +75,6 @@ pizzarr_sample <- function(dataset = NULL,
   
 }
 
-#' Convert a string into a character vector.
-#' 
-#' @param s The string.
-#' @return A vector where each element is an individual character.
-#' @keywords internal
-str_to_vec <- function(s) {
-  return(stringr::str_split(s, pattern = "")[[1]])
-}
-
-#' Create a list of zarray metadata.
-#' @inheritParams zarr_create
-#' @return A list.
-#' @keywords internal
-create_zarray_meta <- function(shape = NA, chunks = NA, dtype = NA, compressor = NA, fill_value = NA, order = NA, filters = NA, dimension_separator = NA) {
-  # Reference: https://zarr.readthedocs.io/en/stable/spec/v2.html#metadata
-  if(is.na(dimension_separator)) {
-    dimension_separator <- "."
-  } else if(!(dimension_separator %in% c(".", "/"))) {
-    stop("dimension_separator must be '.' or '/'.")
-  }
-  if(is_na(compressor)) {
-    compressor <- jsonlite::unbox(compressor)
-  } else if(!is_na(compressor) && !("id" %in% names(compressor))) {
-    stop("compressor must contain an 'id' property when not null.")
-  }
-  if(is_na(filters)) {
-    filters <- jsonlite::unbox(filters)
-  }
-  if(!(order %in% c("C", "F"))) {
-    stop("order must be 'C' or 'F'.")
-  }
-  is_simple_dtype <- (!dtype$is_structured)
-  dtype_str <- dtype$dtype
-  if(is_simple_dtype) {
-    dtype_byteorder <- dtype$byte_order
-    dtype_basictype <- dtype$basic_type
-    # Validation occurs in Dtype constructor.
-    
-    if(dtype_basictype == "f") {
-      if(!is.numeric(fill_value) && !(fill_value %in% c("NaN", "Infinity", "-Infinity"))) {
-        stop("fill_value must be NaN, Infinity, or -Infinity when dtype is float")
-      }
-    }
-    if(dtype_basictype == "S" && !is.na(fill_value)) {
-      # TODO: validate that fill_value is encoded as an ASCII string using the standard Base64 alphabet.
-    }
-  } else {
-    # TODO: validate structured dtypes
-  }
-
-  if(is.null(shape)) {
-    shape <-jsonlite::unbox(NA)
-  }
-
-  
-  # TODO: validate shape param
-  # TODO: validate chunks param
-  # TODO: validate filters param
-  zarray_meta <- list(
-    zarr_format = jsonlite::unbox(2),
-    shape = shape,
-    chunks = chunks,
-    dtype = jsonlite::unbox(dtype_str),
-    compressor = compressor,
-    fill_value = jsonlite::unbox(fill_value),
-    order = jsonlite::unbox(order),
-    filters = filters,
-    dimension_separator = jsonlite::unbox(dimension_separator)
-  )
-  return(zarray_meta)
-}
-
 #' Create an empty named list
 #'
 #' A helper function to construct an empty list which converts to a JSON object rather than a JSON array.
@@ -362,17 +290,6 @@ get_list_product <- function(dim_indexer_iterables) {
 }
 
 #' @keywords internal
-item_to_key <- function(item) {
-  # Remove leading slash if necessary.
-  if(substr(item, 1, 1) == "/") {
-    key <- substr(item, 2, length(item))
-  } else {
-    key <- item
-  }
-  key
-}
-
-#' @keywords internal
 is_truthy_parallel_option <- function(val) {
   if(is.na(val)) return(FALSE)
   
@@ -383,25 +300,3 @@ is_truthy_parallel_option <- function(val) {
   return(as.logical(as.integer(val)))
 }
 
-try_from_zmeta <- function(key, store) {
-  store$get_consolidated_metadata()$metadata[[key]]
-}
-
-try_fromJSON <- function(json, warn_message = "Error parsing json was", 
-                         simplifyVector = FALSE) {
-  out <- tryCatch({
-    jsonlite::fromJSON(json, simplifyVector)
-  }, error = \(e) {
-    if(grepl("NaN", e)) {
-      tryCatch({
-        jsonlite::fromJSON(gsub("NaN", "null", json), simplifyVector)
-      }, error = \(e) {
-        warning("\n\n", warn_message, "\n\n", e)
-        NULL
-      })
-    } else {
-      warning("\n\n", warn_message, "\n\n", e)
-      NULL
-    }
-  })
-}

@@ -1,3 +1,12 @@
+#' Convert a string into a character vector.
+#'
+#' @param s The string.
+#' @return A vector where each element is an individual character.
+#' @keywords internal
+str_to_vec <- function(s) {
+  return(stringr::str_split(s, pattern = "")[[1]])
+}
+
 #' @keywords internal
 normalize_list_selection <- function(selection, shape, convert_integer_selection_to_slices = TRUE) {
   # Reference: https://github.com/gzuidhof/zarr.js/blob/292804/src/core/indexing.ts#L45
