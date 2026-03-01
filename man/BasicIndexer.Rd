@@ -34,7 +34,7 @@ The Zarr BasicIndexer class.
 \if{html}{\out{<a id="method-BasicIndexer-new"></a>}}
 \if{latex}{\out{\hypertarget{method-BasicIndexer-new}{}}}
 \subsection{Method \code{new()}}{
-Create a new VIndex instance.
+Create a new BasicIndexer instance.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BasicIndexer$new(selection, array)}\if{html}{\out{</div>}}
 }
@@ -49,7 +49,7 @@ Create a new VIndex instance.
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A \code{VIndex} instance.
+A \code{BasicIndexer} instance.
 }
 }
 \if{html}{\out{<hr>}}

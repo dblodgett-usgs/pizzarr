@@ -4,6 +4,8 @@
 #' @description
 #' Abstract class representing a compressor.
 #'
+#' @format [R6::R6Class]
+#' @family Codec classes
 #' @rdname Codec
 #' @export
 Codec <- R6::R6Class("Codec",
@@ -25,7 +27,8 @@ Codec <- R6::R6Class("Codec",
        return(buf)
      },
     #' @description
-    #' Get Configuration
+    #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        return(jsonlite::unbox(NA))
      }
@@ -46,6 +49,8 @@ warn_if_unk_args <- function(unk_args, compressor_name) {
 #' @description
 #' Class representing a ZSTD compressor
 
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname ZstdCodec
 #' @importFrom qs2 zstd_compress_raw zstd_decompress_raw
 #' @export
@@ -84,7 +89,8 @@ ZstdCodec <- R6::R6Class("ZstdCodec",
       return(result)
     },
     #' @description
-    #' Get Configuration
+    #' Get codec configuration as a list.
+    #' @return A named list.
     get_config = function() {
       meta <- list(
         id = jsonlite::unbox("zstd"),
@@ -106,6 +112,8 @@ ZstdCodec <- R6::R6Class("ZstdCodec",
 #' For LZ4 compression, use `BloscCodec$new(cname = "lz4")` instead.
 #' This class will be removed in a future version.
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname Lz4Codec
 #' @export
 Lz4Codec <- R6::R6Class("Lz4Codec",
@@ -175,7 +183,8 @@ Lz4Codec <- R6::R6Class("Lz4Codec",
        return(result)
      },
      #' @description
-     #' Get Configuration
+     #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        meta <- list(
          id = jsonlite::unbox("lz4"),
@@ -192,6 +201,8 @@ Lz4Codec <- R6::R6Class("Lz4Codec",
 #' @description
 #' Class representing a zlib compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname ZlibCodec
 #' @export
 ZlibCodec <- R6::R6Class("ZlibCodec",
@@ -237,7 +248,8 @@ ZlibCodec <- R6::R6Class("ZlibCodec",
       return(result)
      },
     #' @description
-    #' Get Configuration
+    #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        meta <- list(
          id = jsonlite::unbox("zlib"),
@@ -254,6 +266,8 @@ ZlibCodec <- R6::R6Class("ZlibCodec",
 #' @description
 #' Class representing a gzip compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname GzipCodec
 #' @export
 GzipCodec <- R6::R6Class("GzipCodec",
@@ -296,7 +310,8 @@ GzipCodec <- R6::R6Class("GzipCodec",
       return(result)
      },
      #' @description
-     #' Get Configuration
+     #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        meta <- list(
           id = jsonlite::unbox("gzip"),
@@ -313,6 +328,8 @@ GzipCodec <- R6::R6Class("GzipCodec",
 #' @description
 #' Class representing a bz2 compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname Bz2Codec
 #' @export
 Bz2Codec <- R6::R6Class("Bz2Codec",
@@ -355,7 +372,8 @@ Bz2Codec <- R6::R6Class("Bz2Codec",
       return(result)
      },
      #' @description
-     #' Get Configuration
+     #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        meta <- list(
          id = jsonlite::unbox("bz2"),
@@ -372,6 +390,8 @@ Bz2Codec <- R6::R6Class("Bz2Codec",
 #' @description
 #' Class representing a lzma compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname LzmaCodec
 #' @export
 LzmaCodec <- R6::R6Class("LzmaCodec",
@@ -421,7 +441,8 @@ LzmaCodec <- R6::R6Class("LzmaCodec",
       return(result)
      },
      #' @description
-     #' Get Configuration
+     #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        meta <- list(
          id = jsonlite::unbox("lzma"),
@@ -439,6 +460,8 @@ LzmaCodec <- R6::R6Class("LzmaCodec",
 #' @description
 #' Class representing a Blosc compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname BloscCodec
 #' @export
 BloscCodec <- R6::R6Class("BloscCodec",
@@ -503,7 +526,8 @@ BloscCodec <- R6::R6Class("BloscCodec",
       return(result)
     },
     #' @description
-    #' Get Configuration
+    #' Get codec configuration as a list.
+    #' @return A named list.
     get_config = function() {
        meta <- list(
          id = jsonlite::unbox("blosc"),
@@ -522,6 +546,8 @@ BloscCodec <- R6::R6Class("BloscCodec",
 #' @description
 #' Class representing a VLenUtf8 compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname VLenUtf8Codec
 #' @export
 VLenUtf8Codec <- R6::R6Class("VLenUtf8Codec",
@@ -626,7 +652,8 @@ VLenUtf8Codec <- R6::R6Class("VLenUtf8Codec",
       return(vec_of_strings)
     },
     #' @description
-    #' Get Configuration
+    #' Get codec configuration as a list.
+    #' @return A named list.
     get_config = function() {
        meta <- list(
          id = jsonlite::unbox("vlen-utf8")

@@ -5,7 +5,7 @@
 \alias{SliceDimIndexer}
 \title{SliceDimIndexer Class}
 \description{
-TODO
+Indexer for a slice selection along one dimension.
 }
 \details{
 The Zarr SliceDimIndexer class.

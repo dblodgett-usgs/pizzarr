@@ -4,12 +4,27 @@
 \name{VLenUtf8Codec}
 \alias{VLenUtf8Codec}
 \title{VLenUtf8Codec Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Codec}.
+}
 \description{
 Class representing a VLenUtf8 compressor
 }
 \details{
 Variable-length UTF-8 codec for Zarr
 }
+\seealso{
+Other Codec classes: 
+\code{\link{BloscCodec}},
+\code{\link{Bz2Codec}},
+\code{\link{Codec}},
+\code{\link{GzipCodec}},
+\code{\link{Lz4Codec}},
+\code{\link{LzmaCodec}},
+\code{\link{ZlibCodec}},
+\code{\link{ZstdCodec}}
+}
+\concept{Codec classes}
 \section{Super class}{
 \code{\link[pizzarr:Codec]{pizzarr::Codec}} -> \code{VLenUtf8Codec}
 }
@@ -70,11 +85,14 @@ Un-compressed data.
 \if{html}{\out{<a id="method-VLenUtf8Codec-get_config"></a>}}
 \if{latex}{\out{\hypertarget{method-VLenUtf8Codec-get_config}{}}}
 \subsection{Method \code{get_config()}}{
-Get Configuration
+Get codec configuration as a list.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{VLenUtf8Codec$get_config()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A named list.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-VLenUtf8Codec-clone"></a>}}

@@ -4,6 +4,9 @@
 \name{Lz4Codec}
 \alias{Lz4Codec}
 \title{Lz4Codec Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Codec}.
+}
 \description{
 Class representing a LZ4 compressor
 }
@@ -17,6 +20,18 @@ For LZ4 compression, use \code{BloscCodec$new(cname = "lz4")} instead.
 This class will be removed in a future version.
 }
 
+\seealso{
+Other Codec classes: 
+\code{\link{BloscCodec}},
+\code{\link{Bz2Codec}},
+\code{\link{Codec}},
+\code{\link{GzipCodec}},
+\code{\link{LzmaCodec}},
+\code{\link{VLenUtf8Codec}},
+\code{\link{ZlibCodec}},
+\code{\link{ZstdCodec}}
+}
+\concept{Codec classes}
 \keyword{internal}
 \section{Super class}{
 \code{\link[pizzarr:Codec]{pizzarr::Codec}} -> \code{Lz4Codec}
@@ -108,11 +123,14 @@ Un-compressed data.
 \if{html}{\out{<a id="method-Lz4Codec-get_config"></a>}}
 \if{latex}{\out{\hypertarget{method-Lz4Codec-get_config}{}}}
 \subsection{Method \code{get_config()}}{
-Get Configuration
+Get codec configuration as a list.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Lz4Codec$get_config()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A named list.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Lz4Codec-clone"></a>}}

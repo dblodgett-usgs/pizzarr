@@ -9,6 +9,7 @@
 #' literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific 
 #' array dimension.
 #'
+#' @format [R6::R6Class]
 #' @rdname ZarrArray
 #' @export
 ZarrArray <- R6::R6Class("ZarrArray",

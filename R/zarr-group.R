@@ -6,6 +6,7 @@
 #' @description
 #' Instantiate a group from an initialized store.
 #'
+#' @format [R6::R6Class]
 #' @rdname ZarrGroup
 #' @export
 ZarrGroup <- R6::R6Class("ZarrGroup",

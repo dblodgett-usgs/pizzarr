@@ -4,6 +4,9 @@
 \name{HttpStore}
 \alias{HttpStore}
 \title{HttpStore Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Store}.
+}
 \description{
 Store class that uses HTTP requests.
 Read-only. Depends on the \code{crul} package.
@@ -21,6 +24,13 @@ Set the option "pizzarr.progress_bar" to TRUE to get a progress bar for long run
 
 For more, see \verb{vignette("parallel").}
 }
+\seealso{
+Other Store classes: 
+\code{\link{DirectoryStore}},
+\code{\link{MemoryStore}},
+\code{\link{Store}}
+}
+\concept{Store classes}
 \section{Super class}{
 \code{\link[pizzarr:Store]{pizzarr::Store}} -> \code{HttpStore}
 }

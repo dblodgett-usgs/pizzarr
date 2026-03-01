@@ -60,6 +60,7 @@ zero_based_to_one_based <- function(selection, shape) {
 #' @description
 #' Represents a multi-dimensional array that can be
 #' accessed and subsetted via list of Slice instances.
+#' @format [R6::R6Class]
 #' @rdname NestedArray
 #' @importFrom R6 R6Class
 #' @export

@@ -139,6 +139,7 @@ get_dtype_asrtype <- function(dtype) {
 #'  the bytes in the fixed-size block of memory corresponding to an array 
 #'  item should be interpreted.
 #' @references https://numpy.org/doc/stable/reference/arrays.dtypes.html
+#' @format [R6::R6Class]
 #' @rdname Dtype
 #' @export
 Dtype <- R6::R6Class("Dtype",
@@ -183,17 +184,20 @@ Dtype <- R6::R6Class("Dtype",
       self$object_codec <- object_codec
     },
     #' @description
-    #' Get as R type
+    #' Get the R coercion function name for this dtype.
+    #' @return Character string (e.g., `"as.double"`).
     get_asrtype = function() {
       return(get_dtype_asrtype(self$dtype))
     },
     #' @description
-    #' basic type R type
+    #' Get the R base type for this dtype.
+    #' @return An R prototype value (e.g., `integer()`, `double()`).
     get_rtype = function() {
       return(get_dtype_rtype(self$basic_type))
     },
     #' @description
-    #' get typed array
+    #' Get a constructor function for typed arrays of this dtype.
+    #' @return A function that takes `dim` and returns an array.
     get_typed_array_ctr = function() {
       rtype <- self$get_rtype()
       return(function(dim) array(data = rtype, dim = dim))

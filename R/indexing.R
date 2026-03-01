@@ -90,7 +90,7 @@ VIndex <- R6::R6Class("VIndex",
 #' @title IntDimIndexer Class
 #' @docType class
 #' @description
-#'  TODO
+#' Indexer for a single integer selection along one dimension.
 #' @rdname IntDimIndexer
 #' @keywords internal
 IntDimIndexer <- R6::R6Class("IntDimIndexer",
@@ -146,7 +146,7 @@ IntDimIndexer <- R6::R6Class("IntDimIndexer",
 #' @title SliceDimIndexer Class
 #' @docType class
 #' @description
-#'  TODO
+#' Indexer for a slice selection along one dimension.
 #' @rdname SliceDimIndexer
 #' @keywords internal
 SliceDimIndexer <- R6::R6Class("SliceDimIndexer",
@@ -277,10 +277,10 @@ BasicIndexer <- R6::R6Class("BasicIndexer",
     #' @keywords internal
     dim_indexers = NULL,
     #' @description
-    #' Create a new VIndex instance.
-    #' @return A `VIndex` instance.
+    #' Create a new BasicIndexer instance.
+    #' @return A `BasicIndexer` instance.
     initialize = function(selection, array) {
-      
+
       shape <- array$get_shape()
       chunks <- array$get_chunks()
 

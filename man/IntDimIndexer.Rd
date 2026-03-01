@@ -5,7 +5,7 @@
 \alias{IntDimIndexer}
 \title{IntDimIndexer Class}
 \description{
-TODO
+Indexer for a single integer selection along one dimension.
 }
 \details{
 The Zarr IntDimIndexer class.

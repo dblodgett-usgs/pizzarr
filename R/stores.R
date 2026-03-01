@@ -4,6 +4,8 @@
 #' @description
 #' Class representing an abstract store
 #'
+#' @format [R6::R6Class]
+#' @family Store classes
 #' @rdname Store
 #' @export
 Store <- R6::R6Class("Store",
@@ -28,7 +30,7 @@ Store <- R6::R6Class("Store",
       }
    ),
    public = list(
-    #' @field metadata_class TODO
+    #' @field metadata_class The metadata encoder/decoder for this store.
     #' @keywords internal
     metadata_class = NULL,
     #' @description 
@@ -42,33 +44,39 @@ Store <- R6::R6Class("Store",
       self$metadata_class <- Metadata2$new()
     },
     #' @description
-    #' test if Store is readable
+    #' Test if Store is readable.
+    #' @return Logical.
     is_readable = function() {
       return(private$readable)
     },
     #' @description
-    #' test if Store is writeable
+    #' Test if Store is writeable.
+    #' @return Logical.
     is_writeable = function() {
       return(private$writeable)
     },
     #' @description
-    #' test if Store is eraseable
+    #' Test if Store is eraseable.
+    #' @return Logical.
     is_erasable = function() {
       return(private$erasable)
     },
     #' @description
-    #' test if Store is listable
+    #' Test if Store is listable.
+    #' @return Logical.
     is_listable = function() {
       return(private$listable)
     },
     #' @description
-    #' close the store
+    #' Close the store.
+    #' @return `NULL`, invisibly.
     close = function() {
       # Do nothing by default
     },
     #' @description
-    #' list the store directory
-    #' @param path character path
+    #' List the store directory.
+    #' @param path character path.
+    #' @return Character vector of keys.
     listdir = function(path=NA) {
       if(is.na(path)) {
         path <- ""
@@ -77,9 +85,9 @@ Store <- R6::R6Class("Store",
       return(private$listdir_from_keys(path))
     },
     #' @description
-    #' rename a Store
-    #' @param src_path character source path
-    #' @param dst_path character destination path
+    #' Rename a Store path.
+    #' @param src_path character source path.
+    #' @param dst_path character destination path.
     rename = function(src_path, dst_path) {
       if(!self$is_erasable()) {
         stop("Store is not erasable, cannot call 'rename'")
@@ -87,8 +95,8 @@ Store <- R6::R6Class("Store",
       private$rename_from_keys(src_path, dst_path)
     },
     #' @description
-    #' remove a path within a Store
-    #' @param path character path
+    #' Remove a path within a Store.
+    #' @param path character path.
     rmdir = function(path) {
       if(!self$is_erasable()) {
         stop("Store is not erasable, cannot call 'rmdir'")
@@ -119,6 +127,7 @@ Store <- R6::R6Class("Store",
      },
     #' @description
     #' Get consolidated metadata if it exists.
+    #' @return A list or `NULL`.
     get_consolidated_metadata = function() {
       return(private$zmetadata)
     }
@@ -133,6 +142,8 @@ Store <- R6::R6Class("Store",
 #' @description
 #' Store class using directories and files on a standard file system.
 #'
+#' @format [R6::R6Class] inheriting from [Store].
+#' @family Store classes
 #' @rdname DirectoryStore
 #' @export
 DirectoryStore <- R6::R6Class("DirectoryStore",
@@ -228,6 +239,8 @@ DirectoryStore <- R6::R6Class("DirectoryStore",
 #' Store class that uses a hierarchy of list objects,
 #' thus all data will be held in main memory.
 #'
+#' @format [R6::R6Class] inheriting from [Store].
+#' @family Store classes
 #' @rdname MemoryStore
 #' @export
 MemoryStore <- R6::R6Class("MemoryStore",
@@ -372,6 +385,8 @@ item_to_key <- function(item) {
 #' Set the option "pizzarr.progress_bar" to TRUE to get a progress bar for long running reads.
 #' 
 #' For more, see `vignette("parallel").`
+#' @format [R6::R6Class] inheriting from [Store].
+#' @family Store classes
 #' @rdname HttpStore
 #' @importFrom memoise memoise timeout
 #' @export

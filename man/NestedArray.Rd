@@ -4,6 +4,9 @@
 \name{NestedArray}
 \alias{NestedArray}
 \title{NestedArray Class}
+\format{
+\link[R6:R6Class]{R6::R6Class}
+}
 \value{
 The data as a flat vector.
 

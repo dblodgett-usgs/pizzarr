@@ -4,6 +4,9 @@
 \name{ZarrGroup}
 \alias{ZarrGroup}
 \title{ZarrGroup Class}
+\format{
+\link[R6:R6Class]{R6::R6Class}
+}
 \description{
 Instantiate a group from an initialized store.
 }

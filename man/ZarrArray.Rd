@@ -4,6 +4,9 @@
 \name{ZarrArray}
 \alias{ZarrArray}
 \title{ZarrArray Class}
+\format{
+\link[R6:R6Class]{R6::R6Class}
+}
 \value{
 A subset of the array, as a NestedArray instance.
 }

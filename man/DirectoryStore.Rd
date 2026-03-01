@@ -4,12 +4,22 @@
 \name{DirectoryStore}
 \alias{DirectoryStore}
 \title{DirectoryStore Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Store}.
+}
 \description{
 Store class using directories and files on a standard file system.
 }
 \details{
 DirectoryStore for Zarr
 }
+\seealso{
+Other Store classes: 
+\code{\link{HttpStore}},
+\code{\link{MemoryStore}},
+\code{\link{Store}}
+}
+\concept{Store classes}
 \keyword{internal}
 \section{Super class}{
 \code{\link[pizzarr:Store]{pizzarr::Store}} -> \code{DirectoryStore}

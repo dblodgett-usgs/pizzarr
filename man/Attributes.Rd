@@ -4,6 +4,9 @@
 \name{Attributes}
 \alias{Attributes}
 \title{Attributes Class}
+\format{
+\link[R6:R6Class]{R6::R6Class}
+}
 \description{
 Class providing access to user attributes on an array or group.
 }

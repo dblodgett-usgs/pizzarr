@@ -4,6 +4,9 @@
 \name{Dtype}
 \alias{Dtype}
 \title{Dtype Class}
+\format{
+\link[R6:R6Class]{R6::R6Class}
+}
 \description{
 A data type object (an instance of Dtype class) describes how
 the bytes in the fixed-size block of memory corresponding to an array
@@ -74,31 +77,40 @@ A \code{Dtype} instance.
 \if{html}{\out{<a id="method-Dtype-get_asrtype"></a>}}
 \if{latex}{\out{\hypertarget{method-Dtype-get_asrtype}{}}}
 \subsection{Method \code{get_asrtype()}}{
-Get as R type
+Get the R coercion function name for this dtype.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Dtype$get_asrtype()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+Character string (e.g., \code{"as.double"}).
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dtype-get_rtype"></a>}}
 \if{latex}{\out{\hypertarget{method-Dtype-get_rtype}{}}}
 \subsection{Method \code{get_rtype()}}{
-basic type R type
+Get the R base type for this dtype.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Dtype$get_rtype()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+An R prototype value (e.g., \code{integer()}, \code{double()}).
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dtype-get_typed_array_ctr"></a>}}
 \if{latex}{\out{\hypertarget{method-Dtype-get_typed_array_ctr}{}}}
 \subsection{Method \code{get_typed_array_ctr()}}{
-get typed array
+Get a constructor function for typed arrays of this dtype.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Dtype$get_typed_array_ctr()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A function that takes \code{dim} and returns an array.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Dtype-clone"></a>}}

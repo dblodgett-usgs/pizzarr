@@ -6,6 +6,7 @@
 #' @description
 #' Class providing access to user attributes on an array or group.
 #'
+#' @format [R6::R6Class]
 #' @rdname Attributes
 #' @export
 Attributes <- R6::R6Class("Attributes",

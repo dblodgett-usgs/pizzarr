@@ -4,12 +4,27 @@
 \name{BloscCodec}
 \alias{BloscCodec}
 \title{BloscCodec Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Codec}.
+}
 \description{
 Class representing a Blosc compressor
 }
 \details{
 Blosc compressor for Zarr
 }
+\seealso{
+Other Codec classes: 
+\code{\link{Bz2Codec}},
+\code{\link{Codec}},
+\code{\link{GzipCodec}},
+\code{\link{Lz4Codec}},
+\code{\link{LzmaCodec}},
+\code{\link{VLenUtf8Codec}},
+\code{\link{ZlibCodec}},
+\code{\link{ZstdCodec}}
+}
+\concept{Codec classes}
 \section{Super class}{
 \code{\link[pizzarr:Codec]{pizzarr::Codec}} -> \code{BloscCodec}
 }
@@ -112,11 +127,14 @@ Un-compressed data.
 \if{html}{\out{<a id="method-BloscCodec-get_config"></a>}}
 \if{latex}{\out{\hypertarget{method-BloscCodec-get_config}{}}}
 \subsection{Method \code{get_config()}}{
-Get Configuration
+Get codec configuration as a list.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BloscCodec$get_config()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A named list.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-BloscCodec-clone"></a>}}

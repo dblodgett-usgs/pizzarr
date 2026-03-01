@@ -4,6 +4,9 @@
 \name{MemoryStore}
 \alias{MemoryStore}
 \title{MemoryStore Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Store}.
+}
 \description{
 Store class that uses a hierarchy of list objects,
 thus all data will be held in main memory.
@@ -11,6 +14,13 @@ thus all data will be held in main memory.
 \details{
 MemoryStore for Zarr
 }
+\seealso{
+Other Store classes: 
+\code{\link{DirectoryStore}},
+\code{\link{HttpStore}},
+\code{\link{Store}}
+}
+\concept{Store classes}
 \keyword{internal}
 \section{Super class}{
 \code{\link[pizzarr:Store]{pizzarr::Store}} -> \code{MemoryStore}
