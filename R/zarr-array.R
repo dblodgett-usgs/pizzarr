@@ -169,7 +169,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
       if(!is.na(private$filters)) {
         filters_config <- list()
         for(filter in private$filters) {
-          append(filters_config, filter$get_config)
+          filters_config <- append(filters_config, list(filter$get_config()))
         }
       } else {
         filters_config <- NA
@@ -667,7 +667,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
           if (is_key_error(cond)) {
             # Chunk is not initialized
             chunk_data <- dtype_constr(chunk_size)
-            if (!is.null(private$fill_value)) { # TODO: should this be is.na
+            if (!is_na(private$fill_value)) {
               chunk_fill(chunk_data, private$fill_value)
             }
             # From base R array.
