@@ -178,7 +178,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
         chunks = private$chunks,
         dtype = private$dtype$dtype,
         compressor = compressor_config,
-        fill_value = private$vill_value,
+        fill_value = private$fill_value,
         order = private$order,
         filters = filters_config
       )
