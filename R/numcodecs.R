@@ -480,8 +480,7 @@ BloscCodec <- R6::R6Class("BloscCodec",
       if(self$cname != "lz4" || self$clevel != 5) {
         stop("Only lz4 compression level 5 is enabled for writing.")
       }
-      dtype_str <- zarr_arr$get_dtype()
-      dtype_size <- get_dtype_numbytes(dtype_str)
+      dtype_size <- zarr_arr$get_dtype()$num_bytes
        result <- .Call(
         "compress_chunk_BLOSC",
         buf,
@@ -656,6 +655,8 @@ get_codec <- function(config) {
       result <- do.call(GzipCodec$new, config)
     } else if(codec_id == "lzma") {
       result <- do.call(LzmaCodec$new, config)
+    } else if(codec_id == "bz2") {
+      result <- do.call(Bz2Codec$new, config)
     } else if(codec_id == "blosc") {
       result <- do.call(BloscCodec$new, config)
     } else if(codec_id == "vlen-utf8") {

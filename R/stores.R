@@ -336,7 +336,11 @@ MemoryStore <- R6::R6Class("MemoryStore",
      #' remove a path within a Store
      #' @param item character item
      rmdir = function(item) {
-      self$set_item(item, NULL)
+      if(is_na(item) || item == "") {
+        self$root <- obj_list()
+      } else {
+        self$set_item(item, NULL)
+      }
      }
    )
 )

@@ -76,3 +76,22 @@ test_that("Zarr MemoryStore, can rmdir", {
   store$rmdir("hello")
   expect_equal(store$listdir(), character(0))
 })
+
+test_that("MemoryStore is readable, writeable, and listable", {
+  store <- MemoryStore$new()
+  expect_true(store$is_readable())
+  expect_true(store$is_writeable())
+  expect_true(store$is_listable())
+})
+
+test_that("MemoryStore set_item overwrites existing key", {
+  store <- MemoryStore$new()
+  store$set_item("key", charToRaw("value1"))
+  store$set_item("key", charToRaw("value2"))
+  expect_equal(rawToChar(store$get_item("key")), "value2")
+})
+
+test_that("MemoryStore contains_item returns FALSE for missing key", {
+  store <- MemoryStore$new()
+  expect_false(store$contains_item("nonexistent"))
+})

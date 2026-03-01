@@ -74,3 +74,69 @@ test_that("open group twice with DirectoryStore", {
     name2 <- z2$get_name()
     expect_equal(name2, "/foo")
 })
+
+# --- contains_item tests ---
+
+test_that("ZarrGroup contains_item finds arrays and subgroups", {
+  store <- MemoryStore$new()
+  g <- zarr_open_group(store)
+  g$create_dataset("arr1", data = array(1:4, dim = c(4)), shape = c(4))
+  g$create_group("subgroup")
+
+  expect_true(g$contains_item("arr1"))
+  expect_true(g$contains_item("subgroup"))
+  expect_false(g$contains_item("nonexistent"))
+})
+
+# --- Mixed hierarchy navigation ---
+
+test_that("Group get_item returns correct type for arrays vs groups", {
+  store <- MemoryStore$new()
+  g <- zarr_open_group(store)
+  g$create_dataset("myarray", data = array(1:4, dim = c(4)), shape = c(4))
+  g$create_group("mygroup")
+
+  item_a <- g$get_item("myarray")
+  expect_s3_class(item_a, "ZarrArray")
+
+  item_g <- g$get_item("mygroup")
+  expect_s3_class(item_g, "ZarrGroup")
+})
+
+test_that("Group get_item on missing key raises error", {
+  store <- MemoryStore$new()
+  g <- zarr_open_group(store)
+  expect_error(g$get_item("nonexistent"))
+})
+
+# --- Group attributes ---
+
+test_that("Group attributes set and get", {
+  store <- MemoryStore$new()
+  g <- zarr_open_group(store)
+  g$get_attrs()$set_item("mykey", "myvalue")
+  expect_equal(g$get_attrs()$get_item("mykey"), "myvalue")
+})
+
+test_that("Group attributes round-trip through reopen", {
+  store <- MemoryStore$new()
+  g <- zarr_open_group(store)
+  g$get_attrs()$set_item("mykey", "myvalue")
+
+  g2 <- zarr_open_group(store, mode = "r")
+  expect_equal(g2$get_attrs()$get_item("mykey"), "myvalue")
+})
+
+# --- Group properties ---
+
+test_that("Group get_store returns the store", {
+  store <- MemoryStore$new()
+  g <- zarr_open_group(store)
+  expect_identical(g$get_store(), store)
+})
+
+test_that("Group get_read_only reflects mode", {
+  store <- MemoryStore$new()
+  g <- zarr_open_group(store)
+  expect_false(g$get_read_only())
+})
