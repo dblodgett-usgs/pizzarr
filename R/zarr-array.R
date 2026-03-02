@@ -814,7 +814,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
                           write_empty_chunks = TRUE) {
       private$store <- store
       private$chunk_store <- chunk_store
-      if(!is.na(path)) {
+      if(!is.na(path) && nchar(path) > 0) {
         private$path <- normalize_storage_path(path)
         private$key_prefix <- paste0(private$path, "/")
       } else {
