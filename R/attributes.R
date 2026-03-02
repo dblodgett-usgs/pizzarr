@@ -133,6 +133,18 @@ Attributes <- R6::R6Class("Attributes",
     del_item = function(item) {
       # TODO: support synchronizer
       private$del_item_nosync(item)
+    },
+    #' @description
+    #' Set cached attributes from V3 embedded metadata.
+    #' In V3, attributes are part of zarr.json rather than a separate .zattrs file.
+    #' This method pre-populates the cache so the normal .zattrs read path is skipped.
+    #' @param attrs_list A named list of attributes from V3 zarr.json.
+    #' @return None (modifies cache in place).
+    set_cached_v3_attrs = function(attrs_list) {
+      if (is.null(attrs_list) || length(attrs_list) == 0) {
+        attrs_list <- obj_list()
+      }
+      private$cached_aslist <- attrs_list
     }
   )
 )

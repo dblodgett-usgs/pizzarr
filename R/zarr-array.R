@@ -74,6 +74,13 @@ ZarrArray <- R6::R6Class("ZarrArray",
     # filters TODO
     #' @keywords internal
     filters = NULL,
+    # zarr_format: integer, 2L or 3L. Determines which metadata format is in use.
+    #' @keywords internal
+    zarr_format = NULL,
+    # chunk_key_encoding: list with $name and $configuration$separator (V3 only).
+    # V3 default: name="default", separator="/", producing keys like "c/0/1/2".
+    #' @keywords internal
+    chunk_key_encoding = NULL,
     # vindex TODO
     #' @keywords internal
     vindex = NULL,
@@ -81,10 +88,22 @@ ZarrArray <- R6::R6Class("ZarrArray",
     #' @keywords internal
     oindex = NULL,
     # (Re)load metadata from store without synchronization (file locking).
+    # Detects V3 (zarr.json) vs V2 (.zarray) format automatically.
     load_metadata_nosync = function() {
 
+      # Check for V3 zarr.json first, then fall back to V2 .zarray.
+      # Reference: zarr-python checks zarr.json first for V3 format detection.
+      v3_key <- paste0(private$key_prefix, ZARR_JSON)
+      if (private$store$contains_item(v3_key)) {
+        private$load_metadata_v3_nosync()
+        return()
+      }
+
+      # V2 path (existing code, unchanged)
+      private$zarr_format <- 2L
+
       mkey <- paste0(private$key_prefix, ARRAY_META_KEY)
-      
+
       meta <- try_from_zmeta(mkey, private$store)
       
       if(is.null(meta)) {
@@ -134,6 +153,86 @@ ZarrArray <- R6::R6Class("ZarrArray",
         }
       }
       private$dtype <- normalize_dtype(meta$dtype, object_codec = object_codec)
+    },
+    # Load V3 array metadata from zarr.json.
+    # Reference: https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html
+    # V3 zarr.json contains: zarr_format, node_type, shape, data_type,
+    # chunk_grid, chunk_key_encoding, codecs, fill_value, attributes,
+    # dimension_names.
+    load_metadata_v3_nosync = function() {
+      mkey <- paste0(private$key_prefix, ZARR_JSON)
+      meta_bytes <- private$store$get_item(mkey)
+
+      # Decode and validate as V3 array
+      meta3 <- Metadata3$new()
+      meta <- meta3$decode_array_metadata(meta_bytes)
+
+      private$meta <- meta
+      private$zarr_format <- 3L
+
+      # --- shape ---
+      if (is.list(meta$shape)) {
+        private$shape <- as.integer(meta$shape)
+      } else {
+        private$shape <- meta$shape
+      }
+
+      # --- chunks from chunk_grid ---
+      # V3 chunk_grid must be "regular" with a chunk_shape configuration.
+      if (is.null(meta$chunk_grid) || meta$chunk_grid$name != "regular") {
+        stop("Only 'regular' chunk_grid is supported for V3 arrays")
+      }
+      chunk_shape <- meta$chunk_grid$configuration$chunk_shape
+      if (is.list(chunk_shape)) {
+        private$chunks <- as.integer(chunk_shape)
+      } else {
+        private$chunks <- chunk_shape
+      }
+
+      # --- chunk_key_encoding ---
+      # V3 default: name="default", separator="/", chunk keys like "c/0/1/2"
+      # V3 v2-compat: name="v2", separator=".", chunk keys like "0.1.2"
+      private$chunk_key_encoding <- meta$chunk_key_encoding
+      if (is.null(private$chunk_key_encoding)) {
+        private$chunk_key_encoding <- list(
+          name = "default",
+          configuration = list(separator = "/")
+        )
+      }
+      # Set dimension_separator for compatibility with code that reads it
+      sep <- private$chunk_key_encoding$configuration$separator
+      private$dimension_separator <- if (!is.null(sep)) sep else "/"
+
+      # --- codecs -> compressor, filters, order, endian ---
+      # V3 codec pipeline replaces V2 compressor + filters.
+      # resolve_v3_codecs() maps V3 codecs to V2-compatible structures
+      # so decode_chunk() works unchanged.
+      codec_result <- resolve_v3_codecs(meta$codecs)
+      private$compressor <- codec_result$compressor
+      private$filters <- codec_result$filters
+      private$order <- codec_result$order
+
+      # --- dtype ---
+      # V3 uses string names like "float64"; convert to V2 numpy-style
+      # so the existing Dtype class works unchanged.
+      v2_dtype_str <- v3_dtype_to_v2_dtype(meta$data_type,
+                                            endian = codec_result$endian)
+
+      # Check for object codec (vlen-utf8) in filters
+      object_codec <- NA
+      if (!is_na(private$filters)) {
+        for (f in private$filters) {
+          if (inherits(f, "VLenUtf8Codec")) {
+            object_codec <- f
+            break
+          }
+        }
+      }
+      private$dtype <- normalize_dtype(v2_dtype_str, object_codec = object_codec)
+
+      # --- fill_value ---
+      # V3 fill_value is required (not optional like V2).
+      private$fill_value <- meta$fill_value
     },
     # method_description
     # Load or reload metadata from store.
@@ -188,9 +287,31 @@ ZarrArray <- R6::R6Class("ZarrArray",
       encoded_meta <- private$store$metadata_class$encode_array_metadata(zarray_meta)
       private$store$set_item(mkey, encoded_meta)
     },
-    # method_description
-    # TODO
+    # Build the store key for a chunk at the given coordinates.
+    # V2: "key_prefix/0.1.2" (dimension_separator between coords)
+    # V3 default: "key_prefix/c/0/1/2" (prefix "c" + separator between coords)
+    # V3 v2-compat: "key_prefix/0.1.2" (no prefix, configured separator)
     chunk_key = function(chunk_coords) {
+      if (!is.null(private$zarr_format) && private$zarr_format == 3L) {
+        # V3 chunk key encoding
+        # Reference: https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html#chunk-key-encoding
+        encoding_name <- private$chunk_key_encoding$name
+        sep <- private$chunk_key_encoding$configuration$separator
+        if (is.null(sep)) sep <- "/"
+
+        if (encoding_name == "default") {
+          # Default V3: prefix "c" + separator + coords
+          # e.g., coords (0,1,2) -> "c/0/1/2"
+          coord_part <- do.call(paste, c(as.list(chunk_coords), sep = sep))
+          return(paste0(private$key_prefix, "c", sep, coord_part))
+        } else if (encoding_name == "v2") {
+          # V2-compatible: no prefix, just coords with separator
+          return(paste0(private$key_prefix, do.call(paste, c(as.list(chunk_coords), sep = sep))))
+        } else {
+          stop("Unsupported chunk_key_encoding: ", encoding_name)
+        }
+      }
+      # V2 chunk key (existing behavior)
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L2063
       return(paste0(private$key_prefix, do.call(paste, c(as.list(chunk_coords), sep = private$dimension_separator))))
     },
@@ -832,7 +953,17 @@ ZarrArray <- R6::R6Class("ZarrArray",
       private$load_metadata()
 
       akey <- paste0(private$key_prefix, ATTRS_KEY)
-      private$attrs <- Attributes$new(store, key = akey)
+      if (!is.null(private$zarr_format) && private$zarr_format == 3L) {
+        # V3: attributes are embedded in zarr.json, not in a separate .zattrs.
+        # Create Attributes object and pre-populate cache from parsed metadata.
+        private$attrs <- Attributes$new(store, key = akey)
+        if (!is.null(private$meta$attributes)) {
+          private$attrs$set_cached_v3_attrs(private$meta$attributes)
+        }
+      } else {
+        # V2: attributes in separate .zattrs file (existing behavior)
+        private$attrs <- Attributes$new(store, key = akey)
+      }
 
       private$vindex <- OIndex$new(self)
       private$oindex <- VIndex$new(self)

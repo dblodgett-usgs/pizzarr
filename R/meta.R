@@ -69,7 +69,56 @@ try_fromJSON <- function(json, warn_message = "Error parsing json was",
   })
 }
 
-# TODO: v3 metadata
+# V3 metadata decoder.
+# Reference: https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html
+# Mirrors the Metadata2 class but handles the V3 zarr.json format.
+# In V3, a single zarr.json per node contains zarr_format, node_type,
+# and all metadata (shape, data_type, codecs, attributes, etc.).
+# Read-only: no encode methods provided.
+#' @keywords internal
+Metadata3 <- R6::R6Class("Metadata3",
+  private = list(
+    ZARR_FORMAT = 3
+  ),
+  public = list(
+    decode_metadata = function(s) {
+      # Parse raw bytes or list into an R list.
+      if (is.list(s) || is.null(s)) {
+        return(s)
+      } else {
+        return(try_fromJSON(rawToChar(s), simplifyVector = FALSE))
+      }
+    },
+    decode_array_metadata = function(s) {
+      # Decode V3 array metadata from zarr.json.
+      # V3 arrays have node_type="array" and contain shape, data_type,
+      # chunk_grid, chunk_key_encoding, codecs, fill_value, attributes.
+      meta <- self$decode_metadata(s)
+      if (!is.null(meta)) validate_v3_meta(meta, expected_node_type = "array")
+      return(meta)
+    },
+    decode_group_metadata = function(s) {
+      # Decode V3 group metadata from zarr.json.
+      # V3 groups have node_type="group" and may contain attributes.
+      meta <- self$decode_metadata(s)
+      if (!is.null(meta)) validate_v3_meta(meta, expected_node_type = "group")
+      return(meta)
+    }
+  )
+)
+
+# Validate basic V3 metadata requirements.
+# @param meta Parsed metadata list from zarr.json.
+# @param expected_node_type Optional. "array" or "group".
+validate_v3_meta <- function(meta, expected_node_type = NULL) {
+  if (is.null(meta$zarr_format) || meta$zarr_format != 3) {
+    stop("Expected zarr_format=3 but got ", meta$zarr_format)
+  }
+  if (!is.null(expected_node_type) && meta$node_type != expected_node_type) {
+    stop("Expected node_type='", expected_node_type,
+         "' but got '", meta$node_type, "'")
+  }
+}
 
 #' Create a list of zarray metadata.
 #' @inheritParams zarr_create

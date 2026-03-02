@@ -133,42 +133,56 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
       private$chunk_store <- chunk_store
 
       # guard conditions
+      # contains_array() checks both V2 and V3 formats
       if(contains_array(store, path)) {
         stop("ContainsArrayError(path)")
       }
 
-      m_key <- paste0(private$key_prefix, GROUP_META_KEY)
-      
-      # use consolidated metadata if exists
-      meta <- try_from_zmeta(m_key, store)
-      
-      if(!is.null(meta)) {
-        
-        private$meta <- meta
-        
+      # Detect V3 vs V2 and load metadata accordingly
+      v3_key <- paste0(private$key_prefix, ZARR_JSON)
+      if (store$contains_item(v3_key)) {
+        # V3 group: read zarr.json, validate as group
+        meta_bytes <- store$get_item(v3_key)
+        meta3 <- Metadata3$new()
+        private$meta <- meta3$decode_group_metadata(meta_bytes)
+
+        # V3 attributes are embedded in zarr.json
+        a_key <- paste0(private$key_prefix, ATTRS_KEY)
+        private$attrs <- Attributes$new(store, key = a_key, read_only = read_only,
+                                        cache = cache_attrs, synchronizer = synchronizer)
+        if (!is.null(private$meta$attributes)) {
+          private$attrs$set_cached_v3_attrs(private$meta$attributes)
+        }
       } else {
-        
-        # initialize metadata
-        meta_bytes <- tryCatch({
-          
-          meta_bytes <- store$get_item(m_key)
-          
-        }, error = function(cond) {
-          if(is_key_error(cond)) {
-            stop("GroupNotFoundError(path) in Group$new")
-          } else {
-            stop(cond$message)
-          }
-        })
-        
-        if(!is.null(meta_bytes))
-          private$meta <- private$store$metadata_class$decode_group_metadata(meta_bytes)
-        
+        # V2 group: existing logic unchanged
+        m_key <- paste0(private$key_prefix, GROUP_META_KEY)
+
+        # use consolidated metadata if exists
+        meta <- try_from_zmeta(m_key, store)
+
+        if(!is.null(meta)) {
+          private$meta <- meta
+        } else {
+          # initialize metadata
+          meta_bytes <- tryCatch({
+            meta_bytes <- store$get_item(m_key)
+          }, error = function(cond) {
+            if(is_key_error(cond)) {
+              stop("GroupNotFoundError(path) in Group$new")
+            } else {
+              stop(cond$message)
+            }
+          })
+
+          if(!is.null(meta_bytes))
+            private$meta <- private$store$metadata_class$decode_group_metadata(meta_bytes)
+        }
+
+        # V2 attributes in separate .zattrs file
+        a_key <- paste0(private$key_prefix, ATTRS_KEY)
+        private$attrs <- Attributes$new(store, key = a_key, read_only = read_only,
+                                        cache = cache_attrs, synchronizer = synchronizer)
       }
-      
-      # setup attributes
-      a_key <- paste0(private$key_prefix, ATTRS_KEY)
-      private$attrs <- Attributes$new(store, key = a_key, read_only = read_only, cache = cache_attrs, synchronizer = synchronizer)
     },
     #' @description
     #' Get group store

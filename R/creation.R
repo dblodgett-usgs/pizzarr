@@ -479,6 +479,13 @@ zarr_open_group <- function(
     }
     path <- normalize_storage_path(path)
 
+    # V3 write guard: V3 stores are read-only in this version of pizzarr.
+    v <- detect_zarr_version(store, path)
+    if (!is.na(v) && v == 3L && mode != "r") {
+      message("V3 write support not yet available. Opening in read-only mode.")
+      mode <- "r"
+    }
+
     # ensure store is initialized
 
     if(mode == "r" || mode == "r+") {
@@ -571,6 +578,14 @@ zarr_open_array <- function(
         chunk_store <- normalize_store_arg(chunk_store, storage_options=storage_options, mode=mode)
     }
     path <- normalize_storage_path(path)
+
+    # V3 write guard: V3 stores are read-only in this version of pizzarr.
+    # If V3 format is detected and mode is not "r", force read-only.
+    v <- detect_zarr_version(store, path)
+    if (!is.na(v) && v == 3L && mode != "r") {
+      message("V3 write support not yet available. Opening in read-only mode.")
+      mode <- "r"
+    }
 
     # ensure store is initialized
     if(mode == "r" || mode == "r+") {

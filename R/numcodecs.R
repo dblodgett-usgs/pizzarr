@@ -701,3 +701,125 @@ get_codec <- function(config) {
 get_default_compressor <- function() {
   return(ZstdCodec$new())
 }
+
+# Resolve a V3 codec pipeline into V2-compatible compressor/filters.
+# Reference: https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html#codecs
+#
+# V3 codecs are an ordered list with three roles:
+#   - array-to-array: "transpose" (memory layout reordering)
+#   - array-to-bytes: "endian"/"bytes" (byte order specification)
+#   - bytes-to-bytes: "gzip", "zstd", "blosc", etc. (compression)
+#
+# For read (decode), codecs are applied in reverse order:
+#   1. bytes-to-bytes codecs decompress the data
+#   2. The endian codec tells us byte order for interpreting raw data
+#   3. The transpose codec tells us memory layout order
+#
+# @param codecs_list List of codec entries from V3 zarr.json "codecs" field.
+#   Each entry has $name and optional $configuration.
+# @return Named list with:
+#   $compressor - Codec instance for decompression (or NA if none)
+#   $filters    - List of additional Codec instances (or NA if none)
+#   $endian     - "little" or "big"
+#   $order      - "C" or "F"
+# @keywords internal
+resolve_v3_codecs <- function(codecs_list) {
+  endian <- "little"  # V3 default
+  order <- "C"        # V3 default (C-contiguous)
+  bytes_to_bytes <- list()
+
+  for (codec_entry in codecs_list) {
+    codec_name <- codec_entry$name
+    config <- codec_entry$configuration
+    if (is.null(config)) config <- list()
+
+    if (codec_name %in% c("endian", "bytes")) {
+      # array-to-bytes codec: specifies byte order.
+      # "endian" is the zarrita name; "bytes" is the modern zarr-python name.
+      if (!is.null(config$endian)) {
+        endian <- config$endian
+      }
+    } else if (codec_name == "transpose") {
+      # array-to-array codec: specifies memory layout.
+      # order="F" means Fortran (column-major) ordering.
+      if (!is.null(config$order) && config$order == "F") {
+        order <- "F"
+      }
+    } else {
+      # bytes-to-bytes codec: compression.
+      # Convert V3 codec config to V2 format for get_codec().
+      v2_config <- v3_codec_to_v2_config(codec_name, config)
+      bytes_to_bytes <- append(bytes_to_bytes, list(get_codec(v2_config)))
+    }
+  }
+
+  # Map to V2 compressor/filters pattern:
+  # - If one bytes-to-bytes codec: it's the compressor, no filters
+  # - If multiple: last is compressor, rest are filters
+  # - If none: no compression (NA)
+  if (length(bytes_to_bytes) == 0) {
+    compressor <- NA
+    filters <- NA
+  } else if (length(bytes_to_bytes) == 1) {
+    compressor <- bytes_to_bytes[[1]]
+    filters <- NA
+  } else {
+    compressor <- bytes_to_bytes[[length(bytes_to_bytes)]]
+    filters <- bytes_to_bytes[1:(length(bytes_to_bytes) - 1)]
+  }
+
+  list(
+    compressor = compressor,
+    filters = filters,
+    endian = endian,
+    order = order
+  )
+}
+
+# Map a V3 codec name + config to a V2-style config list for get_codec().
+# Reference: https://zarr-specs.readthedocs.io/en/latest/v3/codecs/
+# V3 uses "name" field; V2 uses "id" field.
+#
+# @param codec_name Character. V3 codec name (e.g., "gzip", "blosc").
+# @param config List. V3 codec configuration.
+# @return Named list with "id" field suitable for get_codec().
+# @keywords internal
+v3_codec_to_v2_config <- function(codec_name, config) {
+  V3_TO_V2_ID <- list(
+    "gzip"  = "gzip",
+    "zstd"  = "zstd",
+    "blosc" = "blosc",
+    "zlib"  = "zlib",
+    "bz2"   = "bz2",
+    "lzma"  = "lzma"
+  )
+
+  v2_id <- V3_TO_V2_ID[[codec_name]]
+  if (is.null(v2_id)) {
+    stop("Unsupported V3 codec: '", codec_name,
+         "'. Supported codecs: ", paste(names(V3_TO_V2_ID), collapse = ", "))
+  }
+
+  # Build V2-style config with "id" field
+  v2_config <- config
+  v2_config$id <- v2_id
+
+  if (v2_id == "blosc") {
+    # V3 blosc uses string shuffle values; V2 BloscCodec expects logical/integer.
+    # For decode, blosc auto-detects shuffle from the compressed header,
+    # but we convert for constructor compatibility.
+    if (!is.null(v2_config$shuffle) && is.character(v2_config$shuffle)) {
+      v2_config$shuffle <- switch(v2_config$shuffle,
+        "noshuffle"  = 0L,
+        "shuffle"    = 1L,
+        "bitshuffle" = 2L,
+        as.integer(v2_config$shuffle)
+      )
+    }
+    # Strip typesize: not a BloscCodec constructor parameter.
+    # Blosc reads typesize from the compressed data header during decode.
+    v2_config$typesize <- NULL
+  }
+
+  v2_config
+}

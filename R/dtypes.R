@@ -131,6 +131,52 @@ get_dtype_asrtype <- function(dtype) {
   return(DTYPE_RTYPE_MAPPING[[dtype_parts$basic_type]])
 }
 
+# Convert V3 data_type string to V2 numpy-style dtype string.
+# Reference: https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html#data-types
+# V3 uses simple string names like "float64"; we convert to numpy-style strings
+# like "<f8" so the existing Dtype class works unchanged.
+#
+# @param v3_dtype Character. V3 data type name (e.g., "float64", "int16", "bool").
+# @param endian Character. Byte order from the V3 "endian"/"bytes" codec.
+#   Either "little" (default) or "big". Single-byte types ignore this.
+# @return Character. V2-style dtype string (e.g., "<f8", "|b1").
+# @keywords internal
+v3_dtype_to_v2_dtype <- function(v3_dtype, endian = "little") {
+  # Mapping: V3 name -> list(v2 = base string, fixed_order = byte order or NULL)
+  # Single-byte types have fixed byte order "|" (not relevant).
+  # Multi-byte types get byte order prefix from the endian codec.
+  V3_DTYPE_MAP <- list(
+    "bool"    = list(v2 = "b1",  fixed_order = "|"),
+    "int8"    = list(v2 = "i1",  fixed_order = "|"),
+    "int16"   = list(v2 = "i2",  fixed_order = NULL),
+    "int32"   = list(v2 = "i4",  fixed_order = NULL),
+    "int64"   = list(v2 = "i8",  fixed_order = NULL),
+    "uint8"   = list(v2 = "u1",  fixed_order = "|"),
+    "uint16"  = list(v2 = "u2",  fixed_order = NULL),
+    "uint32"  = list(v2 = "u4",  fixed_order = NULL),
+    "uint64"  = list(v2 = "u8",  fixed_order = NULL),
+    "float32" = list(v2 = "f4",  fixed_order = NULL),
+    "float64" = list(v2 = "f8",  fixed_order = NULL)
+  )
+
+  entry <- V3_DTYPE_MAP[[v3_dtype]]
+  if (is.null(entry)) {
+    stop("Unsupported V3 data_type: '", v3_dtype,
+         "'. Supported types: ", paste(names(V3_DTYPE_MAP), collapse = ", "))
+  }
+
+  # Single-byte types use fixed "|" prefix; multi-byte types use endian codec
+  prefix <- if (!is.null(entry$fixed_order)) {
+    entry$fixed_order
+  } else if (endian == "big") {
+    ">"
+  } else {
+    "<"
+  }
+
+  paste0(prefix, entry$v2)
+}
+
 #' The Zarr Dtype class.
 #' @title Dtype Class
 #' @docType class
