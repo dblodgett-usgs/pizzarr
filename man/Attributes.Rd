@@ -38,6 +38,7 @@ The Zarr Attributes class.
 \item \href{#method-Attributes-get_item}{\code{Attributes$get_item()}}
 \item \href{#method-Attributes-set_item}{\code{Attributes$set_item()}}
 \item \href{#method-Attributes-del_item}{\code{Attributes$del_item()}}
+\item \href{#method-Attributes-set_cached_v3_attrs}{\code{Attributes$set_cached_v3_attrs()}}
 \item \href{#method-Attributes-clone}{\code{Attributes$clone()}}
 }
 }
@@ -181,6 +182,28 @@ delete attribute
 }
 \subsection{Returns}{
 none
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Attributes-set_cached_v3_attrs"></a>}}
+\if{latex}{\out{\hypertarget{method-Attributes-set_cached_v3_attrs}{}}}
+\subsection{Method \code{set_cached_v3_attrs()}}{
+Set cached attributes from V3 embedded metadata.
+In V3, attributes are part of zarr.json rather than a separate .zattrs file.
+This method pre-populates the cache so the normal .zattrs read path is skipped.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Attributes$set_cached_v3_attrs(attrs_list)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{attrs_list}}{A named list of attributes from V3 zarr.json.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+None (modifies cache in place).
 }
 }
 \if{html}{\out{<hr>}}
