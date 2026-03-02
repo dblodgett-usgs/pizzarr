@@ -1,0 +1,76 @@
+---
+title: "Reading Zarr V3"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Reading Zarr V3}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  out.width = "100%"
+)
+sample_dir <- tools::R_user_dir("pizzarr")
+clean <- !dir.exists(sample_dir)
+```
+
+pizzarr can read Zarr stores in both V2 and V3 format. This vignette
+demonstrates opening the same dataset (BCSD climate observations) stored in
+each format and shows the data are identical.
+
+## Open V2 and V3 stores
+
+```{r}
+library(pizzarr)
+
+v2_root <- pizzarr_sample("bcsd")
+v3_root <- pizzarr_sample("bcsd_v3")
+
+v2 <- zarr_open(v2_root)
+v3 <- zarr_open(v3_root)
+```
+
+## Compare group attributes
+
+```{r}
+v2_attrs <- v2$get_attrs()$to_list()
+v3_attrs <- v3$get_attrs()$to_list()
+
+identical(v2_attrs, v3_attrs)
+```
+
+## Compare arrays
+
+```{r}
+# Precipitation array
+v2_pr <- v2$get_item("pr")$as.array()
+v3_pr <- v3$get_item("pr")$as.array()
+
+identical(v2_pr, v3_pr)
+
+# Temperature array
+v2_tas <- v2$get_item("tas")$as.array()
+v3_tas <- v3$get_item("tas")$as.array()
+
+identical(v2_tas, v3_tas)
+
+# Coordinate arrays
+identical(v2$get_item("latitude")$as.array(), v3$get_item("latitude")$as.array())
+identical(v2$get_item("longitude")$as.array(), v3$get_item("longitude")$as.array())
+identical(v2$get_item("time")$as.array(), v3$get_item("time")$as.array())
+```
+
+## Inspect an array
+
+```{r}
+v3$get_item("pr")$get_shape()
+
+v3$get_item("pr")$get_attrs()$to_list()
+```
+
+```{r, include=FALSE}
+if(clean) unlink(sample_dir, recursive = TRUE)
+```

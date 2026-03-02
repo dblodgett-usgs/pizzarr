@@ -41,14 +41,24 @@ pizzarr_sample <- function(dataset = NULL,
   if(!is.null(dataset)) {
     f <- grepl(dataset, zarr_zips, fixed = TRUE)
     zarr_zips <- zarr_zips[f]
-    
+
     # if dataset not found, stop and print available datasets
     if(length(zarr_zips) == 0) {
       stop("Dataset not found\n\tMust be one of:\n\t  \"",
            paste(avail, collapse = "\"\n\t  \""), "\"")
     }
-    
+
     avail <- avail[f]
+
+    # If multiple matches and query doesn't specify a version,
+    # prefer the v2 variant for backward compatibility.
+    if(length(zarr_zips) > 1 && !grepl("_v[0-9]", dataset)) {
+      v2 <- grepl("_v2", zarr_zips, fixed = TRUE)
+      if(any(v2)) {
+        zarr_zips <- zarr_zips[v2]
+        avail <- avail[v2]
+      }
+    }
   }
   
   # in case zarr_zips is all, loop over them and unzip

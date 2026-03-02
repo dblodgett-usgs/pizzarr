@@ -821,5 +821,10 @@ v3_codec_to_v2_config <- function(codec_name, config) {
     v2_config$typesize <- NULL
   }
 
+  if (v2_id == "zstd") {
+    # V3 zstd may include "checksum" field not used by ZstdCodec.
+    v2_config$checksum <- NULL
+  }
+
   v2_config
 }
