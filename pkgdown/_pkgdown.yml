@@ -6,29 +6,36 @@ template:
     base_font: {google: "Inter"}
 
 authors:
+  David Blodgett:
+    href: https://github.com/dblodgett-usgs
   Mark Keller:
     href: https://github.com/keller-mark
 
 navbar:
   structure:
-    left:  [home, reference, articles]
+    left:  [home, get-started, reference, articles, news]
     right: [github]
 
 reference:
 - title: "Arrays"
   desc: >
-    Create and manipulate Zarr arrays.
+    Core classes for creating and manipulating chunked, compressed,
+    N-dimensional Zarr arrays. ZarrArray is the primary interface for
+    reading and writing array data; NestedArray handles in-memory representation.
 - contents:
   - ZarrArray
   - NestedArray
 - title: "Groups"
   desc: >
-    Create and manipulate Zarr groups.
+    Hierarchical containers for organizing multiple arrays and sub-groups,
+    analogous to directories in a filesystem.
 - contents:
   - ZarrGroup
 - title: "Storage"
   desc: >
-    Store classes.
+    Backend storage classes that control where array data is persisted.
+    Use DirectoryStore for local files, MemoryStore for ephemeral in-memory
+    data, or HttpStore for read-only access to remote Zarr stores.
 - contents:
   - Store
   - DirectoryStore
@@ -36,7 +43,9 @@ reference:
   - HttpStore
 - title: "Compressors and filters"
   desc: >
-    Compressor and filter codec classes.
+    Codec classes for compressing and decompressing chunk data. Each codec
+    wraps a compression algorithm (Zstd, LZ4, Blosc, zlib, etc.) and can be
+    passed to array creation functions via the compressor argument.
 - contents:
   - Codec
   - ZstdCodec
@@ -50,12 +59,14 @@ reference:
   - get_codec
 - title: "Attributes"
   desc: >
-    Access to user attributes on an array or group.
+    Access to user-defined metadata on arrays and groups, stored as
+    JSON-serializable key-value pairs in .zattrs.
 - contents:
   - Attributes
 - title: "Convenience functions"
   desc: >
-    Convenience functions for storing and loading data.
+    High-level functions for common workflows: creating arrays with specific
+    fill values, opening existing stores, and saving R arrays to Zarr format.
 - contents:
   - zarr_create
   - zarr_create_empty
@@ -68,7 +79,8 @@ reference:
   - zarr_save_array
 - title: "Utilities"
   desc: >
-    Utility functions for working with Zarr arrays and groups.
+    Helper functions for slicing, type conversion, and package configuration.
+    Use slice() and zb_slice() to select sub-regions of arrays.
 - contents:
   - slice
   - zb_slice
@@ -84,15 +96,17 @@ reference:
 
 
 articles:
-  - title: Articles
+  - title: Tutorials
     navbar: Tutorials
     contents:
+      - pizzarr
       - basics
       - ome-ngff
       - remote-ome-ngff
       - remote-anndata
       - parallel
-  - title: Articles
+      - v3-read
+  - title: Troubleshooting
     navbar: Troubleshooting
     contents:
       - session_info

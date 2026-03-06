@@ -16,3 +16,4 @@ tests/testthat/test_data
 .Renviron
 pkgdown/favicon/
 .claude
+.venv

@@ -6,6 +6,7 @@
 ^pkgdown$
 ^vignettes$
 ^docs$
-^index\.md$
 ^LICENSE\.md$
 r6-roxygen-convention.md
+.venv
+.claude
