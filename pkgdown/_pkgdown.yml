@@ -106,6 +106,7 @@ articles:
       - remote-anndata
       - parallel
       - v3-read
+      - v3-interop
   - title: Troubleshooting
     navbar: Troubleshooting
     contents:

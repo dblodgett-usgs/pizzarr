@@ -255,3 +255,135 @@ test_that("V3 store forces read-only when non-read mode requested", {
 
 # Clean up
 unlink(tdir, recursive = TRUE)
+
+# =============================================================================
+# zarr-python 3.x interop tests
+# Fixture generated with zarr-python 3.1.5
+# (see inst/extdata/fixtures/v3/generate-v3-zarr-python.py)
+# =============================================================================
+
+zp_zip <- system.file("extdata/fixtures/v3/zarr_python_v3.zarr.zip",
+                       package = "pizzarr")
+zp_dir <- tempfile("zp_v3test")
+dir.create(zp_dir)
+utils::unzip(zp_zip, exdir = zp_dir)
+zp_root <- file.path(zp_dir, "zarr_python_v3.zarr")
+
+test_that("zarr-python V3 store opens as group", {
+  g <- zarr_open(zp_root, mode = "r")
+  expect_s3_class(g, "ZarrGroup")
+  attrs <- g$get_attrs()$to_list()
+  expect_equal(attrs$generator, "zarr-python")
+  expect_equal(attrs$zarr_python_version, "3.1.5")
+})
+
+test_that("zarr-python V3 int32 1d (gzip)", {
+  g <- zarr_open(zp_root, mode = "r")
+  a <- g$get_item("int32_1d")
+  expect_equal(a$get_shape(), 6)
+  expect_equal(as.integer(a$as.array()), c(10L, 20L, 30L, 40L, 50L, 60L))
+})
+
+test_that("zarr-python V3 float64 1d (zstd)", {
+  g <- zarr_open(zp_root, mode = "r")
+  a <- g$get_item("float64_1d")
+  expect_equal(a$get_shape(), 5)
+  expect_equal(as.double(a$as.array()), c(1.1, 2.2, 3.3, 4.4, 5.5))
+})
+
+test_that("zarr-python V3 bool 1d (uncompressed)", {
+  g <- zarr_open(zp_root, mode = "r")
+  a <- g$get_item("bool_1d")
+  expect_equal(a$get_shape(), 4)
+  expect_equal(as.logical(a$as.array()), c(TRUE, FALSE, TRUE, FALSE))
+})
+
+test_that("zarr-python V3 uint8 1d (uncompressed, chunked)", {
+  g <- zarr_open(zp_root, mode = "r")
+  a <- g$get_item("uint8_1d")
+  expect_equal(a$get_shape(), 4)
+  expect_equal(as.integer(a$as.array()), c(0L, 127L, 128L, 255L))
+})
+
+test_that("zarr-python V3 float32 1d (blosc)", {
+  skip_if_not_installed("Rarr")
+  g <- zarr_open(zp_root, mode = "r")
+  a <- g$get_item("float32_1d")
+  expect_equal(a$get_shape(), 4)
+  result <- as.double(a$as.array())
+  expect_equal(result[1], -1.5)
+  expect_equal(result[2], 0.0)
+  expect_equal(result[3], 1.5)
+  expect_equal(result[4], 3.14, tolerance = 1e-5)
+})
+
+test_that("zarr-python V3 int16 2d (gzip)", {
+  g <- zarr_open(zp_root, mode = "r")
+  a <- g$get_item("int16_2d")
+  expect_equal(a$get_shape(), c(4, 3))
+  m <- a$as.array()
+  expect_equal(m[1, 1], 0)
+  expect_equal(m[1, 3], 2)
+  expect_equal(m[4, 3], 11)
+})
+
+test_that("zarr-python V3 float64 3d (zstd)", {
+  g <- zarr_open(zp_root, mode = "r")
+  a <- g$get_item("float64_3d")
+  expect_equal(a$get_shape(), c(2, 3, 4))
+  arr <- a$as.array()
+  expect_equal(arr[1, 1, 1], 0)
+  expect_equal(arr[2, 3, 4], 23)
+})
+
+test_that("zarr-python V3 fill value works", {
+  g <- zarr_open(zp_root, mode = "r")
+  a <- g$get_item("with_fill")
+  expect_equal(a$get_shape(), 6)
+  d <- as.double(a$as.array())
+  expect_equal(d[1:3], c(1.0, 2.0, 3.0))
+  expect_equal(d[4:6], c(-9999.0, -9999.0, -9999.0))
+})
+
+test_that("zarr-python V3 ragged 2d (gzip)", {
+  g <- zarr_open(zp_root, mode = "r")
+  a <- g$get_item("ragged_2d")
+  expect_equal(a$get_shape(), c(5, 7))
+  m <- a$as.array()
+  expect_equal(m[1, 1], 0)
+  expect_equal(m[5, 7], 34)
+  expect_equal(length(m), 35)
+})
+
+test_that("zarr-python V3 nested group with attributes", {
+  g <- zarr_open(zp_root, mode = "r")
+  sub <- g$get_item("var_group")
+  expect_s3_class(sub, "ZarrGroup")
+  attrs <- sub$get_attrs()$to_list()
+  expect_equal(attrs$description, "Group with multiple variables")
+  expect_equal(attrs$source, "zarr-python 3.x test generation")
+})
+
+test_that("zarr-python V3 sub-group array with attributes (temperature)", {
+  g <- zarr_open(zp_root, mode = "r")
+  temp <- g$get_item("var_group")$get_item("temperature")
+  expect_equal(temp$get_shape(), c(3, 4))
+  ta <- temp$get_attrs()$to_list()
+  expect_equal(ta$units, "K")
+  expect_equal(ta$long_name, "Temperature")
+  m <- temp$as.array()
+  expect_equal(m[1, 1], 280.1, tolerance = 1e-1)
+  expect_equal(m[3, 4], 292.2, tolerance = 1e-1)
+})
+
+test_that("zarr-python V3 sub-group array (pressure, gzip)", {
+  g <- zarr_open(zp_root, mode = "r")
+  pres <- g$get_item("var_group")$get_item("pressure")
+  expect_equal(pres$get_shape(), c(3, 4))
+  m <- pres$as.array()
+  expect_equal(m[1, 1], 101325.0)
+  expect_equal(m[3, 4], 101270.0)
+})
+
+# Clean up
+unlink(zp_dir, recursive = TRUE)
