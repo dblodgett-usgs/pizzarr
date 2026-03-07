@@ -420,7 +420,16 @@ ZarrArray <- R6::R6Class("ZarrArray",
     # method_description
     # TODO
     get_basic_selection_nd = function(selection = NA, out = NA, fields = NA) {
-      indexer <- BasicIndexer$new(selection, self)
+      # Route negative-step slices to orthogonal selection
+      sel_list <- if(is.list(selection)) selection else list(selection)
+      has_neg_step <- any(vapply(sel_list, function(s) {
+        is_slice(s) && !is.na(s$step) && s$step < 0
+      }, logical(1)))
+      if(has_neg_step) {
+        indexer <- OrthogonalIndexer$new(selection, self)
+      } else {
+        indexer <- BasicIndexer$new(selection, self)
+      }
       return(private$get_selection(indexer, out = out, fields = fields))
     },
     # method_description

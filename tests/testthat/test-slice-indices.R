@@ -73,3 +73,47 @@ test_that("step size greater than 1", {
   ), dim=c(4, 4)))
   expect_equal(d3, a3)
 })
+
+test_that("negative step slicing matches zarr-python behavior", {
+  # Use volcano data - first row has 19 values we can slice
+  g <- zarr_volcano()
+  volcano_arr <- g$get_item("volcano")
+
+  # Get the full first row (1D slice) for reference
+  full_row <- volcano_arr$get_orthogonal_selection(
+    list(zb_slice(0, 1), zb_slice(NA))
+  )$data[1,]
+
+  # Negative step: reverse a portion of the first row
+  # Python equivalent: arr[0, 5:0:-1]
+  result <- volcano_arr$get_orthogonal_selection(
+    list(zb_slice(0, 1), zb_slice(5, 0, -1))
+  )
+  expect_equal(as.vector(result$data), rev(full_row[2:6]))
+
+  # Negative step with step size -2
+  # Python equivalent: arr[0, 10:2:-2]
+  result2 <- volcano_arr$get_orthogonal_selection(
+    list(zb_slice(0, 1), zb_slice(10, 2, -2))
+  )
+  expect_equal(as.vector(result2$data), full_row[c(11, 9, 7, 5)])
+
+  # Negative start index with negative step
+  # Python equivalent: arr[0, -5:0:-1]
+  ncols <- length(full_row)
+  result3 <- volcano_arr$get_orthogonal_selection(
+    list(zb_slice(0, 1), zb_slice(-5, 0, -1))
+  )
+  neg5_idx <- ncols - 5 + 1  # R 1-based index for Python's -5
+  expect_equal(as.vector(result3$data), rev(full_row[2:neg5_idx]))
+
+  # Full reverse: arr[0, -1::-1] reverses the entire row
+  result4 <- volcano_arr$get_orthogonal_selection(
+    list(zb_slice(0, 1), zb_slice(-1, NA, -1))
+  )
+  expect_equal(as.vector(result4$data), rev(full_row))
+
+  # Negative step also works through get_item (basic selection routing)
+  result5 <- volcano_arr$get_item(list(zb_slice(0, 1), zb_slice(5, 0, -1)))
+  expect_equal(as.vector(result5$data), rev(full_row[2:6]))
+})

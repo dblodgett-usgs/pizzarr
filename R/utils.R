@@ -85,6 +85,36 @@ pizzarr_sample <- function(dataset = NULL,
   
 }
 
+#' Create a demo Zarr group containing R's volcano dataset
+#'
+#' Writes the \code{\link[datasets]{volcano}} matrix into a temporary
+#' DirectoryStore as a Zarr array named \code{"volcano"} and returns the
+#' opened group.
+#'
+#' @return A \code{ZarrGroup} containing a single array called \code{"volcano"}.
+#' @export
+#' @examples
+#' g <- zarr_volcano()
+#' v <- g$get_item("volcano")
+#' image(v$get_item("...")$data, main = "Maunga Whau Volcano")
+zarr_volcano <- function() {
+  dir <- file.path(tempdir(TRUE), "volcano.zarr")
+
+  unlink(dir, recursive = TRUE, force = TRUE)
+
+  z <- DirectoryStore$new(dir)
+
+  za <- zarr_create(dim(volcano), path = "volcano", store = z, overwrite = TRUE)
+
+  za$set_item("...", volcano)
+
+  g <- zarr_open_group(z)
+
+  g$get_attrs()$set_item("tile", "volcano")
+
+  g
+}
+
 #' Create an empty named list
 #'
 #' A helper function to construct an empty list which converts to a JSON object rather than a JSON array.

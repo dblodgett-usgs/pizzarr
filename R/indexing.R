@@ -404,7 +404,19 @@ OrthogonalIndexer <- R6::R6Class("OrthogonalIndexer",
                                   if(is_integer(dim_sel)) {
                                     dim_indexer <- IntDimIndexer$new(dim_sel, dim_len, dim_chunk_len)
                                   } else if(is_slice(dim_sel)) {
-                                    dim_indexer <- SliceDimIndexer$new(dim_sel, dim_len, dim_chunk_len)
+                                    if(!is.na(dim_sel$step) && dim_sel$step < 0) {
+                                      # Convert negative-step slice to integer vector
+                                      si <- dim_sel$indices(dim_len)
+                                      n <- si[4]
+                                      if(n > 0) {
+                                        dim_sel <- seq(from = si[1], by = si[3], length.out = n)
+                                        dim_indexer <- IntArrayDimIndexer$new(dim_sel, dim_len, dim_chunk_len)
+                                      } else {
+                                        dim_indexer <- IntArrayDimIndexer$new(integer(0), dim_len, dim_chunk_len)
+                                      }
+                                    } else {
+                                      dim_indexer <- SliceDimIndexer$new(dim_sel, dim_len, dim_chunk_len)
+                                    }
                                   } else if(is_bool_vec(dim_sel)) {
                                     dim_indexer <- BoolArrayDimIndexer$new(dim_sel, dim_len, dim_chunk_len)
                                   } else if(is_integer_vec(dim_sel)) {

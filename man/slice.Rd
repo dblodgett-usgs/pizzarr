@@ -11,7 +11,9 @@ slice(start, stop = NA, step = NA, zero_based = FALSE)
 
 \item{stop}{The stop index.}
 
-\item{step}{The step size.}
+\item{step}{The step size. Negative values reverse the direction of the
+slice, matching Python/NumPy semantics (e.g., \code{step = -1} iterates
+backward from \code{start} toward \code{stop}).}
 
 \item{zero_based}{The index of the dimension. By default, FALSE for R-like behavior.}
 }
@@ -20,4 +22,14 @@ A Slice instance with the specified parameters.
 }
 \description{
 Convenience function for the internal Slice R6 class constructor.
+}
+\examples{
+g <- zarr_volcano()
+v <- g$get_item("volcano")
+
+# Reverse the first 5 columns of row 1 (zero-based: 5:0:-1)
+v$get_orthogonal_selection(list(zb_slice(0, 1), zb_slice(5, 0, -1)))
+
+# Full reverse of row 1 (zero-based: -1::-1)
+v$get_orthogonal_selection(list(zb_slice(0, 1), zb_slice(-1, NA, -1)))
 }

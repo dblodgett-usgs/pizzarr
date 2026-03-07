@@ -12,7 +12,9 @@ zb_slice(start, stop = NA, step = NA)
 
 \item{stop}{The stop index.}
 
-\item{step}{The step size.}
+\item{step}{The step size. Negative values reverse the direction of the
+slice, matching Python/NumPy semantics (e.g., \code{step = -1} iterates
+backward from \code{start} toward \code{stop}).}
 }
 \value{
 A Slice instance with the specified parameters.
@@ -20,4 +22,11 @@ A Slice instance with the specified parameters.
 \description{
 Convenience function for the internal Slice R6 class constructor
 with zero-based indexing and exclusive stop index.
+}
+\examples{
+# Equivalent to Python's arr[5:0:-1]
+zb_slice(5, 0, -1)
+
+# Equivalent to Python's arr[-1::-1] (full reverse)
+zb_slice(-1, NA, -1)
 }
