@@ -17,3 +17,5 @@ tests/testthat/test_data
 pkgdown/favicon/
 .claude
 .venv
+CLAUDE.md
+TODO.md

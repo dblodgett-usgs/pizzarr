@@ -10,3 +10,5 @@
 r6-roxygen-convention.md
 .venv
 .claude
+^CLAUDE\.md$
+^TODO\.md$
