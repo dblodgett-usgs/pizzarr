@@ -1,12 +1,32 @@
 
-
 # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/meta.py#L14
+
+#' @title Zarr V2 Metadata Codec
+#'
+#' @description
+#' Handles encoding and decoding of Zarr V2 metadata. Provides methods
+#' to parse raw JSON bytes into R lists and to serialize metadata back
+#' to JSON bytes, for both array and group nodes. Array metadata includes
+#' shape, chunks, dtype, compressor, fill_value, order, and filters.
+#' Group metadata contains only the zarr_format field.
+#'
+#' @format [R6::R6Class] object.
+#'
+#' @family Metadata classes
 #' @keywords internal
 Metadata2 <- R6::R6Class("Metadata2",
     private = list(
         ZARR_FORMAT = 2
     ),
     public = list(
+        #' @description
+        #' Parse metadata from raw bytes or return as-is if already a list.
+        #'
+        #' @param s (`raw()` | `list()` | `NULL`)\cr
+        #'   Raw JSON bytes, a pre-parsed list, or `NULL`.
+        #' @param auto_unbox (`logical(1)`)\cr
+        #'   Passed to [jsonlite::toJSON()]. Default `FALSE`.
+        #' @return `list()` or `NULL`.
         decode_metadata = function(s, auto_unbox=FALSE) {
             if(is.list(s) || is.null(s)) {
                 return(s)
@@ -14,25 +34,57 @@ Metadata2 <- R6::R6Class("Metadata2",
                 return(try_fromJSON(rawToChar(s), simplifyVector = FALSE))
             }
         },
+        #' @description
+        #' Encode metadata list to raw JSON bytes.
+        #'
+        #' @param meta (`list()`)\cr
+        #'   Metadata to encode.
+        #' @param auto_unbox (`logical(1)`)\cr
+        #'   Passed to [jsonlite::toJSON()]. Default `FALSE`.
+        #' @return `raw()`.
         encode_metadata = function(meta, auto_unbox=FALSE) {
             return(charToRaw(jsonlite::toJSON(meta, auto_unbox = auto_unbox)))
         },
+        #' @description
+        #' Decode and validate V2 array metadata.
+        #'
+        #' @param s (`raw()` | `list()` | `NULL`)\cr
+        #'   Raw JSON bytes or pre-parsed list.
+        #' @return `list()` or `NULL`.
         decode_array_metadata = function(s) {
             meta <- self$decode_metadata(s)
             if(!is.null(meta)) validate_v2_meta(meta)
             return(meta)
         },
+        #' @description
+        #' Decode and validate V2 group metadata.
+        #'
+        #' @param s (`raw()` | `list()` | `NULL`)\cr
+        #'   Raw JSON bytes or pre-parsed list.
+        #' @return `list()` or `NULL`.
         decode_group_metadata = function(s) {
             meta <- self$decode_metadata(s)
             if(!is.null(meta)) validate_v2_meta(meta)
             return(meta)
         },
+        #' @description
+        #' Encode array metadata to raw JSON bytes, setting zarr_format to 2.
+        #'
+        #' @param meta (`list()`)\cr
+        #'   Array metadata list.
+        #' @return `raw()`.
         encode_array_metadata = function(meta) {
             clean_meta <- meta
             clean_meta[['zarr_format']] <- jsonlite::unbox(private$ZARR_FORMAT)
             # TODO: clean up meta even further
             return(self$encode_metadata(clean_meta))
         },
+        #' @description
+        #' Encode group metadata to raw JSON bytes, setting zarr_format to 2.
+        #'
+        #' @param meta (`list()` | `NA`)\cr
+        #'   Ignored; a fresh group metadata list is created.
+        #' @return `raw()`.
         encode_group_metadata = function(meta = NA) {
             meta <- obj_list()
             meta[['zarr_format']] <- jsonlite::unbox(private$ZARR_FORMAT)
@@ -69,37 +121,58 @@ try_fromJSON <- function(json, warn_message = "Error parsing json was",
   })
 }
 
-# V3 metadata decoder.
-# Reference: https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html
-# Mirrors the Metadata2 class but handles the V3 zarr.json format.
-# In V3, a single zarr.json per node contains zarr_format, node_type,
-# and all metadata (shape, data_type, codecs, attributes, etc.).
-# Read-only: no encode methods provided.
+#' @title Zarr V3 Metadata Codec
+#'
+#' @description
+#' Handles decoding of Zarr V3 metadata. In V3, each node has a single
+#' `zarr.json` file containing `zarr_format`, `node_type`, and all
+#' metadata (shape, data_type, codecs, chunk_grid, chunk_key_encoding,
+#' fill_value, attributes, etc.). This class is read-only; no encode
+#' methods are provided.
+#'
+#' @format [R6::R6Class] object.
+#'
+#' @family Metadata classes
 #' @keywords internal
 Metadata3 <- R6::R6Class("Metadata3",
   private = list(
     ZARR_FORMAT = 3
   ),
   public = list(
+    #' @description
+    #' Parse metadata from raw bytes or return as-is if already a list.
+    #'
+    #' @param s (`raw()` | `list()` | `NULL`)\cr
+    #'   Raw JSON bytes, a pre-parsed list, or `NULL`.
+    #' @return `list()` or `NULL`.
     decode_metadata = function(s) {
-      # Parse raw bytes or list into an R list.
       if (is.list(s) || is.null(s)) {
         return(s)
       } else {
         return(try_fromJSON(rawToChar(s), simplifyVector = FALSE))
       }
     },
+    #' @description
+    #' Decode and validate V3 array metadata from `zarr.json`.
+    #' V3 arrays have `node_type = "array"` and contain shape, data_type,
+    #' chunk_grid, chunk_key_encoding, codecs, fill_value, and attributes.
+    #'
+    #' @param s (`raw()` | `list()` | `NULL`)\cr
+    #'   Raw JSON bytes or pre-parsed list.
+    #' @return `list()` or `NULL`.
     decode_array_metadata = function(s) {
-      # Decode V3 array metadata from zarr.json.
-      # V3 arrays have node_type="array" and contain shape, data_type,
-      # chunk_grid, chunk_key_encoding, codecs, fill_value, attributes.
       meta <- self$decode_metadata(s)
       if (!is.null(meta)) validate_v3_meta(meta, expected_node_type = "array")
       return(meta)
     },
+    #' @description
+    #' Decode and validate V3 group metadata from `zarr.json`.
+    #' V3 groups have `node_type = "group"` and may contain attributes.
+    #'
+    #' @param s (`raw()` | `list()` | `NULL`)\cr
+    #'   Raw JSON bytes or pre-parsed list.
+    #' @return `list()` or `NULL`.
     decode_group_metadata = function(s) {
-      # Decode V3 group metadata from zarr.json.
-      # V3 groups have node_type="group" and may contain attributes.
       meta <- self$decode_metadata(s)
       if (!is.null(meta)) validate_v3_meta(meta, expected_node_type = "group")
       return(meta)
