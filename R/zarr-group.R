@@ -11,31 +11,31 @@
 #' @export
 ZarrGroup <- R6::R6Class("ZarrGroup",
   private = list(
-    # store TODO
+    # store A MutableMapping providing the underlying storage for the group.
     #' @keywords internal
     store = NULL,
-    # path TODO
+    # path Storage path for this group within the store.
     #' @keywords internal
     path = NULL,
-    # read_only TODO
+    # read_only TRUE if modification operations are not permitted.
     #' @keywords internal
     read_only = NULL,
-    # chunk_store TODO
+    # chunk_store Separate storage for array chunks. If not provided, the main store handles both chunks and metadata.
     #' @keywords internal
     chunk_store = NULL,
-    # cache_attrs TODO
+    # cache_attrs If TRUE (default), user attributes will be cached for faster access.
     #' @keywords internal
     cache_attrs = NULL,
-    # synchronizer TODO
+    # synchronizer Object used to synchronize write access to the group and its arrays.
     #' @keywords internal
     synchronizer = NULL,
-    # key_prefix TODO
+    # key_prefix Storage path prefix prepended to keys when accessing the store. Set to path + "/" or empty string for root.
     #' @keywords internal
     key_prefix = NULL,
-    # meta TODO
+    # meta Parsed group metadata from .zgroup (V2) or zarr.json (V3).
     #' @keywords internal
     meta = NULL,
-    # attrs TODO
+    # attrs A MutableMapping containing user-defined attributes. Attribute values must be JSON serializable.
     #' @keywords internal
     attrs = NULL,
     item_path = function(item) {
