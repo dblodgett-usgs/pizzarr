@@ -186,21 +186,25 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     },
     #' @description
     #' Get group store
+    #' @return [Store].
     get_store = function() {
       return(private$store)
     },
     #' @description
     #' Get group path
+    #' @return `character(1)`.
     get_path = function() {
       return(private$path)
     },
     #' @description
     #' Get group metadata
+    #' @return `list()` or `NULL`.
     get_meta = function() {
       return(private$meta)
     },
     #' @description
     #' Get group name
+    #' @return `character(1)`.
     get_name = function() {
       if(!is_na(private$path)) {
         name <- private$path
@@ -213,11 +217,13 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     },
     #' @description
     #' Is store read only?
+    #' @return `logical(1)`.
     get_read_only = function() {
       return(private$read_only)
     },
     #' @description
     #' Get group chunk store
+    #' @return [Store].
     get_chunk_store = function() {
       if(is_na(private$chunk_store)) {
         return(private$store)
@@ -226,17 +232,20 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     },
     #' @description
     #' Get group synchronizer
+    #' @return Synchronizer object or `NA`.
     get_synchronizer = function() {
       return(private$synchronizer)
     },
     #' @description
     #' Get group attributes
+    #' @return [Attributes].
     get_attrs = function() {
       return(private$attrs)
     },
     #' @description
     #' Test for group membership.
     #' @param item character item to test for
+    #' @return `logical(1)`.
     contains_item = function(item) {
       path <- private$item_path(item)
       return(contains_array(private$store, path) || contains_group(private$store, path))
@@ -244,6 +253,7 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     #' @description
     #' Obtain a group member.
     #' @param item character item to test for
+    #' @return [ZarrArray] or [ZarrGroup].
     get_item = function(item) {
       if(is.null(item)) {
         #for case with no internet
@@ -276,12 +286,16 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     #' create a group
     #' @param name character group name
     #' @param overwrite logical overwrite?
+    #' @return [ZarrGroup].
     create_group = function(name, overwrite = FALSE) {
       return(private$create_group_nosync(name, overwrite = overwrite))
     },
+    #' @description
+    #' Create a dataset (array) within this group.
     #' @param name character group name
     #' @param data data to add to group
     #' @param ... Extra arguments to pass to zarr_create() or array().
+    #' @return [ZarrArray].
     create_dataset = function(name, data = NA, ...) {
       return(private$create_dataset_nosync(name, data = data, ...))
     }

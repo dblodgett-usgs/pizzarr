@@ -69,7 +69,7 @@ Store <- R6::R6Class("Store",
     },
     #' @description
     #' Close the store.
-    #' @return `NULL`, invisibly.
+    #' @return `NULL`.
     close = function() {
       # Do nothing by default
     },
@@ -88,6 +88,7 @@ Store <- R6::R6Class("Store",
     #' Rename a Store path.
     #' @param src_path character source path.
     #' @param dst_path character destination path.
+    #' @return `NULL` (called for side effects).
     rename = function(src_path, dst_path) {
       if(!self$is_erasable()) {
         stop("Store is not erasable, cannot call 'rename'")
@@ -97,6 +98,7 @@ Store <- R6::R6Class("Store",
     #' @description
     #' Remove a path within a Store.
     #' @param path character path.
+    #' @return `NULL` (called for side effects).
     rmdir = function(path) {
       if(!self$is_erasable()) {
         stop("Store is not erasable, cannot call 'rmdir'")
@@ -115,6 +117,7 @@ Store <- R6::R6Class("Store",
      #' Set an item in the store.
      #' @param key The item key.
      #' @param value The item value as a vector of type raw.
+     #' @return `NULL` (called for side effects).
      set_item = function(key, value) {
 
      },
@@ -182,6 +185,7 @@ DirectoryStore <- R6::R6Class("DirectoryStore",
     #' Set an item in the store.
     #' @param key The item key.
     #' @param value The item value as a vector of type raw.
+    #' @return `NULL` (called for side effects).
     set_item = function(key, value) {
       fp <- file.path(self$root, key)
       dir.create(dirname(fp), recursive = TRUE, showWarnings = FALSE)
@@ -200,6 +204,7 @@ DirectoryStore <- R6::R6Class("DirectoryStore",
     #' @description
     #' remove a path within a Store
     #' @param path character path
+    #' @return `NULL` (called for side effects).
     rmdir = function(path=NA) {
       path <- normalize_storage_path(path)
       dir_path <- self$root
@@ -213,6 +218,7 @@ DirectoryStore <- R6::R6Class("DirectoryStore",
     #' @description
     #' list the store directory
     #' @param key character key
+    #' @return `character()` vector of entries.
     listdir = function(key=NA) {
       if(is_na(key)) {
         dir_path <- self$root
@@ -295,6 +301,7 @@ MemoryStore <- R6::R6Class("MemoryStore",
      #' Set an item in the store.
      #' @param item The item key.
      #' @param value The item value as a vector of type raw.
+     #' @return `NULL` (called for side effects).
      set_item = function(item, value) {
        segments <- strsplit(item, "/")[[1]]
        if(length(segments) > 1) {
@@ -338,6 +345,7 @@ MemoryStore <- R6::R6Class("MemoryStore",
      #' @description
      #' list the store directory
      #' @param key character key
+     #' @return `character()` vector of entries.
      listdir = function(key=NA) {
       item <- self$get_item(key)
       if(!is.list(item)) {
@@ -348,6 +356,7 @@ MemoryStore <- R6::R6Class("MemoryStore",
      #' @description
      #' remove a path within a Store
      #' @param item character item
+     #' @return `NULL` (called for side effects).
      rmdir = function(item) {
       if(is_na(item) || item == "") {
         self$root <- obj_list()
@@ -489,11 +498,12 @@ HttpStore <- R6::R6Class("HttpStore",
     }
   ),
   public = list(
-    #' @description 
-    #' Create a `HttpStore` object 
+    #' @description
+    #' Create a `HttpStore` object
     #' @param url character url of store
     #' @param options crul options
     #' @param headers crul headers
+    #' @return A new `HttpStore` object.
     initialize = function(url, options = NA, headers = NA) {
       super$initialize()
       # Remove trailing slash if necessary.
@@ -577,14 +587,16 @@ HttpStore <- R6::R6Class("HttpStore",
       return(out)
       
     },
-    #' @description 
+    #' @description
     #' Get cache time of http requests.
+    #' @return `numeric(1)`.
     get_cache_time_seconds = function() {
       return(private$cache_time_seconds)
     },
     #' @description
     #' Set cache time of http requests.
     #' @param seconds number of seconds until cache is invalid -- 0 for no cache
+    #' @return `NULL` (called for side effects).
     set_cache_time_seconds = function(seconds) {
       private$cache_time_seconds <- seconds
       # We need to re-memoize.

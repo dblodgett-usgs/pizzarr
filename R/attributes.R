@@ -95,7 +95,7 @@ Attributes <- R6::R6Class("Attributes",
     },
     #' @description
     #' refresh attributes
-    #' @return None
+    #' @return `NULL` (called for side effects).
     refresh = function() {
       if(self$cache) {
         new_val <- private$get_nosync()
@@ -113,7 +113,7 @@ Attributes <- R6::R6Class("Attributes",
     #' @description
     #' get attribute
     #' @param item character
-    #' @return item as list
+    #' @return The attribute value.
     get_item = function(item) {
       return(self$to_list()[[item]])
     },
@@ -121,7 +121,7 @@ Attributes <- R6::R6Class("Attributes",
     #' set attribute
     #' @param item character
     #' @param value value to add or update
-    #' @return none
+    #' @return `NULL` (called for side effects).
     set_item = function(item, value) {
       # TODO: support synchronizer
       private$set_item_nosync(item, value)
@@ -129,7 +129,7 @@ Attributes <- R6::R6Class("Attributes",
     #' @description
     #' delete attribute
     #' @param item character
-    #' @return none
+    #' @return `NULL` (called for side effects).
     del_item = function(item) {
       # TODO: support synchronizer
       private$del_item_nosync(item)
@@ -139,7 +139,7 @@ Attributes <- R6::R6Class("Attributes",
     #' In V3, attributes are part of zarr.json rather than a separate .zattrs file.
     #' This method pre-populates the cache so the normal .zattrs read path is skipped.
     #' @param attrs_list A named list of attributes from V3 zarr.json.
-    #' @return None (modifies cache in place).
+    #' @return `NULL` (modifies cache in place).
     set_cached_v3_attrs = function(attrs_list) {
       if (is.null(attrs_list) || length(attrs_list) == 0) {
         attrs_list <- obj_list()

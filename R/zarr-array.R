@@ -928,7 +928,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
     #' @param cache_metadata logical cache metadata?
     #' @param cache_attrs logical cache attributes?
     #' @param write_empty_chunks logical write empty chunks?
-    #' @return An `Array` instance.
+    #' @return A [ZarrArray] instance.
     initialize = function(store, path = NA, read_only = FALSE, 
                           chunk_store = NA, synchronizer = NA, 
                           cache_metadata = TRUE, cache_attrs = TRUE, 
@@ -964,21 +964,24 @@ ZarrArray <- R6::R6Class("ZarrArray",
         private$attrs <- Attributes$new(store, key = akey)
       }
 
-      private$vindex <- OIndex$new(self)
-      private$oindex <- VIndex$new(self)
+      private$oindex <- OIndex$new(self)
+      private$vindex <- VIndex$new(self)
     },
     #' @description
     #' get store from array.
+    #' @return [Store].
     get_store = function() {
       return(private$store)
     },    
     #' @description
     #' get array path
+    #' @return `character(1)` or `NA`.
     get_path = function() {
       return(private$path)
     },
     #' @description
     #' get full array name
+    #' @return `character(1)` or `NA`.
     get_name = function() {
       if(!is.na(private$path)) {
         name <- private$path
@@ -992,6 +995,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' get the basename of an array
+    #' @return `character(1)` or `NA`.
     get_basename = function() {
       name <- self$get_name()
       if(!is.na(name)) {
@@ -1002,17 +1006,20 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' get the read only property of an array (TRUE/FALSE)
+    #' @return `logical(1)`.
     get_read_only = function() {
       return(private$read_only)
     },
     #' @description
     #' set the read only property of an array
     #' @param val value to set
+    #' @return `NULL` (called for side effects).
     set_read_only = function(val) {
       private$read_only <- val
     },
     #' @description
     #' get the chunk store for an array
+    #' @return [Store].
     get_chunk_store = function() {
       if(is_na(private$chunk_store)) {
         return(private$store)
@@ -1022,6 +1029,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' get the shape of an array
+    #' @return `integer()`.
     get_shape = function() {
       private$refresh_metadata()
       return(private$shape)
@@ -1029,130 +1037,154 @@ ZarrArray <- R6::R6Class("ZarrArray",
     #' @description
     #' set or reset the size of an array
     #' @param value numeric size to set
+    #' @return `NULL` (called for side effects).
     set_shape = function(value) {
       self$resize(value)
     },
     #' @description
     #' Change the shape of the array by growing or shrinking one or more dimensions.
     #' @param ... arguments for do.call
+    #' @return `NULL` (called for side effects).
     resize = function(...) {
       args <- list(...)
       do.call(private$resize_nosync, args)
     },
     #' @description
     #' get the chunk metadata of an array
+    #' @return `integer()`.
     get_chunks = function() {
       return(private$chunks)
     },
     #' @description
     #' get the Dtype of an array
+    #' @return [Dtype].
     get_dtype = function() {
       return(private$dtype)
     },
     #' @description
     #' get the compressor of an array
+    #' @return [Codec] or `NA`.
     get_compressor = function() {
       return(private$compressor)
     },
     #' @description
     #' get the fill value of an array
+    #' @return Scalar fill value.
     get_fill_value = function() {
       return(private$fill_value)
     },
     #' @description
     #' set the fill value of an array
     #' @param val fill value to use
+    #' @return `NULL` (called for side effects).
     set_fill_value = function(val) {
       private$fill_value <- val
       private$flush_metadata_nosync()
     },
     #' @description
     #' get the storage order metadata of an array.
+    #' @return `character(1)`, `"C"` or `"F"`.
     get_order = function() {
       return(private$order)
     },
     #' @description
     #' get the filters metadata of an array
+    #' @return `list()` of [Codec] objects or `NA`.
     get_filters = function() {
       return(private$filters)
     },
     #' @description
     #' Get the synchronizer used to coordinate write access to the array.
+    #' @return Synchronizer object or `NA`.
     get_synchronizer = function() {
       return(private$synchronizer)
     },
     #' @description
     #' get attributes of array
+    #' @return [Attributes].
     get_attrs = function() {
       return(private$attrs)
     },
     #' @description
     #' get number of dimensions of array
+    #' @return `integer(1)`.
     get_ndim = function() {
       return(length(private$shape))
     },
     #' @description
     #' Get the total number of elements in the array.
+    #' @return `numeric(1)`.
     get_size = function() {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L383
       # TODO
     },
     #' @description
     #' Get the size in bytes of each item in the array.
+    #' @return `integer(1)`.
     get_itemsize = function() {
       # TODO
     },
     #' @description
     #' get number of bytes of an array
+    #' @return `numeric(1)`.
     get_nbytes = function() {
       private$refresh_metadata()
       return(self$get_size() * self$get_itemsize())
     },
     #' @description
     #' Get the total number of stored bytes for the array, including metadata and compressed chunk data.
+    #' @return `numeric(1)`.
     get_nbytes_stored = function() {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L413
       # TODO
     },
     #' @description
     #' Get the number of chunks along each dimension of the array.
+    #' @return `numeric()`.
     get_cdata_shape = function() {
       private$refresh_metadata()
       return(private$compute_cdata_shape())
     },
     #' @description
     #' Get the total number of chunks in the array.
+    #' @return `integer(1)`.
     get_nchunks = function() {
       # TODO
     },
     #' @description
     #' Get the number of chunks that have been initialized with data.
+    #' @return `integer(1)`.
     get_nchunks_initialized = function() {
       # TODO
     },
     #' @description
     #' get is_view metadata of array
+    #' @return `logical(1)`.
     get_is_view = function() {
       return(private$is_view)
     },
     #' @description
     #' get orthogonal index of array
+    #' @return [OIndex].
     get_oindex = function() {
       return(private$oindex)
     },
     #' @description
     #' get vectorized index of array
+    #' @return [VIndex].
     get_vindex = function() {
       return(private$vindex)
     },
     #' @description
     #' get write empty chunks setting of array
+    #' @return `logical(1)`.
     get_write_empty_chunks = function() {
       return(private$write_empty_chunks)
     },
     #' @description
     #' check if another object refers to the same array. does not check array data
     #' @param other other object to check
+    #' @return `logical(1)`.
     equals = function(other) {
       return(all(c(
         class(other)[[1]] == "Array",
@@ -1166,11 +1198,13 @@ ZarrArray <- R6::R6Class("ZarrArray",
     #' Iterate over the array or a range of it, yielding successive slices along the first dimension. Uses chunk caching for efficient sequential access.
     #' @param start start index of the iteration range (1-based, inclusive)
     #' @param end end index of the iteration range (1-based, inclusive)
+    #' @return `list()` of [NestedArray] slices.
     islice = function(start = NA, end = NA) {
       # TODO
     },
     #' @description
     #' Return the length of the first dimension. Raises an error for zero-dimensional arrays.
+    #' @return `integer(1)`.
     length = function() {
       if(private$shape) {
         return(private$shape[1])
@@ -1181,7 +1215,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' Subset the array.
-    #' @returns A subset of the array, as a NestedArray instance.
+    #' @return [NestedArray].
     get_item = function(selection) {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L580
       # Reference: https://github.com/gzuidhof/zarr.js/blob/master/src/core/index.ts#L266
@@ -1195,10 +1229,10 @@ ZarrArray <- R6::R6Class("ZarrArray",
       }
     },
     #' @description
-    #' get a selection of an array based on a "basic"list of slices
-
+    #' get a selection of an array based on a "basic" list of slices
     #' @param out TODO
     #' @param fields TODO
+    #' @return [NestedArray].
     get_basic_selection = function(selection = NA, out = NA, fields = NA) {
       # Refresh metadata
       if(!private$cache_metadata) {
@@ -1211,10 +1245,10 @@ ZarrArray <- R6::R6Class("ZarrArray",
       return(private$get_basic_selection_nd(selection, out = out, fields = fields))
     },
     #' @description
-    #' TODO
-
+    #' Retrieve data using orthogonal (outer) indexing.
     #' @param out TODO
     #' @param fields TODO
+    #' @return [NestedArray].
     get_orthogonal_selection = function(selection = NA, out = NA, fields = NA) {
       
       # Refresh metadata
@@ -1226,33 +1260,33 @@ ZarrArray <- R6::R6Class("ZarrArray",
       return(private$get_selection(indexer, out = out, fields = fields))
     },
     #' @description
-    #' TODO
-
+    #' Retrieve data using coordinate (point) indexing. Not yet implemented.
     #' @param out TODO
     #' @param fields TODO
+    #' @return [NestedArray].
     get_coordinate_selection = function(selection = NA, out = NA, fields = NA) {
       # TODO
     },
     #' @description
-    #' TODO
-
+    #' Retrieve data using a boolean mask. Not yet implemented.
     #' @param out TODO
     #' @param fields TODO
+    #' @return [NestedArray].
     get_mask_selection = function(selection = NA, out = NA, fields = NA) {
       # TODO
     },
     #' @description
     #' Set a subset of the array.
-
     #' @param value The value to set, as an R array() or a Zarr NestedArray instance.
+    #' @return `NULL` (called for side effects).
     set_item = function(selection, value) {
       self$set_basic_selection(selection, value)
     },
     #' @description
-    #' TODO
-
+    #' Set a selection of the array using basic (integer/slice) indexing.
     #' @param value TODO
     #' @param fields TODO
+    #' @return `NULL` (called for side effects).
     set_basic_selection = function(selection, value, fields = NA) {
       # Handle zero-dimensional arrays
       if(is.null(private$shape) || length(private$shape) == 0) {
@@ -1261,56 +1295,60 @@ ZarrArray <- R6::R6Class("ZarrArray",
       return(private$set_basic_selection_nd(selection, value = value, fields = fields))
     },
     #' @description
-    #' TODO
-
+    #' Set data using orthogonal (outer) indexing. Not yet implemented.
     #' @param value TODO
     #' @param fields TODO
+    #' @return `NULL` (called for side effects).
     set_orthogonal_selection = function(selection, value, fields = NA) {
       # TODO
     },
     #' @description
-    #' TODO
-
+    #' Set data using coordinate (point) indexing. Not yet implemented.
     #' @param value TODO
     #' @param fields TODO
+    #' @return `NULL` (called for side effects).
     set_coordinate_selection = function(selection, value, fields = NA) {
       # TODO
     },
     #' @description
-    #' TODO
-
+    #' Set data using a boolean mask. Not yet implemented.
     #' @param value TODO
     #' @param fields TODO
+    #' @return `NULL` (called for side effects).
     set_mask_selection = function(selection, value, fields = NA) {
       # TODO
     },
     #' @description
-    #' TODO
+    #' Get array diagnostic info. Not yet implemented.
+    #' @return `character(1)`.
     get_info = function() {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L2141
       # TODO
     },
     #' @description
-    #' TODO
+    #' Compute a checksum digest of the array data. Not yet implemented.
     #' @param hashname name of hash
+    #' @return `character(1)`.
     get_digest = function(hashname = "sha1") {
       # TODO
     },
     #' @description
-    #' TODO
+    #' Compute a hex-string checksum digest. Not yet implemented.
     #' @param hashname name of hash
+    #' @return `character(1)`.
     get_hexdigest = function(hashname = "sha1") {
       # TODO
     },
     #' @description
-    #' TODO
+    #' Append data to the array along the specified axis. Not yet implemented.
     #' @param data data to append
     #' @param axis axis to append
+    #' @return `NULL` (called for side effects).
     append = function(data, axis = 0) {
       private$append_nosync(data, axis)
     },
     #' @description
-    #' TODO
+    #' Return a view on the array with modified interpretation. Not yet implemented.
     #' @param shape TODO
     #' @param chunks TODO
     #' @param dtype TODO
@@ -1318,19 +1356,22 @@ ZarrArray <- R6::R6Class("ZarrArray",
     #' @param filters TODO
     #' @param read_only TODO
     #' @param synchronizer TODO
-    view = function(shape = NA, chunks = NA, dtype = NA, fill_value = NA, 
+    #' @return [ZarrArray].
+    view = function(shape = NA, chunks = NA, dtype = NA, fill_value = NA,
                     filters = NA, read_only = NA, synchronizer = NA) {
       # TODO
     },
     #' @description
-    #' TODO
+    #' Return a view with a different dtype. Not yet implemented.
     #' @param dtype TODO
+    #' @return [ZarrArray].
     astype = function(dtype) {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L2586
       # TODO
     },
     #' @description
-    #' TODO
+    #' Get the dimension separator used in chunk keys.
+    #' @return `character(1)`.
     get_dimension_separator = function() {
       return(private$dimension_separator)
     },
@@ -1358,6 +1399,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
     #' Assign values for a selection using bracket notation (for S3 method).
     #' @param ... Contains the slicing parameters, one for each dimension.
     #' Use empty space to get whole dimension e.g. \code{[1:5,,]}
+    #' @return Always raises an error.
     #' @keywords internal
     `[<-` = function(...) {
       stop("Assignment using bracket notation is not yet supported - use set_item() directly")

@@ -242,6 +242,7 @@ NestedArray <- R6::R6Class("NestedArray",
     #' Set a subset of the array.
     #' @param selection A list of slices.
     #' @param value A NestedArray or a base R array.
+    #' @return `NULL` (called for side effects, modifies `self$data` in place).
     set = function(selection, value) {
       # value should be a NestedArray.
       selection_list <- zero_based_to_one_based(selection, self$shape)
@@ -280,7 +281,7 @@ NestedArray <- R6::R6Class("NestedArray",
     #' @description
     #' Flatten the array contents.
     #' @param order Either "C", "F", or NA.
-    #' @returns The data as a flat vector.
+    #' @return The data as a flat vector.
     flatten = function(order = NA) {
       # Transpose first (if needed, based on the ordering).
 
@@ -298,7 +299,7 @@ NestedArray <- R6::R6Class("NestedArray",
     #' @description
     #' Flatten the array contents and convert to a raw vector.
     #' @param order Either "C", "F", or NA.
-    #' @returns The data as a flat raw vector.
+    #' @return The data as a flat `raw()` vector (or plain vector for object dtypes).
     flatten_to_raw = function(order = NA) {
       data_as_vec <- self$flatten(order = order)
 
@@ -332,9 +333,9 @@ NestedArray <- R6::R6Class("NestedArray",
       }
       return(buf)
     },
-    #' Convert NestArray object to R array (for S3 method)
-    #'
-    #' @return array
+    #' @description
+    #' Convert NestedArray to a base R array.
+    #' @return `array()`.
     as.array = function() {
       # Consider using drop() to simplify dimensions of 1
       return(self$data)
