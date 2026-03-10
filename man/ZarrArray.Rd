@@ -906,17 +906,17 @@ Compute a hex-string checksum digest. Not yet implemented.
 \if{html}{\out{<a id="method-ZarrArray-append"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-append}{}}}
 \subsection{Method \code{append()}}{
-Append data to the array along the specified axis. Not yet implemented.
+Append data to the array along the specified axis.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ZarrArray$append(data, axis = 0)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ZarrArray$append(data, axis = 1)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{Data to append.}
+\item{\code{data}}{Data to append. Will be coerced to array if needed.}
 
-\item{\code{axis}}{Axis to append along.}
+\item{\code{axis}}{Axis to append along (1-indexed, R convention). Default 1.}
 }
 \if{html}{\out{</div>}}
 }

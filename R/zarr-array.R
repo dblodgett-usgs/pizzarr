@@ -260,12 +260,12 @@ ZarrArray <- R6::R6Class("ZarrArray",
       if(private$is_view) {
         stop("Operation not permitted for views")
       }
-      if(!is.na(private$compressor)) {
+      if(!is_na(private$compressor)) {
         compressor_config <- private$compressor$get_config()
       } else {
         compressor_config <- NA
       }
-      if(!is.na(private$filters)) {
+      if(!is_na(private$filters)) {
         filters_config <- list()
         for(filter in private$filters) {
           filters_config <- append(filters_config, list(filter$get_config()))
@@ -912,9 +912,37 @@ ZarrArray <- R6::R6Class("ZarrArray",
       return(cdata)
     },
     # Append data to the array along the specified axis without synchronization.
-    append_nosync = function(data, axis = 0) {
-      # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L2141
-      # TODO
+    # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L2141
+    append_nosync = function(data, axis = 1) {
+      if (!is.array(data)) {
+        data <- as.array(data)
+      }
+
+      old_shape <- private$shape
+      data_shape <- dim(data)
+      if (length(data_shape) != length(old_shape)) {
+        stop("incompatible number of dimensions for append")
+      }
+      for (i in seq_along(old_shape)) {
+        if (i != axis && data_shape[i] != old_shape[i]) {
+          stop("shape mismatch on non-append axis")
+        }
+      }
+
+      new_shape <- old_shape
+      new_shape[axis] <- old_shape[axis] + data_shape[axis]
+      do.call(self$resize, as.list(new_shape))
+
+      selection <- list()
+      for (i in seq_along(new_shape)) {
+        if (i == axis) {
+          selection[[i]] <- slice(old_shape[axis] + 1, new_shape[axis])
+        } else {
+          selection[[i]] <- slice(1, new_shape[i])
+        }
+      }
+
+      self$set_item(selection, data)
     }
   ),
   public = list(
@@ -1361,11 +1389,11 @@ ZarrArray <- R6::R6Class("ZarrArray",
       # TODO
     },
     #' @description
-    #' Append data to the array along the specified axis. Not yet implemented.
-    #' @param data Data to append.
-    #' @param axis Axis to append along.
+    #' Append data to the array along the specified axis.
+    #' @param data Data to append. Will be coerced to array if needed.
+    #' @param axis Axis to append along (1-indexed, R convention). Default 1.
     #' @return `NULL` (called for side effects).
-    append = function(data, axis = 0) {
+    append = function(data, axis = 1) {
       private$append_nosync(data, axis)
     },
     #' @description
