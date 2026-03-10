@@ -56,7 +56,7 @@ test_that("V3 1d contiguous gzip int16", {
 })
 
 test_that("V3 1d contiguous blosc int16", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "1d.contiguous.blosc.i2", read_only = TRUE)
   expect_equal(a$get_shape(), 4)
@@ -65,7 +65,7 @@ test_that("V3 1d contiguous blosc int16", {
 })
 
 test_that("V3 1d contiguous int32", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "1d.contiguous.i4", read_only = TRUE)
   expect_equal(a$get_shape(), 4)
@@ -74,7 +74,7 @@ test_that("V3 1d contiguous int32", {
 })
 
 test_that("V3 1d contiguous uint8", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "1d.contiguous.u1", read_only = TRUE)
   expect_equal(a$get_shape(), 4)
@@ -83,7 +83,7 @@ test_that("V3 1d contiguous uint8", {
 })
 
 test_that("V3 1d contiguous float32 little-endian", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "1d.contiguous.f4.le", read_only = TRUE)
   expect_equal(a$get_shape(), 4)
@@ -92,7 +92,7 @@ test_that("V3 1d contiguous float32 little-endian", {
 })
 
 test_that("V3 1d contiguous float32 big-endian", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "1d.contiguous.f4.be", read_only = TRUE)
   expect_equal(a$get_shape(), 4)
@@ -101,7 +101,7 @@ test_that("V3 1d contiguous float32 big-endian", {
 })
 
 test_that("V3 1d contiguous float64", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "1d.contiguous.f8", read_only = TRUE)
   expect_equal(a$get_shape(), 4)
@@ -110,7 +110,7 @@ test_that("V3 1d contiguous float64", {
 })
 
 test_that("V3 1d contiguous bool", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "1d.contiguous.b1", read_only = TRUE)
   expect_equal(a$get_shape(), 4)
@@ -119,7 +119,7 @@ test_that("V3 1d contiguous bool", {
 })
 
 test_that("V3 1d chunked int16", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "1d.chunked.i2", read_only = TRUE)
   expect_equal(a$get_shape(), 4)
@@ -128,7 +128,7 @@ test_that("V3 1d chunked int16", {
 })
 
 test_that("V3 1d chunked ragged int16", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "1d.chunked.ragged.i2", read_only = TRUE)
   expect_equal(a$get_shape(), 5)
@@ -139,7 +139,7 @@ test_that("V3 1d chunked ragged int16", {
 # --- 2D arrays ---
 
 test_that("V3 2d contiguous int16", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "2d.contiguous.i2", read_only = TRUE)
   expect_equal(a$get_shape(), c(2L, 2L))
@@ -153,7 +153,7 @@ test_that("V3 2d contiguous int16", {
 })
 
 test_that("V3 2d chunked int16", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "2d.chunked.i2", read_only = TRUE)
   expect_equal(a$get_shape(), c(2L, 2L))
@@ -165,7 +165,7 @@ test_that("V3 2d chunked int16", {
 })
 
 test_that("V3 2d chunked ragged int16", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "2d.chunked.ragged.i2", read_only = TRUE)
   expect_equal(a$get_shape(), c(3L, 3L))
@@ -180,7 +180,7 @@ test_that("V3 2d chunked ragged int16", {
 # --- 3D arrays ---
 
 test_that("V3 3d contiguous int16", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "3d.contiguous.i2", read_only = TRUE)
   expect_equal(a$get_shape(), c(3L, 3L, 3L))
@@ -197,7 +197,7 @@ test_that("V3 3d contiguous int16", {
 })
 
 test_that("V3 3d chunked int16", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "3d.chunked.i2", read_only = TRUE)
   expect_equal(a$get_shape(), c(3L, 3L, 3L))
@@ -209,7 +209,7 @@ test_that("V3 3d chunked int16", {
 })
 
 test_that("V3 3d chunked mixed C-order int16", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "3d.chunked.mixed.i2.C", read_only = TRUE)
   expect_equal(a$get_shape(), c(3L, 3L, 3L))
@@ -221,7 +221,7 @@ test_that("V3 3d chunked mixed C-order int16", {
 })
 
 test_that("V3 3d chunked mixed F-order int16", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   store <- DirectoryStore$new(v3_root)
   a <- ZarrArray$new(store, path = "3d.chunked.mixed.i2.F", read_only = TRUE)
   expect_equal(a$get_shape(), c(3L, 3L, 3L))
@@ -582,7 +582,7 @@ test_that("zarr-python V3 uint8 1d (uncompressed, chunked)", {
 })
 
 test_that("zarr-python V3 float32 1d (blosc)", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   g <- zarr_open(zp_root, mode = "r")
   a <- g$get_item("float32_1d")
   expect_equal(a$get_shape(), 4)

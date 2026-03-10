@@ -10,13 +10,11 @@ vignette: >
 ### Setup
 
 `pizzarr` does not depend on the `raster` package, but we use it for this demo to render an RGB array to an image using R.
-We also install the `Rarr` package to be able to use Blosc as the decompression codec, since the image we want to load is Blosc-compressed.
+We also install the `blosc` package to be able to use Blosc as the decompression codec, since the image we want to load is Blosc-compressed.
 
 ```r
 install.packages("raster")
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("Rarr")
+install.packages("blosc")
 ```
 
 ### Demo

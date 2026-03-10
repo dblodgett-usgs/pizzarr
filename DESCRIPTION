@@ -44,7 +44,7 @@ Suggests:
     pkgdown,
     rmarkdown,
     crul,
-    Rarr,
+    blosc,
     vcr (>= 0.6.0),
     pbapply,
     parallel,

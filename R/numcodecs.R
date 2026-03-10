@@ -526,8 +526,8 @@ BloscCodec <- R6::R6Class("BloscCodec",
       self$shuffle <- shuffle
       self$blocksize <- blocksize # TODO: use
       # No config options for blosc.
-      if (!require("Rarr", quietly = TRUE)) {
-        stop("Rarr package must be installed to use the Blosc codec. Install with BiocManager::install('Rarr')")
+      if (!requireNamespace("blosc", quietly = TRUE)) {
+        stop("blosc package must be installed to use the Blosc codec. Install with install.packages('blosc')")
       }
       warn_if_unk_args(list(...), "BloscCodec")
     },
@@ -539,15 +539,18 @@ BloscCodec <- R6::R6Class("BloscCodec",
     #'   The ZarrArray instance.
     #' @return Compressed data.
     encode = function(buf, zarr_arr) {
-      if(self$cname != "lz4" || self$clevel != 5) {
-        stop("Only lz4 compression level 5 is enabled for writing.")
-      }
       dtype_size <- zarr_arr$get_dtype()$num_bytes
-       result <- .Call(
-        "compress_chunk_BLOSC",
+      shuffle_str <- if (is.logical(self$shuffle)) {
+        if (self$shuffle) "shuffle" else "noshuffle"
+      } else {
+        c("noshuffle", "shuffle", "bitshuffle")[as.integer(self$shuffle) + 1L]
+      }
+      result <- blosc::blosc_compress(
         buf,
-        as.integer(dtype_size),
-        PACKAGE = "Rarr"
+        compressor = self$cname,
+        level = as.integer(self$clevel),
+        shuffle = shuffle_str,
+        typesize = as.integer(dtype_size)
       )
       return(result)
     },
@@ -559,11 +562,7 @@ BloscCodec <- R6::R6Class("BloscCodec",
     #'   The ZarrArray instance.
     #' @return Un-compressed data.
     decode = function(buf, zarr_arr) {
-      result <- .Call(
-        "decompress_chunk_BLOSC",
-        buf,
-        PACKAGE = "Rarr"
-      )
+      result <- blosc::blosc_decompress(buf)
       return(result)
     },
     #' @description

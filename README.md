@@ -116,8 +116,8 @@ pkgdown::build_site()
 ## Resources
 
 - [Discussion of Zarr in R](https://github.com/zarr-developers/community/issues/18)
-- [Rarr](https://github.com/grimbough/Rarr)
-  - Note: `pizzarr` has an optional dependency on Rarr for Blosc (de)compression.
+- [blosc](https://cran.r-project.org/web/packages/blosc/index.html)
+  - Note: `pizzarr` has an optional dependency on `blosc` for Blosc (de)compression.
 - R package development
   - [R packages](https://r-pkgs.org/)
   - [roxygen2 syntax](https://roxygen2.r-lib.org/articles/rd-formatting.html)
