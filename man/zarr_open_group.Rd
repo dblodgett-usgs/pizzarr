@@ -43,6 +43,10 @@ for storage of both chunks and metadata.}
 \item{storage_options}{: dict
 If using an fsspec URL to create the store, these will be passed to
 the backend implementation. Ignored otherwise.}
+
+\item{zarr_format}{: int, optional
+Zarr format version. Use \code{2L} (default) for Zarr V2 or \code{3L}
+for Zarr V3.}
 }
 \value{
 ZarrGroup

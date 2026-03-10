@@ -353,6 +353,9 @@ init_group <- function(
 #'     is deleted. This setting enables sparser storage, as only chunks with
 #'     non-fill-value data are stored, at the expense of overhead associated
 #'     with checking the data of each chunk.
+#' @param zarr_format : int, optional
+#'     Zarr format version. Use \code{2L} (default) for Zarr V2 or \code{3L}
+#'     for Zarr V3.
 #' @returns ZarrArray
 #' @export
 zarr_create <- function(
