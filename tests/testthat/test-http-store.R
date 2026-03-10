@@ -100,32 +100,24 @@ test_that("http broken", {
 })
 
 vcr::use_cassette("http_github_pattern", {
-  
-  test_that("http_listdir", {
-    
-    url <- "https://raw.githubusercontent.com/zarr-developers/pizzarr/main/inst/extdata/dog.ome.zarr"
-    
+
+  test_that("http github pattern", {
+
+    url <- "https://raw.githubusercontent.com/DOI-USGS/rnz/main/inst/extdata/bcsd.zarr"
+
     z <- zarr_open(url)
-    
+
     s <- pizzarr::HttpStore$new(url)
     expect_equal(class(s), c("HttpStore", "Store", "R6"))
-    
+
     g <- zarr_open_group(s, mode = "r", path = NA)
-    
+
     expect_equal(z$get_attrs()$to_list(), g$get_attrs()$to_list())
-    
-    attrs <- g$get_attrs()$to_list()
-    
-    expect_equal(names(attrs), c("multiscales", "omero"))
-    
-    resolution_paths <- attrs$multiscales[[1]]$datasets[[1]]$path
-    first_resolution <- resolution_paths[[1]]
-    
-    zarr_arr <- g$get_item(first_resolution)
-    
-    expect_equal(zarr_arr$get_shape(),
-                 c(3L, 500L, 750L))
-    
+
+    zarr_arr <- g$get_item("pr")
+
+    expect_equal(zarr_arr$get_shape(), c(12L, 33L, 81L))
+
   })
-  
+
 })
