@@ -70,9 +70,11 @@ pizzarr_sample <- function(dataset = NULL,
       
       new_z <- file.path(tdir, basename(zarr_zips[z]))
 
-      utils::download.file(paste0("https://github.com/zarr-developers/pizzarr/raw/refs/heads/main/docs/data/", 
-                                           basename(zarr_zips[z])), mode = "wb",
-                                    new_z)
+      url <- paste0("https://github.com/zarr-developers/pizzarr/raw/refs/heads/main/docs/data/",
+                     basename(zarr_zips[z]))
+      client <- crul::HttpClient$new(url = url)
+      res <- client$get(disk = new_z)
+      res$raise_for_status()
       
       zarr_zips[z] <- new_z
     }
@@ -272,6 +274,9 @@ compute_size <- function(shape) {
 #' @return Whether the value is NA
 #' @keywords internal
 is_na <- function(val) {
+  if(is.environment(val)) {
+    return(FALSE)
+  }
   if(length(val) != 1) {
     # Including when val is integer(0), character(0), etc.
     return(FALSE)
