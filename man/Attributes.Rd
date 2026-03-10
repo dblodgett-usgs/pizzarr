@@ -53,7 +53,8 @@ Create a new Attributes instance.
   key = NA,
   read_only = FALSE,
   cache = TRUE,
-  synchronizer = NA
+  synchronizer = NA,
+  zarr_format = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -74,6 +75,9 @@ Whether to cache attributes.}
 
 \item{\code{synchronizer}}{(\code{ANY} or \code{NA})\cr
 Synchronizer object.}
+
+\item{\code{zarr_format}}{(\code{integer(1)} or \code{NULL})\cr
+Zarr format version: \code{2L} for V2 (\code{.zattrs}), \code{3L} for V3 (zarr.json).}
 }
 \if{html}{\out{</div>}}
 }

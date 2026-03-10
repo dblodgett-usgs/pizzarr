@@ -22,7 +22,8 @@ zarr_create(
   read_only = FALSE,
   object_codec = NA,
   dimension_separator = NA,
-  write_empty_chunks = TRUE
+  write_empty_chunks = TRUE,
+  zarr_format = 2L
 )
 }
 \arguments{

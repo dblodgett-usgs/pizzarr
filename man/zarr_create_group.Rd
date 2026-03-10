@@ -10,7 +10,8 @@ zarr_create_group(
   chunk_store = NA,
   cache_attrs = TRUE,
   synchronizer = NA,
-  path = NA
+  path = NA,
+  zarr_format = 2L
 )
 }
 \arguments{

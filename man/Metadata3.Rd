@@ -25,6 +25,8 @@ Other Metadata classes:
 \item \href{#method-Metadata3-decode_metadata}{\code{Metadata3$decode_metadata()}}
 \item \href{#method-Metadata3-decode_array_metadata}{\code{Metadata3$decode_array_metadata()}}
 \item \href{#method-Metadata3-decode_group_metadata}{\code{Metadata3$decode_group_metadata()}}
+\item \href{#method-Metadata3-encode_array_metadata}{\code{Metadata3$encode_array_metadata()}}
+\item \href{#method-Metadata3-encode_group_metadata}{\code{Metadata3$encode_group_metadata()}}
 \item \href{#method-Metadata3-clone}{\code{Metadata3$clone()}}
 }
 }
@@ -92,6 +94,54 @@ Raw JSON bytes or pre-parsed list.}
 }
 \subsection{Returns}{
 \code{list()} or \code{NULL}.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Metadata3-encode_array_metadata"></a>}}
+\if{latex}{\out{\hypertarget{method-Metadata3-encode_array_metadata}{}}}
+\subsection{Method \code{encode_array_metadata()}}{
+Encode V3 array metadata to raw JSON bytes.
+Expects a list built by \code{create_v3_array_meta()} with all scalars
+already wrapped in \code{jsonlite::unbox()}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Metadata3$encode_array_metadata(meta)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{meta}}{(\code{list()})\cr
+V3 array metadata list.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{raw()}.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Metadata3-encode_group_metadata"></a>}}
+\if{latex}{\out{\hypertarget{method-Metadata3-encode_group_metadata}{}}}
+\subsection{Method \code{encode_group_metadata()}}{
+Encode V3 group metadata to raw JSON bytes.
+Produces \verb{\{"zarr_format":3,"node_type":"group","attributes":\{\}\}}.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Metadata3$encode_group_metadata(meta = NA, attributes = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{meta}}{(\code{list()} | \code{NA})\cr
+Ignored; a fresh group metadata list is created.}
+
+\item{\code{attributes}}{(\code{list()})\cr
+Attributes to embed in zarr.json. Default empty.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{raw()}.
 }
 }
 \if{html}{\out{<hr>}}

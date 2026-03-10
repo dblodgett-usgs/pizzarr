@@ -23,7 +23,8 @@ zarr_open_array(
   cache_attrs = TRUE,
   object_codec = NA,
   dimension_separator = NA,
-  write_empty_chunks = TRUE
+  write_empty_chunks = TRUE,
+  zarr_format = 2L
 )
 }
 \arguments{

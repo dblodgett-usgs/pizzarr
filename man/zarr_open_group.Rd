@@ -11,7 +11,8 @@ zarr_open_group(
   synchronizer = NA,
   path = NA,
   chunk_store = NA,
-  storage_options = NA
+  storage_options = NA,
+  zarr_format = 2L
 )
 }
 \arguments{
