@@ -70,6 +70,26 @@ test_that("normalize_integer_selection with invalid input", {
   expect_error(f3())
 })
 
+test_that("normalize_list_selection handles slice objects without crashing", {
+  # Regression: is.na() on Slice R6 objects causes
+
+  # "invalid 'x' type in 'x || y'" in non-interactive contexts (e.g. knitr)
+  s1 <- slice(1, 3)
+  s2 <- slice(2, 5)
+  shape <- c(10, 10)
+  result <- normalize_list_selection(list(s1, s2), shape)
+  expect_true(is_slice(result[[1]]))
+  expect_true(is_slice(result[[2]]))
+})
+
+test_that("normalize_list_selection handles mix of slice and integer", {
+  s1 <- slice(1, 3)
+  shape <- c(10, 10)
+  result <- normalize_list_selection(list(s1, 2L), shape)
+  expect_true(is_slice(result[[1]]))
+  expect_true(is_slice(result[[2]]))  # integer gets converted to slice
+})
+
 test_that("normalize_chunks", {
   res <- normalize_chunks(c(10), c(100), 1)
   expect_equal(res, c(10))
