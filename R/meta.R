@@ -102,6 +102,27 @@ try_from_zmeta <- function(key, store) {
   store$get_consolidated_metadata()$metadata[[key]]
 }
 
+# Encode a fill_value for V3 zarr.json.
+# V3 requires special float values as JSON strings: NaN, Infinity, -Infinity.
+# Normal numeric values are returned as unboxed scalars.
+# @param fill_value The fill value to encode.
+# @return A value suitable for inclusion in a jsonlite::toJSON call.
+# @keywords internal
+encode_fill_value_v3 <- function(fill_value) {
+  if (is.numeric(fill_value) && length(fill_value) == 1) {
+    # NOTE: in R, is.na(NaN) == TRUE, so check is.nan() first
+    if (is.nan(fill_value)) return(jsonlite::unbox("NaN"))
+    if (is.infinite(fill_value) && fill_value > 0) return(jsonlite::unbox("Infinity"))
+    if (is.infinite(fill_value) && fill_value < 0) return(jsonlite::unbox("-Infinity"))
+    if (is.na(fill_value)) return(jsonlite::unbox(0))
+    return(jsonlite::unbox(fill_value))
+  }
+  if (is.logical(fill_value) && length(fill_value) == 1) {
+    return(jsonlite::unbox(fill_value))
+  }
+  jsonlite::unbox(fill_value)
+}
+
 try_fromJSON <- function(json, warn_message = "Error parsing json was",
                          simplifyVector = FALSE) {
   out <- tryCatch({
@@ -176,6 +197,34 @@ Metadata3 <- R6::R6Class("Metadata3",
       meta <- self$decode_metadata(s)
       if (!is.null(meta)) validate_v3_meta(meta, expected_node_type = "group")
       return(meta)
+    },
+    #' @description
+    #' Encode V3 array metadata to raw JSON bytes.
+    #' Expects a list built by `create_v3_array_meta()` with all scalars
+    #' already wrapped in `jsonlite::unbox()`.
+    #'
+    #' @param meta (`list()`)\cr
+    #'   V3 array metadata list.
+    #' @return `raw()`.
+    encode_array_metadata = function(meta) {
+      return(charToRaw(jsonlite::toJSON(meta, auto_unbox = FALSE)))
+    },
+    #' @description
+    #' Encode V3 group metadata to raw JSON bytes.
+    #' Produces `{"zarr_format":3,"node_type":"group","attributes":{}}`.
+    #'
+    #' @param meta (`list()` | `NA`)\cr
+    #'   Ignored; a fresh group metadata list is created.
+    #' @param attributes (`list()`)\cr
+    #'   Attributes to embed in zarr.json. Default empty.
+    #' @return `raw()`.
+    encode_group_metadata = function(meta = NA, attributes = NULL) {
+      group_meta <- list(
+        zarr_format = jsonlite::unbox(3L),
+        node_type = jsonlite::unbox("group"),
+        attributes = if (is.null(attributes)) obj_list() else attributes
+      )
+      return(charToRaw(jsonlite::toJSON(group_meta, auto_unbox = FALSE)))
     }
   )
 )
@@ -254,4 +303,56 @@ create_zarray_meta <- function(shape = NA, chunks = NA, dtype = NA, compressor =
     dimension_separator = jsonlite::unbox(dimension_separator)
   )
   return(zarray_meta)
+}
+
+#' Create a V3 array metadata list.
+#' Parallel to create_zarray_meta() for V2. Builds the zarr.json metadata
+#' for a V3 array node. All scalar values are wrapped with jsonlite::unbox()
+#' so the result can be encoded with toJSON(auto_unbox = FALSE).
+#'
+#' @param shape Integer vector. Array shape.
+#' @param chunks Integer vector. Chunk shape.
+#' @param dtype Character. V2-style dtype string (e.g., "<f8", "|b1").
+#' @param compressor Codec object or NA.
+#' @param fill_value Fill value (numeric, logical, or NA).
+#' @param order Character. "C" or "F" (unused in V3 codec pipeline but stored).
+#' @param filters List of Codec objects or NA.
+#' @param chunk_key_encoding List or NULL. If NULL, defaults to default "/" encoding.
+#' @param attributes List or NULL. Embedded attributes. Default empty.
+#' @param dimension_names Character vector or NULL. Omitted from zarr.json if NULL.
+#' @return A list ready for jsonlite::toJSON encoding.
+#' @keywords internal
+create_v3_array_meta <- function(shape, chunks, dtype, compressor, fill_value,
+                                  order, filters, chunk_key_encoding = NULL,
+                                  attributes = NULL, dimension_names = NULL) {
+  codecs <- build_v3_codec_pipeline(compressor, filters, dtype)
+  dtype_info <- v2_dtype_to_v3_dtype(dtype)
+
+  if (is.null(chunk_key_encoding)) {
+    chunk_key_encoding <- list(
+      name = jsonlite::unbox("default"),
+      configuration = list(separator = jsonlite::unbox("/"))
+    )
+  }
+
+  meta <- list(
+    zarr_format = jsonlite::unbox(3L),
+    node_type = jsonlite::unbox("array"),
+    shape = shape,
+    data_type = jsonlite::unbox(dtype_info$data_type),
+    chunk_grid = list(
+      name = jsonlite::unbox("regular"),
+      configuration = list(chunk_shape = chunks)
+    ),
+    chunk_key_encoding = chunk_key_encoding,
+    codecs = codecs,
+    fill_value = encode_fill_value_v3(fill_value),
+    attributes = if (is.null(attributes)) obj_list() else attributes
+  )
+
+  if (!is.null(dimension_names)) {
+    meta$dimension_names <- dimension_names
+  }
+
+  meta
 }

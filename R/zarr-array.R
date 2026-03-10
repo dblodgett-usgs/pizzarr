@@ -260,6 +260,28 @@ ZarrArray <- R6::R6Class("ZarrArray",
       if(private$is_view) {
         stop("Operation not permitted for views")
       }
+
+      if (!is.null(private$zarr_format) && private$zarr_format == 3L) {
+        # V3: rebuild and rewrite zarr.json with updated metadata
+        v3_meta <- create_v3_array_meta(
+          shape = private$shape,
+          chunks = private$chunks,
+          dtype = private$dtype$dtype,
+          compressor = private$compressor,
+          fill_value = private$fill_value,
+          order = private$order,
+          filters = private$filters,
+          chunk_key_encoding = private$chunk_key_encoding,
+          attributes = if (!is.null(private$attrs)) private$attrs$to_list() else obj_list()
+        )
+        mkey <- paste0(private$key_prefix, ZARR_JSON)
+        meta3 <- Metadata3$new()
+        encoded_meta <- meta3$encode_array_metadata(v3_meta)
+        private$store$set_item(mkey, encoded_meta)
+        return(invisible(NULL))
+      }
+
+      # V2 path
       if(!is_na(private$compressor)) {
         compressor_config <- private$compressor$get_config()
       } else {
@@ -276,11 +298,12 @@ ZarrArray <- R6::R6Class("ZarrArray",
       zarray_meta <- list(
         shape = private$shape,
         chunks = private$chunks,
-        dtype = private$dtype$dtype,
+        dtype = jsonlite::unbox(private$dtype$dtype),
         compressor = compressor_config,
-        fill_value = private$fill_value,
-        order = private$order,
-        filters = filters_config
+        fill_value = jsonlite::unbox(private$fill_value),
+        order = jsonlite::unbox(private$order),
+        filters = filters_config,
+        dimension_separator = jsonlite::unbox(private$dimension_separator)
       )
       mkey <- paste0(private$key_prefix, ARRAY_META_KEY)
 
@@ -742,10 +765,6 @@ ZarrArray <- R6::R6Class("ZarrArray",
     chunk_setitem = function(chunk_coords, chunk_selection, value, fields = NA) {
       # Reference: https://github.com/gzuidhof/zarr.js/blob/15e3a3f00eb19f0133018fb65f002311ea53bb7c/src/core/index.ts#L625
       
-      if (private$order == "C" && self$get_ndim() > 1) {
-        stop("Setting content for arrays in C-order is not yet supported.")
-      }
-
       # Obtain key for chunk storage
       chunk_key <- private$chunk_key(chunk_coords)
 
@@ -992,13 +1011,13 @@ ZarrArray <- R6::R6Class("ZarrArray",
       if (!is.null(private$zarr_format) && private$zarr_format == 3L) {
         # V3: attributes are embedded in zarr.json, not in a separate .zattrs.
         # Create Attributes object and pre-populate cache from parsed metadata.
-        private$attrs <- Attributes$new(store, key = akey)
+        private$attrs <- Attributes$new(store, key = akey, zarr_format = 3L)
         if (!is.null(private$meta$attributes)) {
           private$attrs$set_cached_v3_attrs(private$meta$attributes)
         }
       } else {
         # V2: attributes in separate .zattrs file (existing behavior)
-        private$attrs <- Attributes$new(store, key = akey)
+        private$attrs <- Attributes$new(store, key = akey, zarr_format = 2L)
       }
 
       private$oindex <- OIndex$new(self)

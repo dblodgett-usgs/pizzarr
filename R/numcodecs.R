@@ -873,3 +873,115 @@ v3_codec_to_v2_config <- function(codec_name, config) {
 
   v2_config
 }
+
+# Convert a V2 codec config (with $id) to a V3 codec entry (with $name + $configuration).
+# Inverse of v3_codec_to_v2_config.
+#
+# @param config Named list. V2 codec config with "$id" field (as from get_config()).
+# @param dtype Character or NULL. V2 dtype string for blosc typesize (e.g., "<f4").
+# @return Named list with "$name" and optional "$configuration".
+# @keywords internal
+v2_config_to_v3_codec <- function(config, dtype = NULL) {
+  codec_id <- as.character(config$id)
+
+  V2_TO_V3_NAME <- list(
+    "gzip"  = "gzip",
+    "zstd"  = "zstd",
+    "blosc" = "blosc",
+    "zlib"  = "zlib",
+    "bz2"   = "bz2",
+    "lzma"  = "lzma"
+  )
+
+  v3_name <- V2_TO_V3_NAME[[codec_id]]
+  if (is.null(v3_name)) {
+    stop("Cannot convert V2 codec '", codec_id, "' to V3 codec: unsupported codec")
+  }
+
+  # Build config without the "id" field
+  v3_cfg <- config[names(config) != "id"]
+
+  if (codec_id == "blosc") {
+    # Convert integer shuffle to string ("noshuffle", "shuffle", "bitshuffle")
+    if (!is.null(v3_cfg$shuffle)) {
+      shuffle_int <- as.integer(v3_cfg$shuffle)
+      v3_cfg$shuffle <- jsonlite::unbox(switch(as.character(shuffle_int),
+        "0" = "noshuffle",
+        "1" = "shuffle",
+        "2" = "bitshuffle",
+        "shuffle"
+      ))
+    }
+    # Add typesize (required in V3 blosc)
+    typesize <- if (!is.null(dtype)) get_dtype_numbytes(dtype) else 0L
+    v3_cfg$typesize <- jsonlite::unbox(as.integer(typesize))
+    # Ensure blocksize is present
+    if (is.null(v3_cfg$blocksize)) {
+      v3_cfg$blocksize <- jsonlite::unbox(0L)
+    }
+  }
+
+  if (codec_id == "zstd") {
+    # zarr-python includes checksum in V3 zstd config
+    if (is.null(v3_cfg$checksum)) {
+      v3_cfg$checksum <- jsonlite::unbox(FALSE)
+    }
+  }
+
+  result <- list(name = jsonlite::unbox(v3_name))
+  if (length(v3_cfg) > 0) {
+    result$configuration <- v3_cfg
+  }
+  result
+}
+
+# Build a V3 codec pipeline from V2 compressor, filters, and dtype.
+# Pipeline order (write/encode direction):
+#   1. ArrayBytesCodec: "bytes" (with endian) or "vlen-utf8" if VLenUtf8 filter present
+#   2. BytesBytesCodec: compressor (if any)
+#
+# @param compressor Codec object or NA.
+# @param filters List of Codec objects or NA.
+# @param dtype Character. V2 dtype string (e.g., "<f8").
+# @return List of V3 codec entry lists.
+# @keywords internal
+build_v3_codec_pipeline <- function(compressor, filters, dtype) {
+  codecs <- list()
+
+  # Check for vlen-utf8 filter (it becomes the ArrayBytesCodec in V3)
+  has_vlen <- FALSE
+  if (!is_na(filters) && is.list(filters)) {
+    has_vlen <- any(sapply(filters, function(f) {
+      inherits(f, "VLenUtf8Codec") ||
+        (!is.null(f$id) && as.character(f$id) == "vlen-utf8")
+    }))
+  }
+
+  # 1. ArrayBytesCodec (exactly one, required)
+  if (has_vlen) {
+    codecs <- append(codecs, list(list(name = jsonlite::unbox("vlen-utf8"))))
+  } else {
+    dtype_info <- v2_dtype_to_v3_dtype(dtype)
+    if (is.na(dtype_info$endian)) {
+      # Single-byte type: omit endian field entirely
+      codecs <- append(codecs, list(list(name = jsonlite::unbox("bytes"))))
+    } else {
+      codecs <- append(codecs, list(list(
+        name = jsonlite::unbox("bytes"),
+        configuration = list(endian = jsonlite::unbox(dtype_info$endian))
+      )))
+    }
+  }
+
+  # 2. BytesBytesCodec (compressor, if any)
+  if (!is_na(compressor)) {
+    compressor_cfg <- if (inherits(compressor, "Codec")) {
+      compressor$get_config()
+    } else {
+      compressor
+    }
+    codecs <- append(codecs, list(v2_config_to_v3_codec(compressor_cfg, dtype)))
+  }
+
+  codecs
+}

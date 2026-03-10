@@ -38,6 +38,9 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     # attrs A MutableMapping containing user-defined attributes. Attribute values must be JSON serializable.
     #' @keywords internal
     attrs = NULL,
+    # zarr_format Integer 2L or 3L. Detected from the store on initialization.
+    #' @keywords internal
+    zarr_format = NULL,
     item_path = function(item) {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/hierarchy.py#L302
       # Check if the first character is a forward slash
@@ -51,12 +54,13 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     create_group_nosync = function(name, overwrite = FALSE) {
       path <- private$item_path(name)
 
-      # create terminal group
+      # create terminal group (inherit parent's zarr_format)
       init_group(
         private$store,
         path = path,
         overwrite = overwrite,
-        chunk_store = self$get_chunk_store()
+        chunk_store = self$get_chunk_store(),
+        zarr_format = if (!is.null(private$zarr_format)) private$zarr_format else 2L
       )
 
       # create group instance
@@ -71,7 +75,7 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     },
     create_dataset_nosync = function(name, data = NA, ...) {
       path <- private$item_path(name)
-      
+
       kwargs <- list(...)
 
       if(is.null(kwargs[['synchronizer']])) {
@@ -85,6 +89,9 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
         cache_attrs <- kwargs[['cache_attrs']]
       }
 
+      # Inherit parent group's zarr_format unless explicitly overridden
+      grp_zarr_format <- if (!is.null(private$zarr_format)) private$zarr_format else 2L
+
       if(is_na(data)) {
         a <- zarr_create(
           store = private$store,
@@ -92,6 +99,7 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
           chunk_store = self$get_chunk_store(),
           synchronizer = synchronizer,
           cache_attrs = cache_attrs,
+          zarr_format = grp_zarr_format,
           ...
         )
       } else {
@@ -102,6 +110,7 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
           chunk_store = self$get_chunk_store(),
           synchronizer = synchronizer,
           cache_attrs = cache_attrs,
+          zarr_format = grp_zarr_format,
           ...
         )
       }
@@ -147,6 +156,7 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
       v3_key <- paste0(private$key_prefix, ZARR_JSON)
       if (store$contains_item(v3_key)) {
         # V3 group: read zarr.json, validate as group
+        private$zarr_format <- 3L
         meta_bytes <- store$get_item(v3_key)
         meta3 <- Metadata3$new()
         private$meta <- meta3$decode_group_metadata(meta_bytes)
@@ -154,12 +164,14 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
         # V3 attributes are embedded in zarr.json
         a_key <- paste0(private$key_prefix, ATTRS_KEY)
         private$attrs <- Attributes$new(store, key = a_key, read_only = read_only,
-                                        cache = cache_attrs, synchronizer = synchronizer)
+                                        cache = cache_attrs, synchronizer = synchronizer,
+                                        zarr_format = 3L)
         if (!is.null(private$meta$attributes)) {
           private$attrs$set_cached_v3_attrs(private$meta$attributes)
         }
       } else {
         # V2 group: existing logic unchanged
+        private$zarr_format <- 2L
         m_key <- paste0(private$key_prefix, GROUP_META_KEY)
 
         # use consolidated metadata if exists
@@ -186,7 +198,8 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
         # V2 attributes in separate .zattrs file
         a_key <- paste0(private$key_prefix, ATTRS_KEY)
         private$attrs <- Attributes$new(store, key = a_key, read_only = read_only,
-                                        cache = cache_attrs, synchronizer = synchronizer)
+                                        cache = cache_attrs, synchronizer = synchronizer,
+                                        zarr_format = 2L)
       }
     },
     #' @description

@@ -177,6 +177,44 @@ v3_dtype_to_v2_dtype <- function(v3_dtype, endian = "little") {
   paste0(prefix, entry$v2)
 }
 
+# Convert V2 numpy-style dtype string to V3 data_type name and endian.
+# Inverse of v3_dtype_to_v2_dtype.
+#
+# @param dtype Character. V2 dtype string (e.g., "<f8", "|b1", ">i4").
+# @return Named list with:
+#   $data_type - V3 data type string (e.g., "float64", "bool")
+#   $endian    - "little", "big", or NA_character_ (for single-byte types)
+# @keywords internal
+v2_dtype_to_v3_dtype <- function(dtype) {
+  dtype_parts <- get_dtype_parts(dtype)
+
+  V2_TO_V3_MAP <- list(
+    "b1" = "bool",
+    "i1" = "int8",
+    "i2" = "int16",
+    "i4" = "int32",
+    "i8" = "int64",
+    "u1" = "uint8",
+    "u2" = "uint16",
+    "u4" = "uint32",
+    "u8" = "uint64",
+    "f4" = "float32",
+    "f8" = "float64"
+  )
+
+  key <- paste0(dtype_parts$basic_type, dtype_parts$num_bytes)
+  v3_name <- V2_TO_V3_MAP[[key]]
+  if (is.null(v3_name)) {
+    stop("Cannot convert V2 dtype '", dtype, "' to V3 data_type: unsupported type '", key, "'")
+  }
+
+  # "|" prefix means byte order not applicable (single-byte types: bool, int8, uint8)
+  endian_str <- get_dtype_endianness(dtype)
+  endian <- if (endian_str == "nr") NA_character_ else endian_str
+
+  list(data_type = v3_name, endian = endian)
+}
+
 #' The Zarr Dtype class.
 #' @title Dtype Class
 #' @docType class

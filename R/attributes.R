@@ -13,8 +13,24 @@ Attributes <- R6::R6Class("Attributes",
   private = list(
 
     cached_aslist = NULL,
+    zarr_format = NULL,
 
     get_nosync = function() {
+      if (!is.null(private$zarr_format) && private$zarr_format == 3L) {
+        # V3: read attributes from zarr.json
+        zarr_json_key <- sub(ATTRS_KEY, ZARR_JSON, self$key, fixed = TRUE)
+        raw_meta <- tryCatch({
+          self$store$get_item(zarr_json_key)
+        }, error = function(cond) {
+          if (is_key_error(cond)) return(NULL)
+          stop(cond)
+        })
+        if (is.null(raw_meta)) return(obj_list())
+        meta <- try_fromJSON(rawToChar(raw_meta), simplifyVector = FALSE)
+        if (is.null(meta$attributes)) return(obj_list())
+        return(meta$attributes)
+      }
+      # V2: read from .zattrs
       attrs_list <- tryCatch({
         # TODO: use consolidated metadata?
         return(self$store$metadata_class$decode_metadata(self$store$get_item(self$key), auto_unbox = TRUE))
@@ -27,6 +43,17 @@ Attributes <- R6::R6Class("Attributes",
       return(attrs_list)
     },
     put_nosync = function(d) {
+      if (!is.null(private$zarr_format) && private$zarr_format == 3L) {
+        # V3: read-modify-write zarr.json (attributes are embedded)
+        zarr_json_key <- sub(ATTRS_KEY, ZARR_JSON, self$key, fixed = TRUE)
+        raw_meta <- self$store$get_item(zarr_json_key)
+        meta <- try_fromJSON(rawToChar(raw_meta), simplifyVector = FALSE)
+        meta$attributes <- d
+        encoded <- charToRaw(jsonlite::toJSON(meta, auto_unbox = TRUE))
+        self$store$set_item(zarr_json_key, encoded)
+        if (self$cache) private$cached_aslist <- d
+        return(invisible(NULL))
+      }
       self$store$set_item(self$key, self$store$metadata_class$encode_metadata(d, auto_unbox = TRUE))
       if(self$cache) {
         private$cached_aslist <- d
@@ -66,8 +93,10 @@ Attributes <- R6::R6Class("Attributes",
     #'   Whether to cache attributes.
     #' @param synchronizer (`ANY` or `NA`)\cr
     #'   Synchronizer object.
+    #' @param zarr_format (`integer(1)` or `NULL`)\cr
+    #'   Zarr format version: `2L` for V2 (`.zattrs`), `3L` for V3 (zarr.json).
     #' @return An `Attributes` instance.
-    initialize = function(store, key = NA, read_only = FALSE, cache = TRUE, synchronizer = NA) {
+    initialize = function(store, key = NA, read_only = FALSE, cache = TRUE, synchronizer = NA, zarr_format = NULL) {
       if(is_na(key)) {
         key <- ATTRS_KEY
       }
@@ -76,13 +105,14 @@ Attributes <- R6::R6Class("Attributes",
       self$read_only <- read_only
       self$cache <- cache
       private$cached_aslist <- NA
-      
+      private$zarr_format <- zarr_format
+
       check_cached <- try_from_zmeta(key, store)
-      
+
       if(cache & !is.null(check_cached)) {
         private$cached_aslist <- check_cached
       }
-      
+
       self$synchronizer <- synchronizer
     },
     #' @description
