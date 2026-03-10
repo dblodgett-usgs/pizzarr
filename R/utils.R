@@ -1,3 +1,5 @@
+utils::globalVariables("volcano")
+
 #' pizzarr demo data
 #' @details
 #' For directory stores, unzips the store to a temporary directory
