@@ -1,4 +1,4 @@
-url: https://keller-mark.github.io/pizzarr/
+url: https://zarr-developers.github.io/pizzarr/
 
 template:
   bootstrap: 5
@@ -91,6 +91,7 @@ reference:
   - is_scalar
   - is_key_error
   - pizzarr_sample
+  - zarr_volcano
   - pizzarr_option_defaults
   - Dtype
 
