@@ -920,14 +920,23 @@ ZarrArray <- R6::R6Class("ZarrArray",
   public = list(
     #' @description
     #' Create a new ZarrArray instance.
-    #' @param store Array store already initialized.
-    #' @param path character path
-    #' @param read_only logical read only?
-    #' @param chunk_store Separate storage for chunks. If not provided, `store` will be used for both chunks and metadata.
-    #' @param synchronizer Object used to synchronize write access to the array.
-    #' @param cache_metadata logical cache metadata?
-    #' @param cache_attrs logical cache attributes?
-    #' @param write_empty_chunks logical write empty chunks?
+    #' @param store ([Store])\cr
+    #'   Array store, already initialized.
+    #' @param path (`character(1)`)\cr
+    #'   Storage path.
+    #' @param read_only (`logical(1)`)\cr
+    #'   Whether the array is read-only.
+    #' @param chunk_store ([Store] or `NA`)\cr
+    #'   Separate storage for chunks. If not provided, `store` will be used
+    #'   for both chunks and metadata.
+    #' @param synchronizer (`ANY` or `NA`)\cr
+    #'   Object used to synchronize write access to the array.
+    #' @param cache_metadata (`logical(1)`)\cr
+    #'   Whether to cache metadata.
+    #' @param cache_attrs (`logical(1)`)\cr
+    #'   Whether to cache attributes.
+    #' @param write_empty_chunks (`logical(1)`)\cr
+    #'   Whether to write empty chunks.
     #' @return A [ZarrArray] instance.
     initialize = function(store, path = NA, read_only = FALSE, 
                           chunk_store = NA, synchronizer = NA, 
@@ -1012,7 +1021,8 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' set the read only property of an array
-    #' @param val value to set
+    #' @param val (`logical(1)`)\cr
+    #'   Value to set.
     #' @return `NULL` (called for side effects).
     set_read_only = function(val) {
       private$read_only <- val
@@ -1036,14 +1046,15 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' set or reset the size of an array
-    #' @param value numeric size to set
+    #' @param value (`integer()`)\cr
+    #'   Numeric size to set.
     #' @return `NULL` (called for side effects).
     set_shape = function(value) {
       self$resize(value)
     },
     #' @description
     #' Change the shape of the array by growing or shrinking one or more dimensions.
-    #' @param ... arguments for do.call
+    #' @param ... Arguments for do.call.
     #' @return `NULL` (called for side effects).
     resize = function(...) {
       args <- list(...)
@@ -1075,7 +1086,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' set the fill value of an array
-    #' @param val fill value to use
+    #' @param val Fill value to use.
     #' @return `NULL` (called for side effects).
     set_fill_value = function(val) {
       private$fill_value <- val
@@ -1183,7 +1194,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' check if another object refers to the same array. does not check array data
-    #' @param other other object to check
+    #' @param other Other object to check.
     #' @return `logical(1)`.
     equals = function(other) {
       return(all(c(
@@ -1196,8 +1207,8 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' Iterate over the array or a range of it, yielding successive slices along the first dimension. Uses chunk caching for efficient sequential access.
-    #' @param start start index of the iteration range (1-based, inclusive)
-    #' @param end end index of the iteration range (1-based, inclusive)
+    #' @param start Start index of the iteration range (1-based, inclusive).
+    #' @param end End index of the iteration range (1-based, inclusive).
     #' @return `list()` of [NestedArray] slices.
     islice = function(start = NA, end = NA) {
       # TODO
@@ -1215,6 +1226,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' Subset the array.
+    #' @param selection Selection specifying the subset to retrieve.
     #' @return [NestedArray].
     get_item = function(selection) {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L580
@@ -1229,9 +1241,10 @@ ZarrArray <- R6::R6Class("ZarrArray",
       }
     },
     #' @description
-    #' get a selection of an array based on a "basic" list of slices
-    #' @param out TODO
-    #' @param fields TODO
+    #' Get a selection of an array based on a "basic" list of slices.
+    #' @param selection Selection specifying the subset to retrieve.
+    #' @param out Not yet implemented.
+    #' @param fields Not yet implemented.
     #' @return [NestedArray].
     get_basic_selection = function(selection = NA, out = NA, fields = NA) {
       # Refresh metadata
@@ -1246,8 +1259,9 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' Retrieve data using orthogonal (outer) indexing.
-    #' @param out TODO
-    #' @param fields TODO
+    #' @param selection Selection specifying the subset to retrieve.
+    #' @param out Not yet implemented.
+    #' @param fields Not yet implemented.
     #' @return [NestedArray].
     get_orthogonal_selection = function(selection = NA, out = NA, fields = NA) {
       
@@ -1261,22 +1275,25 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' Retrieve data using coordinate (point) indexing. Not yet implemented.
-    #' @param out TODO
-    #' @param fields TODO
+    #' @param selection Selection specifying the subset to retrieve.
+    #' @param out Not yet implemented.
+    #' @param fields Not yet implemented.
     #' @return [NestedArray].
     get_coordinate_selection = function(selection = NA, out = NA, fields = NA) {
       # TODO
     },
     #' @description
     #' Retrieve data using a boolean mask. Not yet implemented.
-    #' @param out TODO
-    #' @param fields TODO
+    #' @param selection Selection specifying the subset to retrieve.
+    #' @param out Not yet implemented.
+    #' @param fields Not yet implemented.
     #' @return [NestedArray].
     get_mask_selection = function(selection = NA, out = NA, fields = NA) {
       # TODO
     },
     #' @description
     #' Set a subset of the array.
+    #' @param selection Selection specifying the subset to set.
     #' @param value The value to set, as an R array() or a Zarr NestedArray instance.
     #' @return `NULL` (called for side effects).
     set_item = function(selection, value) {
@@ -1284,8 +1301,9 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' Set a selection of the array using basic (integer/slice) indexing.
-    #' @param value TODO
-    #' @param fields TODO
+    #' @param selection Selection specifying the subset to set.
+    #' @param value The value to set.
+    #' @param fields Not yet implemented.
     #' @return `NULL` (called for side effects).
     set_basic_selection = function(selection, value, fields = NA) {
       # Handle zero-dimensional arrays
@@ -1296,24 +1314,27 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' Set data using orthogonal (outer) indexing. Not yet implemented.
-    #' @param value TODO
-    #' @param fields TODO
+    #' @param selection Selection specifying the subset to set.
+    #' @param value Not yet implemented.
+    #' @param fields Not yet implemented.
     #' @return `NULL` (called for side effects).
     set_orthogonal_selection = function(selection, value, fields = NA) {
       # TODO
     },
     #' @description
     #' Set data using coordinate (point) indexing. Not yet implemented.
-    #' @param value TODO
-    #' @param fields TODO
+    #' @param selection Selection specifying the subset to set.
+    #' @param value Not yet implemented.
+    #' @param fields Not yet implemented.
     #' @return `NULL` (called for side effects).
     set_coordinate_selection = function(selection, value, fields = NA) {
       # TODO
     },
     #' @description
     #' Set data using a boolean mask. Not yet implemented.
-    #' @param value TODO
-    #' @param fields TODO
+    #' @param selection Selection specifying the subset to set.
+    #' @param value Not yet implemented.
+    #' @param fields Not yet implemented.
     #' @return `NULL` (called for side effects).
     set_mask_selection = function(selection, value, fields = NA) {
       # TODO
@@ -1327,35 +1348,35 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' Compute a checksum digest of the array data. Not yet implemented.
-    #' @param hashname name of hash
+    #' @param hashname Name of hash.
     #' @return `character(1)`.
     get_digest = function(hashname = "sha1") {
       # TODO
     },
     #' @description
     #' Compute a hex-string checksum digest. Not yet implemented.
-    #' @param hashname name of hash
+    #' @param hashname Name of hash.
     #' @return `character(1)`.
     get_hexdigest = function(hashname = "sha1") {
       # TODO
     },
     #' @description
     #' Append data to the array along the specified axis. Not yet implemented.
-    #' @param data data to append
-    #' @param axis axis to append
+    #' @param data Data to append.
+    #' @param axis Axis to append along.
     #' @return `NULL` (called for side effects).
     append = function(data, axis = 0) {
       private$append_nosync(data, axis)
     },
     #' @description
     #' Return a view on the array with modified interpretation. Not yet implemented.
-    #' @param shape TODO
-    #' @param chunks TODO
-    #' @param dtype TODO
-    #' @param fill_value TODO
-    #' @param filters TODO
-    #' @param read_only TODO
-    #' @param synchronizer TODO
+    #' @param shape Not yet implemented.
+    #' @param chunks Not yet implemented.
+    #' @param dtype Not yet implemented.
+    #' @param fill_value Not yet implemented.
+    #' @param filters Not yet implemented.
+    #' @param read_only Not yet implemented.
+    #' @param synchronizer Not yet implemented.
     #' @return [ZarrArray].
     view = function(shape = NA, chunks = NA, dtype = NA, fill_value = NA,
                     filters = NA, read_only = NA, synchronizer = NA) {
@@ -1363,7 +1384,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' Return a view with a different dtype. Not yet implemented.
-    #' @param dtype TODO
+    #' @param dtype Not yet implemented.
     #' @return [ZarrArray].
     astype = function(dtype) {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L2586
@@ -1406,7 +1427,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' Convert Zarr object to R array (for S3 method). Note that this loads all data into memory.
-    #' @return array
+    #' @return An R `array`.
     as.array = function() {
       return(self$get_item("...")$data)
     }
@@ -1415,8 +1436,8 @@ ZarrArray <- R6::R6Class("ZarrArray",
 
 #' S3 method for custom bracket subsetting
 #'
-#' @param obj object
-#' @param ... dots
+#' @param obj Object.
+#' @param ... Dots.
 #' @keywords internal 
 #' @export
 `[.ZarrArray` <- function(obj, ...) {
@@ -1425,8 +1446,10 @@ ZarrArray <- R6::R6Class("ZarrArray",
 
 #' S3 method for custom bracket assignment
 #'
-#' @param value array or ZarrArray
-#' @keywords internal 
+#' @param obj Object.
+#' @param ... Dots.
+#' @param value Array or ZarrArray.
+#' @keywords internal
 #' @export
 `[<-.ZarrArray` <- function(obj, ..., value) {
   obj$`[<-`(value)
@@ -1434,8 +1457,8 @@ ZarrArray <- R6::R6Class("ZarrArray",
 
 #' S3 method for as.array
 #'
-#' @param x object 
-#' @param ... not used
+#' @param x Object.
+#' @param ... Not used.
 #' @keywords internal
 #' @export
 as.array.ZarrArray = function(x, ...) {
@@ -1447,9 +1470,9 @@ as.array.ZarrArray = function(x, ...) {
 #' @description
 #' given information about user preferences and environment conditions, returns a function
 #' and cluster object.
-#' @param on_windows logical indicating if windows restrictions should apply
-#' @param parallel_option integer, or "future" to control how parallelization occurs.
-#' @param progress logical to control whether `pbapply` is used such that progress is printed.
+#' @param on_windows Logical indicating if windows restrictions should apply.
+#' @param parallel_option Integer, or "future" to control how parallelization occurs.
+#' @param progress Logical to control whether `pbapply` is used such that progress is printed.
 #' @return list containing the function to use in parallel operations, a cluster object to be used 
 #' in parallel operations, and whether or not the cluster object needs to be closed.
 #' 

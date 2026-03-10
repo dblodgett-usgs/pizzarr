@@ -5,7 +5,7 @@
 \alias{Order}
 \title{Order Class}
 \description{
-TODO
+Determines the sort order of an integer array selection (increasing, decreasing, or unordered).
 }
 \details{
 The Order class.
@@ -43,7 +43,7 @@ checking order of numbers
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{a}}{vector of numbers}
+\item{\code{a}}{Vector of numbers.}
 }
 \if{html}{\out{</div>}}
 }

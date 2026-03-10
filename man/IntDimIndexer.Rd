@@ -12,16 +12,16 @@ The Zarr IntDimIndexer class.
 }
 \keyword{internal}
 \section{Super class}{
-\code{pizzarr::DimIndexer} -> \code{IntDimIndexer}
+\code{\link[pizzarr:DimIndexer]{pizzarr::DimIndexer}} -> \code{IntDimIndexer}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{dim_sel}}{TODO}
+\item{\code{dim_sel}}{Normalized integer index for this dimension.}
 
-\item{\code{dim_len}}{TODO}
+\item{\code{dim_len}}{Length of the array along this dimension.}
 
-\item{\code{dim_chunk_len}}{TODO}
+\item{\code{dim_chunk_len}}{Length of a chunk along this dimension.}
 }
 \if{html}{\out{</div>}}
 }
@@ -45,11 +45,11 @@ Create a new IntDimIndexer instance.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{dim_sel}}{integer dimension selection}
+\item{\code{dim_sel}}{Integer dimension selection.}
 
-\item{\code{dim_len}}{integer dimension length}
+\item{\code{dim_len}}{Integer dimension length.}
 
-\item{\code{dim_chunk_len}}{integer dimension chunk length}
+\item{\code{dim_chunk_len}}{Integer dimension chunk length.}
 }
 \if{html}{\out{</div>}}
 }
@@ -61,7 +61,7 @@ A \code{IntDimIndexer} instance.
 \if{html}{\out{<a id="method-IntDimIndexer-iter"></a>}}
 \if{latex}{\out{\hypertarget{method-IntDimIndexer-iter}{}}}
 \subsection{Method \code{iter()}}{
-TODO
+Compute the chunk dimension projection for the single selected index.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{IntDimIndexer$iter()}\if{html}{\out{</div>}}
 }

@@ -13,12 +13,12 @@ The Zarr BasicIndexer class.
 }
 \keyword{internal}
 \section{Super class}{
-\code{pizzarr::Indexer} -> \code{BasicIndexer}
+\code{\link[pizzarr:Indexer]{pizzarr::Indexer}} -> \code{BasicIndexer}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{dim_indexers}}{TODO}
+\item{\code{dim_indexers}}{List of per-dimension indexers (IntDimIndexer or SliceDimIndexer).}
 }
 \if{html}{\out{</div>}}
 }
@@ -42,9 +42,9 @@ Create a new BasicIndexer instance.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{selection as with ZarrArray, scalar, string, or Slice. "..." and ":" supported for string}
+\item{\code{selection}}{Selection as with ZarrArray: scalar, string, or Slice.}
 
-\item{\code{array}}{ZarrArray object that will be indexed}
+\item{\code{array}}{\link{ZarrArray} object that will be indexed.}
 }
 \if{html}{\out{</div>}}
 }

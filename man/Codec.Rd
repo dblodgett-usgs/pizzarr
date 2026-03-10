@@ -46,9 +46,11 @@ Compress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The un-compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The un-compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -68,9 +70,11 @@ Decompress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }

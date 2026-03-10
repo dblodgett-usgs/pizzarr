@@ -119,7 +119,7 @@ Close the store.
 }
 
 \subsection{Returns}{
-\code{NULL}, invisibly.
+\code{NULL}.
 }
 }
 \if{html}{\out{<hr>}}
@@ -160,6 +160,9 @@ Rename a Store path.
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+\code{NULL} (called for side effects).
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Store-rmdir"></a>}}
@@ -176,6 +179,9 @@ Remove a path within a Store.
 \item{\code{path}}{character path.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
@@ -215,6 +221,9 @@ Set an item in the store.
 \item{\code{value}}{The item value as a vector of type raw.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}

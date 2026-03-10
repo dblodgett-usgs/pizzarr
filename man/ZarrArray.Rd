@@ -7,9 +7,6 @@
 \format{
 \link[R6:R6Class]{R6::R6Class}
 }
-\value{
-A subset of the array, as a NestedArray instance.
-}
 \description{
 Instantiate an array from an initialized store.
 }
@@ -99,26 +96,35 @@ Create a new ZarrArray instance.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{store}}{Array store already initialized.}
+\item{\code{store}}{(\link{Store})\cr
+Array store, already initialized.}
 
-\item{\code{path}}{character path}
+\item{\code{path}}{(\code{character(1)})\cr
+Storage path.}
 
-\item{\code{read_only}}{logical read only?}
+\item{\code{read_only}}{(\code{logical(1)})\cr
+Whether the array is read-only.}
 
-\item{\code{chunk_store}}{TODO}
+\item{\code{chunk_store}}{(\link{Store} or \code{NA})\cr
+Separate storage for chunks. If not provided, \code{store} will be used
+for both chunks and metadata.}
 
-\item{\code{synchronizer}}{TODO}
+\item{\code{synchronizer}}{(\code{ANY} or \code{NA})\cr
+Object used to synchronize write access to the array.}
 
-\item{\code{cache_metadata}}{logical cache metadata?}
+\item{\code{cache_metadata}}{(\code{logical(1)})\cr
+Whether to cache metadata.}
 
-\item{\code{cache_attrs}}{logical cache attributes?}
+\item{\code{cache_attrs}}{(\code{logical(1)})\cr
+Whether to cache attributes.}
 
-\item{\code{write_empty_chunks}}{logical write empty chunks?}
+\item{\code{write_empty_chunks}}{(\code{logical(1)})\cr
+Whether to write empty chunks.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-An \code{Array} instance.
+A \link{ZarrArray} instance.
 }
 }
 \if{html}{\out{<hr>}}
@@ -130,6 +136,9 @@ get store from array.
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_store()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\link{Store}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_path"></a>}}
@@ -140,6 +149,9 @@ get array path
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_path()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{character(1)} or \code{NA}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_name"></a>}}
@@ -150,6 +162,9 @@ get full array name
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_name()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{character(1)} or \code{NA}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_basename"></a>}}
@@ -160,6 +175,9 @@ get the basename of an array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_basename()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{character(1)} or \code{NA}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_read_only"></a>}}
@@ -170,6 +188,9 @@ get the read only property of an array (TRUE/FALSE)
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_read_only()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{logical(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-set_read_only"></a>}}
@@ -183,9 +204,13 @@ set the read only property of an array
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{val}}{value to set}
+\item{\code{val}}{(\code{logical(1)})\cr
+Value to set.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
@@ -197,6 +222,9 @@ get the chunk store for an array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_chunk_store()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\link{Store}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_shape"></a>}}
@@ -207,6 +235,9 @@ get the shape of an array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_shape()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{integer()}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-set_shape"></a>}}
@@ -220,9 +251,13 @@ set or reset the size of an array
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{value}}{numeric size to set}
+\item{\code{value}}{(\code{integer()})\cr
+Numeric size to set.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
@@ -237,9 +272,12 @@ Change the shape of the array by growing or shrinking one or more dimensions.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{...}}{arguments for do.call}
+\item{\code{...}}{Arguments for do.call.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
@@ -251,6 +289,9 @@ get the chunk metadata of an array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_chunks()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{integer()}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_dtype"></a>}}
@@ -261,6 +302,9 @@ get the Dtype of an array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_dtype()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\link{Dtype}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_compressor"></a>}}
@@ -271,6 +315,9 @@ get the compressor of an array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_compressor()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\link{Codec} or \code{NA}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_fill_value"></a>}}
@@ -281,6 +328,9 @@ get the fill value of an array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_fill_value()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+Scalar fill value.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-set_fill_value"></a>}}
@@ -294,9 +344,12 @@ set the fill value of an array
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{val}}{fill value to use}
+\item{\code{val}}{Fill value to use.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
@@ -308,6 +361,9 @@ get the storage order metadata of an array.
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_order()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{character(1)}, \code{"C"} or \code{"F"}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_filters"></a>}}
@@ -318,16 +374,22 @@ get the filters metadata of an array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_filters()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{list()} of \link{Codec} objects or \code{NA}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_synchronizer"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_synchronizer}{}}}
 \subsection{Method \code{get_synchronizer()}}{
-get the synchronizer of an array TODO: not implemented
+Get the synchronizer used to coordinate write access to the array.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_synchronizer()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+Synchronizer object or \code{NA}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_attrs"></a>}}
@@ -338,6 +400,9 @@ get attributes of array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_attrs()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\link{Attributes}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_ndim"></a>}}
@@ -348,26 +413,35 @@ get number of dimensions of array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_ndim()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{integer(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_size"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_size}{}}}
 \subsection{Method \code{get_size()}}{
-get size of an array TODO: not implemented
+Get the total number of elements in the array.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_size()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{numeric(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_itemsize"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_itemsize}{}}}
 \subsection{Method \code{get_itemsize()}}{
-TODO: not implemented
+Get the size in bytes of each item in the array.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_itemsize()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{integer(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_nbytes"></a>}}
@@ -378,46 +452,61 @@ get number of bytes of an array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_nbytes()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{numeric(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_nbytes_stored"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_nbytes_stored}{}}}
 \subsection{Method \code{get_nbytes_stored()}}{
-TODO
+Get the total number of stored bytes for the array, including metadata and compressed chunk data.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_nbytes_stored()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{numeric(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_cdata_shape"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_cdata_shape}{}}}
 \subsection{Method \code{get_cdata_shape()}}{
-TODO
+Get the number of chunks along each dimension of the array.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_cdata_shape()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{numeric()}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_nchunks"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_nchunks}{}}}
 \subsection{Method \code{get_nchunks()}}{
-TODO
+Get the total number of chunks in the array.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_nchunks()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{integer(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_nchunks_initialized"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_nchunks_initialized}{}}}
 \subsection{Method \code{get_nchunks_initialized()}}{
-TODO
+Get the number of chunks that have been initialized with data.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_nchunks_initialized()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{integer(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_is_view"></a>}}
@@ -428,6 +517,9 @@ get is_view metadata of array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_is_view()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{logical(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_oindex"></a>}}
@@ -438,6 +530,9 @@ get orthogonal index of array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_oindex()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\link{OIndex}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_vindex"></a>}}
@@ -448,6 +543,9 @@ get vectorized index of array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_vindex()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\link{VIndex}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_write_empty_chunks"></a>}}
@@ -458,6 +556,9 @@ get write empty chunks setting of array
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_write_empty_chunks()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{logical(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-equals"></a>}}
@@ -471,16 +572,19 @@ check if another object refers to the same array. does not check array data
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{other}}{other object to check}
+\item{\code{other}}{Other object to check.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{logical(1)}.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-islice"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-islice}{}}}
 \subsection{Method \code{islice()}}{
-TODO
+Iterate over the array or a range of it, yielding successive slices along the first dimension. Uses chunk caching for efficient sequential access.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$islice(start = NA, end = NA)}\if{html}{\out{</div>}}
 }
@@ -488,22 +592,28 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{start}}{start of slice}
+\item{\code{start}}{Start index of the iteration range (1-based, inclusive).}
 
-\item{\code{end}}{end of slice}
+\item{\code{end}}{End index of the iteration range (1-based, inclusive).}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{list()} of \link{NestedArray} slices.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-length"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-length}{}}}
 \subsection{Method \code{length()}}{
-TODO
+Return the length of the first dimension. Raises an error for zero-dimensional arrays.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$length()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{integer(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_item"></a>}}
@@ -517,18 +627,19 @@ Subset the array.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{Selections are lists containing either scalars, strings, or Slice objects. Two character
-literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific
-array dimension.}
+\item{\code{selection}}{Selection specifying the subset to retrieve.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\link{NestedArray}.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_basic_selection"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_basic_selection}{}}}
 \subsection{Method \code{get_basic_selection()}}{
-get a selection of an array based on a "basic"list of slices
+Get a selection of an array based on a "basic" list of slices.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_basic_selection(selection = NA, out = NA, fields = NA)}\if{html}{\out{</div>}}
 }
@@ -536,22 +647,23 @@ get a selection of an array based on a "basic"list of slices
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{Selections are lists containing either scalars, strings, or Slice objects. Two character
-literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific
-array dimension.}
+\item{\code{selection}}{Selection specifying the subset to retrieve.}
 
-\item{\code{out}}{TODO}
+\item{\code{out}}{Not yet implemented.}
 
-\item{\code{fields}}{TODO}
+\item{\code{fields}}{Not yet implemented.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\link{NestedArray}.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_orthogonal_selection"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_orthogonal_selection}{}}}
 \subsection{Method \code{get_orthogonal_selection()}}{
-TODO
+Retrieve data using orthogonal (outer) indexing.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_orthogonal_selection(selection = NA, out = NA, fields = NA)}\if{html}{\out{</div>}}
 }
@@ -559,22 +671,23 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{Selections are lists containing either scalars, strings, or Slice objects. Two character
-literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific
-array dimension.}
+\item{\code{selection}}{Selection specifying the subset to retrieve.}
 
-\item{\code{out}}{TODO}
+\item{\code{out}}{Not yet implemented.}
 
-\item{\code{fields}}{TODO}
+\item{\code{fields}}{Not yet implemented.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\link{NestedArray}.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_coordinate_selection"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_coordinate_selection}{}}}
 \subsection{Method \code{get_coordinate_selection()}}{
-TODO
+Retrieve data using coordinate (point) indexing. Not yet implemented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_coordinate_selection(selection = NA, out = NA, fields = NA)}\if{html}{\out{</div>}}
 }
@@ -582,22 +695,23 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{Selections are lists containing either scalars, strings, or Slice objects. Two character
-literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific
-array dimension.}
+\item{\code{selection}}{Selection specifying the subset to retrieve.}
 
-\item{\code{out}}{TODO}
+\item{\code{out}}{Not yet implemented.}
 
-\item{\code{fields}}{TODO}
+\item{\code{fields}}{Not yet implemented.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\link{NestedArray}.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_mask_selection"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_mask_selection}{}}}
 \subsection{Method \code{get_mask_selection()}}{
-TODO
+Retrieve data using a boolean mask. Not yet implemented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_mask_selection(selection = NA, out = NA, fields = NA)}\if{html}{\out{</div>}}
 }
@@ -605,15 +719,16 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{Selections are lists containing either scalars, strings, or Slice objects. Two character
-literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific
-array dimension.}
+\item{\code{selection}}{Selection specifying the subset to retrieve.}
 
-\item{\code{out}}{TODO}
+\item{\code{out}}{Not yet implemented.}
 
-\item{\code{fields}}{TODO}
+\item{\code{fields}}{Not yet implemented.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\link{NestedArray}.
 }
 }
 \if{html}{\out{<hr>}}
@@ -628,20 +743,21 @@ Set a subset of the array.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{Selections are lists containing either scalars, strings, or Slice objects. Two character
-literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific
-array dimension.}
+\item{\code{selection}}{Selection specifying the subset to set.}
 
 \item{\code{value}}{The value to set, as an R array() or a Zarr NestedArray instance.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-set_basic_selection"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-set_basic_selection}{}}}
 \subsection{Method \code{set_basic_selection()}}{
-TODO
+Set a selection of the array using basic (integer/slice) indexing.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$set_basic_selection(selection, value, fields = NA)}\if{html}{\out{</div>}}
 }
@@ -649,22 +765,23 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{Selections are lists containing either scalars, strings, or Slice objects. Two character
-literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific
-array dimension.}
+\item{\code{selection}}{Selection specifying the subset to set.}
 
-\item{\code{value}}{TODO}
+\item{\code{value}}{The value to set.}
 
-\item{\code{fields}}{TODO}
+\item{\code{fields}}{Not yet implemented.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-set_orthogonal_selection"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-set_orthogonal_selection}{}}}
 \subsection{Method \code{set_orthogonal_selection()}}{
-TODO
+Set data using orthogonal (outer) indexing. Not yet implemented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$set_orthogonal_selection(selection, value, fields = NA)}\if{html}{\out{</div>}}
 }
@@ -672,22 +789,23 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{Selections are lists containing either scalars, strings, or Slice objects. Two character
-literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific
-array dimension.}
+\item{\code{selection}}{Selection specifying the subset to set.}
 
-\item{\code{value}}{TODO}
+\item{\code{value}}{Not yet implemented.}
 
-\item{\code{fields}}{TODO}
+\item{\code{fields}}{Not yet implemented.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-set_coordinate_selection"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-set_coordinate_selection}{}}}
 \subsection{Method \code{set_coordinate_selection()}}{
-TODO
+Set data using coordinate (point) indexing. Not yet implemented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$set_coordinate_selection(selection, value, fields = NA)}\if{html}{\out{</div>}}
 }
@@ -695,22 +813,23 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{Selections are lists containing either scalars, strings, or Slice objects. Two character
-literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific
-array dimension.}
+\item{\code{selection}}{Selection specifying the subset to set.}
 
-\item{\code{value}}{TODO}
+\item{\code{value}}{Not yet implemented.}
 
-\item{\code{fields}}{TODO}
+\item{\code{fields}}{Not yet implemented.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-set_mask_selection"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-set_mask_selection}{}}}
 \subsection{Method \code{set_mask_selection()}}{
-TODO
+Set data using a boolean mask. Not yet implemented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$set_mask_selection(selection, value, fields = NA)}\if{html}{\out{</div>}}
 }
@@ -718,32 +837,36 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{Selections are lists containing either scalars, strings, or Slice objects. Two character
-literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific
-array dimension.}
+\item{\code{selection}}{Selection specifying the subset to set.}
 
-\item{\code{value}}{TODO}
+\item{\code{value}}{Not yet implemented.}
 
-\item{\code{fields}}{TODO}
+\item{\code{fields}}{Not yet implemented.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_info"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_info}{}}}
 \subsection{Method \code{get_info()}}{
-TODO
+Get array diagnostic info. Not yet implemented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_info()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{character(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_digest"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_digest}{}}}
 \subsection{Method \code{get_digest()}}{
-TODO
+Compute a checksum digest of the array data. Not yet implemented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_digest(hashname = "sha1")}\if{html}{\out{</div>}}
 }
@@ -751,16 +874,19 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{hashname}}{name of hash}
+\item{\code{hashname}}{Name of hash.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{character(1)}.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_hexdigest"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_hexdigest}{}}}
 \subsection{Method \code{get_hexdigest()}}{
-TODO
+Compute a hex-string checksum digest. Not yet implemented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_hexdigest(hashname = "sha1")}\if{html}{\out{</div>}}
 }
@@ -768,16 +894,19 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{hashname}}{name of hash}
+\item{\code{hashname}}{Name of hash.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{character(1)}.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-append"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-append}{}}}
 \subsection{Method \code{append()}}{
-TODO
+Append data to the array along the specified axis. Not yet implemented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$append(data, axis = 0)}\if{html}{\out{</div>}}
 }
@@ -785,18 +914,21 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{data to append}
+\item{\code{data}}{Data to append.}
 
-\item{\code{axis}}{axis to append}
+\item{\code{axis}}{Axis to append along.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-view"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-view}{}}}
 \subsection{Method \code{view()}}{
-TODO
+Return a view on the array with modified interpretation. Not yet implemented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$view(
   shape = NA,
@@ -812,28 +944,31 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{shape}}{TODO}
+\item{\code{shape}}{Not yet implemented.}
 
-\item{\code{chunks}}{TODO}
+\item{\code{chunks}}{Not yet implemented.}
 
-\item{\code{dtype}}{TODO}
+\item{\code{dtype}}{Not yet implemented.}
 
-\item{\code{fill_value}}{TODO}
+\item{\code{fill_value}}{Not yet implemented.}
 
-\item{\code{filters}}{TODO}
+\item{\code{filters}}{Not yet implemented.}
 
-\item{\code{read_only}}{TODO}
+\item{\code{read_only}}{Not yet implemented.}
 
-\item{\code{synchronizer}}{TODO}
+\item{\code{synchronizer}}{Not yet implemented.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\link{ZarrArray}.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-astype"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-astype}{}}}
 \subsection{Method \code{astype()}}{
-TODO
+Return a view with a different dtype. Not yet implemented.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$astype(dtype)}\if{html}{\out{</div>}}
 }
@@ -841,20 +976,26 @@ TODO
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{dtype}}{TODO}
+\item{\code{dtype}}{Not yet implemented.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\link{ZarrArray}.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-get_dimension_separator"></a>}}
 \if{latex}{\out{\hypertarget{method-ZarrArray-get_dimension_separator}{}}}
 \subsection{Method \code{get_dimension_separator()}}{
-TODO
+Get the dimension separator used in chunk keys.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZarrArray$get_dimension_separator()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{character(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-["></a>}}
@@ -894,6 +1035,9 @@ Use empty space to get whole dimension e.g. \code{[1:5,,]}}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+Always raises an error.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZarrArray-as.array"></a>}}
@@ -905,7 +1049,7 @@ Convert Zarr object to R array (for S3 method). Note that this loads all data in
 }
 
 \subsection{Returns}{
-array
+An R \code{array}.
 }
 }
 \if{html}{\out{<hr>}}

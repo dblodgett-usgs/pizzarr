@@ -60,15 +60,20 @@ Create a new Attributes instance.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{store}}{Attributes store, already initialized.}
+\item{\code{store}}{(\link{Store})\cr
+Attributes store, already initialized.}
 
-\item{\code{key}}{description key to use for attributes (.attrs is default)}
+\item{\code{key}}{(\code{character(1)})\cr
+Key to use for attributes (\code{.zattrs} is default).}
 
-\item{\code{read_only}}{logical}
+\item{\code{read_only}}{(\code{logical(1)})\cr
+Whether the attributes are read-only.}
 
-\item{\code{cache}}{logical}
+\item{\code{cache}}{(\code{logical(1)})\cr
+Whether to cache attributes.}
 
-\item{\code{synchronizer}}{object}
+\item{\code{synchronizer}}{(\code{ANY} or \code{NA})\cr
+Synchronizer object.}
 }
 \if{html}{\out{</div>}}
 }
@@ -86,7 +91,7 @@ convert attributes to list
 }
 
 \subsection{Returns}{
-list
+\code{list()}.
 }
 }
 \if{html}{\out{<hr>}}
@@ -99,7 +104,7 @@ refresh attributes
 }
 
 \subsection{Returns}{
-None
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
@@ -114,12 +119,12 @@ check if object contains item
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{x}}{object}
+\item{\code{x}}{Object to test.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-logical
+\code{logical(1)}.
 }
 }
 \if{html}{\out{<hr>}}
@@ -134,12 +139,12 @@ get attribute
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{item}}{character}
+\item{\code{item}}{Character attribute name.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-item as list
+The attribute value.
 }
 }
 \if{html}{\out{<hr>}}
@@ -154,14 +159,14 @@ set attribute
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{item}}{character}
+\item{\code{item}}{Character attribute name.}
 
-\item{\code{value}}{value to add or update}
+\item{\code{value}}{Value to add or update.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-none
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
@@ -176,12 +181,12 @@ delete attribute
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{item}}{character}
+\item{\code{item}}{Character attribute name.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-none
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
@@ -203,7 +208,7 @@ This method pre-populates the cache so the normal .zattrs read path is skipped.
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-None (modifies cache in place).
+\code{NULL} (modifies cache in place).
 }
 }
 \if{html}{\out{<hr>}}

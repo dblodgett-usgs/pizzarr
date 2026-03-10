@@ -56,11 +56,16 @@ Attributes <- R6::R6Class("Attributes",
     synchronizer = NULL,
     #' @description
     #' Create a new Attributes instance.
-    #' @param store Attributes store, already initialized.
-    #' @param key description key to use for attributes (.attrs is default)
-    #' @param read_only logical
-    #' @param cache logical
-    #' @param synchronizer object
+    #' @param store ([Store])\cr
+    #'   Attributes store, already initialized.
+    #' @param key (`character(1)`)\cr
+    #'   Key to use for attributes (`.zattrs` is default).
+    #' @param read_only (`logical(1)`)\cr
+    #'   Whether the attributes are read-only.
+    #' @param cache (`logical(1)`)\cr
+    #'   Whether to cache attributes.
+    #' @param synchronizer (`ANY` or `NA`)\cr
+    #'   Synchronizer object.
     #' @return An `Attributes` instance.
     initialize = function(store, key = NA, read_only = FALSE, cache = TRUE, synchronizer = NA) {
       if(is_na(key)) {
@@ -82,7 +87,7 @@ Attributes <- R6::R6Class("Attributes",
     },
     #' @description
     #' convert attributes to list
-    #' @return list
+    #' @return `list()`.
     to_list = function() {
       if(self$cache && !is_na(private$cached_aslist)) {
         return(private$cached_aslist)
@@ -105,22 +110,22 @@ Attributes <- R6::R6Class("Attributes",
     },
     #' @description
     #' check if object contains item
-    #' @param x object
-    #' @return logical
+    #' @param x Object to test.
+    #' @return `logical(1)`.
     contains = function(x) {
       return(x %in% names(self$to_list()))
     },
     #' @description
     #' get attribute
-    #' @param item character
+    #' @param item Character attribute name.
     #' @return The attribute value.
     get_item = function(item) {
       return(self$to_list()[[item]])
     },
     #' @description
     #' set attribute
-    #' @param item character
-    #' @param value value to add or update
+    #' @param item Character attribute name.
+    #' @param value Value to add or update.
     #' @return `NULL` (called for side effects).
     set_item = function(item, value) {
       # TODO: support synchronizer
@@ -128,7 +133,7 @@ Attributes <- R6::R6Class("Attributes",
     },
     #' @description
     #' delete attribute
-    #' @param item character
+    #' @param item Character attribute name.
     #' @return `NULL` (called for side effects).
     del_item = function(item) {
       # TODO: support synchronizer

@@ -12,16 +12,20 @@ Codec <- R6::R6Class("Codec",
    public = list(
      #' @description
      #' Compress data.
-     #' @param buf The un-compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Compressed data.
      encode = function(buf, zarr_arr) {
        return(buf)
      },
      #' @description
      #' Decompress data.
-     #' @param buf The compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
        return(buf)
@@ -63,7 +67,7 @@ ZstdCodec <- R6::R6Class("ZstdCodec",
     #' @description
     #' Create a new ZSTD compressor.
     #' @param level The compression level, between 1 and 22.
-    #' @param ... not used
+    #' @param ... Not used.
     #' @return A new `ZstdCodec` object.
     initialize = function(level = 1, ...) {
       self$level <- level
@@ -71,8 +75,10 @@ ZstdCodec <- R6::R6Class("ZstdCodec",
     },
     #' @description
     #' Compress data.
-    #' @param buf The un-compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Compressed data.
     encode = function(buf, zarr_arr) {
       # Reference: https://github.com/traversc/qs/blob/84e30f4/R/RcppExports.R#L16
@@ -81,8 +87,10 @@ ZstdCodec <- R6::R6Class("ZstdCodec",
     },
     #' @description
     #' Decompress data.
-    #' @param buf The compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Un-compressed data.
     decode = function(buf, zarr_arr) {
       result <- zstd_decompress_raw(buf)
@@ -125,7 +133,7 @@ Lz4Codec <- R6::R6Class("Lz4Codec",
      #' @description
      #' Create a new LZ4 compressor.
      #' @param acceleration The compression level.
-     #' @param ... not used
+     #' @param ... Not used.
      #' @return A new `Lz4Codec` object.
      initialize = function(acceleration = 1, ...) {
        .Deprecated(
@@ -142,8 +150,10 @@ Lz4Codec <- R6::R6Class("Lz4Codec",
      },
      #' @description
      #' Compress data.
-     #' @param buf The un-compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Compressed data.
      encode = function(buf, zarr_arr) {
        # Reference: https://github.com/traversc/qs/blob/84e30f4/R/RcppExports.R#L24
@@ -167,8 +177,10 @@ Lz4Codec <- R6::R6Class("Lz4Codec",
      },
      #' @description
      #' Decompress data.
-     #' @param buf The compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
        if (!requireNamespace("qs", quietly = TRUE)) {
@@ -213,7 +225,7 @@ ZlibCodec <- R6::R6Class("ZlibCodec",
      #' @description
      #' Create a new Zlib compressor.
      #' @param level The compression level, between 1 and 22.
-     #' @param ... not used
+     #' @param ... Not used.
      #' @return A new `ZlibCodec` object.
      initialize = function(level = 6, ...) {
       self$level <- level
@@ -222,8 +234,10 @@ ZlibCodec <- R6::R6Class("ZlibCodec",
      },
     #' @description
     #' Compress data.
-    #' @param buf The un-compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Compressed data.
      encode = function(buf, zarr_arr) {
       if(self$level != 6) {
@@ -237,8 +251,10 @@ ZlibCodec <- R6::R6Class("ZlibCodec",
      },
     #' @description
     #' Decompress data.
-    #' @param buf The compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
       # References:
@@ -278,8 +294,8 @@ GzipCodec <- R6::R6Class("GzipCodec",
      #' @description
      #' Create a new Gzip compressor.
      #' @param level The compression level, between 1 and 22.
+     #' @param ... Not used.
      #' @return A new `GzipCodec` object.
-     #' @param ... not used
      initialize = function(level = 6, ...) {
       # No config options for gzip.
       self$level <- level
@@ -287,8 +303,10 @@ GzipCodec <- R6::R6Class("GzipCodec",
      },
      #' @description
      #' Compress data.
-     #' @param buf The un-compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Compressed data.
      encode = function(buf, zarr_arr) {
       if(self$level != 6) {
@@ -302,8 +320,10 @@ GzipCodec <- R6::R6Class("GzipCodec",
      },
      #' @description
      #' Decompress data.
-     #' @param buf The compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
       result <- memDecompress(buf, type = "gzip", asChar = FALSE)
@@ -340,7 +360,7 @@ Bz2Codec <- R6::R6Class("Bz2Codec",
      #' @description
      #' Create a new Bz2 compressor.
      #' @param level The compression level, between 1 and 22.
-     #' @param ... not used
+     #' @param ... Not used.
      #' @return A new `Bz2Codec` object.
      initialize = function(level = 6, ...) {
       # No config options for bz2.
@@ -349,8 +369,10 @@ Bz2Codec <- R6::R6Class("Bz2Codec",
      },
      #' @description
      #' Compress data.
-     #' @param buf The un-compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Compressed data.
      encode = function(buf, zarr_arr) {
        # References:
@@ -364,8 +386,10 @@ Bz2Codec <- R6::R6Class("Bz2Codec",
      },
      #' @description
      #' Decompress data.
-     #' @param buf The compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
       result <- memDecompress(buf, type = "bzip2", asChar = FALSE)
@@ -404,8 +428,9 @@ LzmaCodec <- R6::R6Class("LzmaCodec",
      #' @description
      #' Create a new lzma compressor.
      #' @param level The compression level, between 1 and 22.
-     #' @param format only 1 is supported
-     #' @param ... not used
+     #' @param format (`integer(1)`)\cr
+     #'   Only 1 is supported.
+     #' @param ... Not used.
      #' @return A new `LzmaCodec` object.
      initialize = function(level = 9, format = 1, ...) {
       # No config options for lzma.
@@ -418,8 +443,10 @@ LzmaCodec <- R6::R6Class("LzmaCodec",
      },
      #' @description
      #' Compress data.
-     #' @param buf The un-compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Compressed data.
      encode = function(buf, zarr_arr) {
        # References:
@@ -433,8 +460,10 @@ LzmaCodec <- R6::R6Class("LzmaCodec",
      },
      #' @description
      #' Decompress data.
-     #' @param buf The compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
       result <- memDecompress(buf, type = "xz", asChar = FALSE)
@@ -467,21 +496,29 @@ LzmaCodec <- R6::R6Class("LzmaCodec",
 BloscCodec <- R6::R6Class("BloscCodec",
   inherit = Codec,
   public = list(
-    #' @field cname The compression algorithm to use.
+    #' @field cname (`character(1)`)\cr
+    #'   The compression algorithm to use.
     cname = NULL,
-    #' @field clevel The compression level.
+    #' @field clevel (`integer(1)`)\cr
+    #'   The compression level.
     clevel = NULL,
-    #' @field shuffle The shuffle filter to use.
+    #' @field shuffle (`logical(1)` | `integer(1)`)\cr
+    #'   The shuffle filter to use.
     shuffle = NULL,
-    #' @field blocksize The block size.
+    #' @field blocksize (`integer(1)` | `NA`)\cr
+    #'   The block size.
     blocksize = NULL,
     #' @description
     #' Create a new Blosc compressor.
-    #' @param cname The compression algorithm to use.
-    #' @param clevel The compression level.
-    #' @param shuffle The shuffle filter to use.
-    #' @param blocksize The block size.
-    #' @param ... not used
+    #' @param cname (`character(1)`)\cr
+    #'   The compression algorithm to use.
+    #' @param clevel (`integer(1)`)\cr
+    #'   The compression level.
+    #' @param shuffle (`logical(1)` | `integer(1)`)\cr
+    #'   The shuffle filter to use.
+    #' @param blocksize (`integer(1)` | `NA`)\cr
+    #'   The block size.
+    #' @param ... Not used.
     #' @return A new `BloscCodec` object.
     initialize = function(cname = "lz4", clevel = 5, shuffle = TRUE, blocksize = NA, ...) {
       self$cname <- cname
@@ -496,8 +533,10 @@ BloscCodec <- R6::R6Class("BloscCodec",
     },
     #' @description
     #' Compress data.
-    #' @param buf The un-compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Compressed data.
     encode = function(buf, zarr_arr) {
       if(self$cname != "lz4" || self$clevel != 5) {
@@ -514,8 +553,10 @@ BloscCodec <- R6::R6Class("BloscCodec",
     },
     #' @description
     #' Decompress data.
-    #' @param buf The compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Un-compressed data.
     decode = function(buf, zarr_arr) {
       result <- .Call(
@@ -555,14 +596,16 @@ VLenUtf8Codec <- R6::R6Class("VLenUtf8Codec",
   public = list(
     #' @description
     #' Compress data.
-    #' @param vec_of_strings The un-compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`character()`)\cr
+    #'   The un-compressed data (character vector).
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Compressed data.
-    encode = function(vec_of_strings, zarr_arr) {
+    encode = function(buf, zarr_arr) {
       # Kind: array to bytes
       # Reference: https://github.com/zarr-developers/numcodecs/blob/cb155432e36536e17a2d054c8c24b7bf6f4a7347/numcodecs/vlen.pyx#L74
 
-      num_strings <- length(vec_of_strings)
+      num_strings <- length(buf)
 
       encoded_values <- list()
       encoded_lengths <- integer(num_strings)
@@ -571,7 +614,7 @@ VLenUtf8Codec <- R6::R6Class("VLenUtf8Codec",
 
       # first iteration to convert to bytes
       for(i in seq_len(num_strings)) {
-        orig_str <- vec_of_strings[i]
+        orig_str <- buf[i]
         if(is.na(orig_str) || is.null(orig_str)) {
           # treat these as missing value, normalize
           orig_str <- ""
@@ -614,8 +657,10 @@ VLenUtf8Codec <- R6::R6Class("VLenUtf8Codec",
     },
     #' @description
     #' Decompress data.
-    #' @param buf The compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Un-compressed data.
     decode = function(buf, zarr_arr) {
       # Kind: bytes to array

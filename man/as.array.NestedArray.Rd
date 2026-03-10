@@ -7,7 +7,9 @@
 \method{as.array}{NestedArray}(x, ...)
 }
 \arguments{
-\item{x}{}
+\item{x}{Object.}
+
+\item{...}{Not used.}
 }
 \description{
 S3 method for as.array

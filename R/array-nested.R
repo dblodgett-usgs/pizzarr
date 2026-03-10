@@ -345,7 +345,8 @@ NestedArray <- R6::R6Class("NestedArray",
 
 #' S3 method for as.array
 #'
-#' @param x 
+#' @param x Object.
+#' @param ... Not used.
 #' @keywords internal
 #' @export
 as.array.NestedArray = function(x, ...) {

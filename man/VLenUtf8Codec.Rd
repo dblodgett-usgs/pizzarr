@@ -43,15 +43,17 @@ Other Codec classes:
 \subsection{Method \code{encode()}}{
 Compress data.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{VLenUtf8Codec$encode(vec_of_strings, zarr_arr)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{VLenUtf8Codec$encode(buf, zarr_arr)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{vec_of_strings}}{The un-compressed data.}
+\item{\code{buf}}{(\code{character()})\cr
+The un-compressed data (character vector).}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -71,9 +73,11 @@ Decompress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }

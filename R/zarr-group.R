@@ -111,13 +111,18 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
   public = list(
     #' @description
     #' Create a new ZarrGroup instance.
-    #' @param store Group store, already initialized.
-    #' @param path character path
-    #' @param read_only logical read only?
-    #' @param chunk_store TODO
-    #' @param synchronizer TODO
-    #' @param cache_metadata logical cache metadata?
-    #' @param cache_attrs logical cache attributes?
+    #' @param store ([Store])\cr
+    #'   Group store, already initialized.
+    #' @param path (`character(1)`)\cr
+    #'   Storage path.
+    #' @param read_only (`logical(1)`)\cr
+    #'   Whether the group is read-only.
+    #' @param chunk_store ([Store] or `NA`)\cr
+    #'   Separate storage for chunks.
+    #' @param synchronizer (`ANY` or `NA`)\cr
+    #'   Object used to synchronize write access.
+    #' @param cache_attrs (`logical(1)`)\cr
+    #'   Whether to cache attributes.
     #' @return A `ZarrGroup` instance.
     initialize = function(store, path = NA, read_only = FALSE, 
                           chunk_store = NA, cache_attrs = TRUE, 
@@ -244,7 +249,7 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     },
     #' @description
     #' Test for group membership.
-    #' @param item character item to test for
+    #' @param item Character item to test for.
     #' @return `logical(1)`.
     contains_item = function(item) {
       path <- private$item_path(item)
@@ -252,7 +257,7 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     },
     #' @description
     #' Obtain a group member.
-    #' @param item character item to test for
+    #' @param item Character item to retrieve.
     #' @return [ZarrArray] or [ZarrGroup].
     get_item = function(item) {
       if(is.null(item)) {
@@ -284,17 +289,17 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     },
     #' @description
     #' create a group
-    #' @param name character group name
-    #' @param overwrite logical overwrite?
+    #' @param name Character group name.
+    #' @param overwrite Logical overwrite.
     #' @return [ZarrGroup].
     create_group = function(name, overwrite = FALSE) {
       return(private$create_group_nosync(name, overwrite = overwrite))
     },
     #' @description
     #' Create a dataset (array) within this group.
-    #' @param name character group name
-    #' @param data data to add to group
-    #' @param ... Extra arguments to pass to zarr_create() or array().
+    #' @param name Character dataset name.
+    #' @param data Data to add to group.
+    #' @param ... Extra arguments to pass to `zarr_create()` or `array()`.
     #' @return [ZarrArray].
     create_dataset = function(name, data = NA, ...) {
       return(private$create_dataset_nosync(name, data = data, ...))

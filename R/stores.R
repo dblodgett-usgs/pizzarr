@@ -202,8 +202,8 @@ DirectoryStore <- R6::R6Class("DirectoryStore",
       return(file.exists(fp))
     },
     #' @description
-    #' remove a path within a Store
-    #' @param path character path
+    #' Remove a path within a Store.
+    #' @param path Character path.
     #' @return `NULL` (called for side effects).
     rmdir = function(path=NA) {
       path <- normalize_storage_path(path)
@@ -216,8 +216,8 @@ DirectoryStore <- R6::R6Class("DirectoryStore",
       }
     },
     #' @description
-    #' list the store directory
-    #' @param key character key
+    #' List the store directory.
+    #' @param key Character key.
     #' @return `character()` vector of entries.
     listdir = function(key=NA) {
       if(is_na(key)) {
@@ -343,8 +343,8 @@ MemoryStore <- R6::R6Class("MemoryStore",
        return(result)
      },
      #' @description
-     #' list the store directory
-     #' @param key character key
+     #' List the store directory.
+     #' @param key Character key.
      #' @return `character()` vector of entries.
      listdir = function(key=NA) {
       item <- self$get_item(key)
@@ -354,8 +354,8 @@ MemoryStore <- R6::R6Class("MemoryStore",
       return(sort(names(item)))
      },
      #' @description
-     #' remove a path within a Store
-     #' @param item character item
+     #' Remove a path within a Store.
+     #' @param item Character item.
      #' @return `NULL` (called for side effects).
      rmdir = function(item) {
       if(is_na(item) || item == "") {
@@ -500,9 +500,12 @@ HttpStore <- R6::R6Class("HttpStore",
   public = list(
     #' @description
     #' Create a `HttpStore` object
-    #' @param url character url of store
-    #' @param options crul options
-    #' @param headers crul headers
+    #' @param url (`character(1)`)\cr
+    #'   URL of the store.
+    #' @param options (`list()` or `NA`)\cr
+    #'   Options passed to crul.
+    #' @param headers (`list()` or `NA`)\cr
+    #'   Headers passed to crul.
     #' @return A new `HttpStore` object.
     initialize = function(url, options = NA, headers = NA) {
       super$initialize()
@@ -568,7 +571,7 @@ HttpStore <- R6::R6Class("HttpStore",
     },
     #' @description
     #' Fetches .zmetadata from the store evaluates its names
-    #' @return character vector of unique keys that do note  start with a `.`. 
+    #' @return Character vector of unique keys that do not start with a `.`.
     listdir = function() {
 
       if(!is.null(private$zmetadata)) {
@@ -595,7 +598,7 @@ HttpStore <- R6::R6Class("HttpStore",
     },
     #' @description
     #' Set cache time of http requests.
-    #' @param seconds number of seconds until cache is invalid -- 0 for no cache
+    #' @param seconds Number of seconds until cache is invalid -- 0 for no cache.
     #' @return `NULL` (called for side effects).
     set_cache_time_seconds = function(seconds) {
       private$cache_time_seconds <- seconds

@@ -31,13 +31,17 @@ Other Codec classes:
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{cname}}{The compression algorithm to use.}
+\item{\code{cname}}{(\code{character(1)})\cr
+The compression algorithm to use.}
 
-\item{\code{clevel}}{The compression level.}
+\item{\code{clevel}}{(\code{integer(1)})\cr
+The compression level.}
 
-\item{\code{shuffle}}{The shuffle filter to use.}
+\item{\code{shuffle}}{(\code{logical(1)} | \code{integer(1)})\cr
+The shuffle filter to use.}
 
-\item{\code{blocksize}}{The block size.}
+\item{\code{blocksize}}{(\code{integer(1)} | \code{NA})\cr
+The block size.}
 }
 \if{html}{\out{</div>}}
 }
@@ -63,15 +67,19 @@ Create a new Blosc compressor.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{cname}}{The compression algorithm to use.}
+\item{\code{cname}}{(\code{character(1)})\cr
+The compression algorithm to use.}
 
-\item{\code{clevel}}{The compression level.}
+\item{\code{clevel}}{(\code{integer(1)})\cr
+The compression level.}
 
-\item{\code{shuffle}}{The shuffle filter to use.}
+\item{\code{shuffle}}{(\code{logical(1)} | \code{integer(1)})\cr
+The shuffle filter to use.}
 
-\item{\code{blocksize}}{The block size.}
+\item{\code{blocksize}}{(\code{integer(1)} | \code{NA})\cr
+The block size.}
 
-\item{\code{...}}{not used}
+\item{\code{...}}{Not used.}
 }
 \if{html}{\out{</div>}}
 }
@@ -91,9 +99,11 @@ Compress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The un-compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The un-compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -113,9 +123,11 @@ Decompress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
