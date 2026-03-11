@@ -63,7 +63,18 @@ check_dtype_support <- function(dtype_parts) {
 }
 
 #' @keywords internal
-get_dtype_rtype <- function(basic_type) {
+get_dtype_rtype <- function(basic_type, num_bytes = NULL) {
+
+  # 64-bit integers: use bit64::integer64 if available, else double
+  if (basic_type %in% c("i", "u") && !is.null(num_bytes) && num_bytes == 8) {
+    if (has_bit64()) {
+      return(bit64::integer64())
+    } else {
+      warning("bit64 package not installed; reading 64-bit integers as double ",
+              "(precision loss possible for values > 2^53)")
+      return(double())
+    }
+  }
 
   # Reference: https://github.com/gzuidhof/zarr.js/blob/292804/src/nestedArray/types.ts#L32
   BASICTYPE_RTYPE_MAPPING <- list(
@@ -117,6 +128,15 @@ get_dtype_signed <- function(dtype) {
 get_dtype_asrtype <- function(dtype) {
   dtype_parts <- get_dtype_parts(dtype)
   check_dtype_support(dtype_parts)
+
+  # 64-bit integers: use bit64::as.integer64 if available, else as.double
+  if (dtype_parts$basic_type %in% c("i", "u") && dtype_parts$num_bytes == 8) {
+    if (has_bit64()) {
+      return(bit64::as.integer64)
+    } else {
+      return(as.double)
+    }
+  }
 
   # Reference: https://github.com/gzuidhof/zarr.js/blob/292804/src/nestedArray/types.ts#L32
   DTYPE_RTYPE_MAPPING <- list(
@@ -265,6 +285,11 @@ Dtype <- R6::R6Class("Dtype",
       self$is_structured <- is_structured_dtype(dtype)
       self$is_object <- (self$basic_type == "O")
 
+      if (self$basic_type == "u" && self$num_bytes == 8) {
+        warning("uint64 dtype: bit64 only supports signed int64; ",
+                "values >= 2^63 will overflow")
+      }
+
       self$object_codec <- object_codec
     },
     #' @description
@@ -275,15 +300,22 @@ Dtype <- R6::R6Class("Dtype",
     },
     #' @description
     #' Get the R base type for this dtype.
-    #' @return An R prototype value (e.g., `integer()`, `double()`).
+    #' @return An R prototype value (e.g., `integer()`, `double()`, or `bit64::integer64()`).
     get_rtype = function() {
-      return(get_dtype_rtype(self$basic_type))
+      return(get_dtype_rtype(self$basic_type, self$num_bytes))
     },
     #' @description
     #' Get a constructor function for typed arrays of this dtype.
     #' @return A function that takes `dim` and returns an array.
     get_typed_array_ctr = function() {
       rtype <- self$get_rtype()
+      if (inherits(rtype, "integer64")) {
+        return(function(dim) {
+          a <- array(data = double(), dim = dim)
+          class(a) <- "integer64"
+          a
+        })
+      }
       return(function(dim) array(data = rtype, dim = dim))
     }
   )

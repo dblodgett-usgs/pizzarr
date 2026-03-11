@@ -339,11 +339,49 @@ get_list_product <- function(dim_indexer_iterables) {
 #' @keywords internal
 is_truthy_parallel_option <- function(val) {
   if(is.na(val)) return(FALSE)
-  
+
   if(inherits(val, "cluster")) return(TRUE)
-  
+
   if(val == "future") return(TRUE)
-  
+
   return(as.logical(as.integer(val)))
+}
+
+#' Check if the bit64 package is available
+#' @return Logical.
+#' @keywords internal
+has_bit64 <- function() {
+  requireNamespace("bit64", quietly = TRUE)
+}
+
+#' Check if a dtype represents a 64-bit integer type
+#' @param dtype_obj A Dtype instance.
+#' @return Logical.
+#' @keywords internal
+is_int64_dtype <- function(dtype_obj) {
+  dtype_obj$basic_type %in% c("i", "u") && dtype_obj$num_bytes == 8
+}
+
+#' Convert raw bytes to integer64 vector
+#' @param buf Raw vector of 8-byte little-endian integers.
+#' @param n Number of elements to read.
+#' @param endian "little" or "big".
+#' @return A bit64::integer64 vector.
+#' @keywords internal
+raw_to_integer64 <- function(buf, n, endian = "little") {
+  # integer64 stores int64 bit patterns in double's 8 bytes
+  vec <- readBin(con = buf, what = double(), size = 8, n = n, endian = endian)
+  class(vec) <- "integer64"
+  vec
+}
+
+#' Convert integer64 vector to raw bytes
+#' @param x A bit64::integer64 vector.
+#' @param endian "little" or "big".
+#' @return A raw vector.
+#' @keywords internal
+integer64_to_raw <- function(x, endian = "little") {
+  # Strip class so writeBin sees plain doubles (which hold the int64 bits)
+  writeBin(unclass(x), con = raw(), size = 8, endian = endian)
 }
 

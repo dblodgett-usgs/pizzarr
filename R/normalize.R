@@ -300,6 +300,8 @@ normalize_fill_value <- function(fill_value, dtype) {
     if (fill_value == 0) {
       if(is.logical(rtype)) {
         fill_value <- FALSE
+      } else if(inherits(rtype, "integer64")) {
+        fill_value <- bit64::as.integer64(0)
       } else if(is.integer(rtype)) {
         fill_value <- 0L
       } else if(is.double(rtype)) {
@@ -312,6 +314,8 @@ normalize_fill_value <- function(fill_value, dtype) {
     } else {
       if(is.logical(rtype)) {
         fill_value <- TRUE
+      } else if(inherits(rtype, "integer64")) {
+        fill_value <- bit64::as.integer64(fill_value)
       } else if(is.integer(rtype)) {
         fill_value <- as.integer(fill_value)
       } else if(is.double(rtype)) {

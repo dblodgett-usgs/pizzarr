@@ -51,6 +51,7 @@ Suggests:
     future,
     future.apply,
     bench,
+    bit64,
     qs,
     withr
 Remotes: qsbase/qs

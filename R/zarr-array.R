@@ -581,10 +581,12 @@ ZarrArray <- R6::R6Class("ZarrArray",
           # Setting a single value
         } else if (is_scalar(value)) {
           # Setting a scalar value
-        } else if("array" %in% class(value)) {
-          if (!all(ensure_integer_vec(dim(value)) == selection_shape_vec)) {
+        } else if("array" %in% class(value) || (is.atomic(value) && is.vector(value))) {
+          if (!is.null(dim(value)) && !all(ensure_integer_vec(dim(value)) == selection_shape_vec)) {
             stop("Shape mismatch in source array and set selection: ${dim(value)} and ${selectionShape}")
           }
+          value <- NestedArray$new(value, shape = selection_shape_vec, dtype=private$dtype, order = private$order)
+        } else if (inherits(value, "integer64")) {
           value <- NestedArray$new(value, shape = selection_shape_vec, dtype=private$dtype, order = private$order)
         } else if ("NestedArray" %in% class(value)) {
           if (!all(ensure_integer_vec(value$shape) == selection_shape_vec)) {
