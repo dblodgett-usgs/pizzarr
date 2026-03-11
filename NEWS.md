@@ -1,8 +1,7 @@
 # pizzarr 0.1.0
 
 * Initial release of pizzarr.
-* Read and write Zarr V2 arrays and groups.
-* Read support for Zarr V3 stores.
+* Read and write Zarr V2 and Zarr V3 stores.
 * Storage backends: DirectoryStore, MemoryStore, HttpStore.
 * Compression codecs: Zstd, LZ4, Blosc, zlib, gzip, bzip2, LZMA.
 * VLenUTF8 object codec for variable-length strings.
