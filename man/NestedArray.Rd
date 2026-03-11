@@ -4,11 +4,8 @@
 \name{NestedArray}
 \alias{NestedArray}
 \title{NestedArray Class}
-\value{
-The data as a flat vector.
-
-The data as a flat raw vector.
-Convert NestArray object to R array (for S3 method)
+\format{
+\link[R6:R6Class]{R6::R6Class}
 }
 \description{
 Represents a multi-dimensional array that can be
@@ -109,6 +106,9 @@ Set a subset of the array.
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+\code{NULL} (called for side effects, modifies \code{self$data} in place).
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NestedArray-flatten"></a>}}
@@ -125,6 +125,9 @@ Flatten the array contents.
 \item{\code{order}}{Either "C", "F", or NA.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The data as a flat vector.
 }
 }
 \if{html}{\out{<hr>}}
@@ -143,17 +146,21 @@ Flatten the array contents and convert to a raw vector.
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+The data as a flat \code{raw()} vector (or plain vector for object dtypes).
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NestedArray-as.array"></a>}}
 \if{latex}{\out{\hypertarget{method-NestedArray-as.array}{}}}
 \subsection{Method \code{as.array()}}{
+Convert NestedArray to a base R array.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NestedArray$as.array()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-array
+\code{array()}.
 }
 }
 \if{html}{\out{<hr>}}

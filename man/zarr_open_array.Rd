@@ -23,7 +23,8 @@ zarr_open_array(
   cache_attrs = TRUE,
   object_codec = NA,
   dimension_separator = NA,
-  write_empty_chunks = TRUE
+  write_empty_chunks = TRUE,
+  zarr_format = 2L
 )
 }
 \arguments{
@@ -100,6 +101,10 @@ that chunk is not be stored, and the store entry for that chunk's key
 is deleted. This setting enables sparser storage, as only chunks with
 non-fill-value data are stored, at the expense of overhead associated
 with checking the data of each chunk.}
+
+\item{zarr_format}{: int, optional
+Zarr format version. Use \code{2L} (default) for Zarr V2 or \code{3L}
+for Zarr V3.}
 }
 \value{
 ZarrArray

@@ -4,12 +4,27 @@
 \name{ZstdCodec}
 \alias{ZstdCodec}
 \title{ZstdCodec Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Codec}.
+}
 \description{
 Class representing a ZSTD compressor
 }
 \details{
 ZSTD compressor for Zarr
 }
+\seealso{
+Other Codec classes: 
+\code{\link{BloscCodec}},
+\code{\link{Bz2Codec}},
+\code{\link{Codec}},
+\code{\link{GzipCodec}},
+\code{\link{Lz4Codec}},
+\code{\link{LzmaCodec}},
+\code{\link{VLenUtf8Codec}},
+\code{\link{ZlibCodec}}
+}
+\concept{Codec classes}
 \keyword{internal}
 \section{Super class}{
 \code{\link[pizzarr:Codec]{pizzarr::Codec}} -> \code{ZstdCodec}
@@ -45,7 +60,7 @@ Create a new ZSTD compressor.
 \describe{
 \item{\code{level}}{The compression level, between 1 and 22.}
 
-\item{\code{...}}{not used}
+\item{\code{...}}{Not used.}
 }
 \if{html}{\out{</div>}}
 }
@@ -65,9 +80,11 @@ Compress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The un-compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The un-compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -87,9 +104,11 @@ Decompress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -101,11 +120,14 @@ Un-compressed data.
 \if{html}{\out{<a id="method-ZstdCodec-get_config"></a>}}
 \if{latex}{\out{\hypertarget{method-ZstdCodec-get_config}{}}}
 \subsection{Method \code{get_config()}}{
-Get Configuration
+Get codec configuration as a list.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ZstdCodec$get_config()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A named list.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ZstdCodec-clone"></a>}}

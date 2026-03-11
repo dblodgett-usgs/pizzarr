@@ -32,57 +32,13 @@ print(selection$data)
 # [2,]    2    4    6    8   10
 ```
 
-## Current status
+## Features
 
-(This section has been adapted from the [Rarr](https://github.com/grimbough/Rarr) project README).
-
-### Stores
-
-| Store             | Status<br/>(reading / writing) |
-|-------------------|:------------------------------:|
-| `MemoryStore`     |             ✔ / ✔              |
-| `DirectoryStore`  |             ✔ / ✔              |
-| `HttpStore`       |             ✔ / ❌             |
-
-### Data types
-
-| Zarr Data Type        | Status<br/>(reading / writing) | Notes                                                                                                                                                                           |
-|-----------------------|:------------------------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `b1` / `boolean`             |             ✔ / ✔             |  Converted to `logical` in R.         |
-| `i1` / `int8`                |             ✔ / ✔             |  Converted to `integer` in R.         |
-| `u1` / `uint8`               |             ✔ / ✔             |  Converted to `integer` in R.         |
-| `i2` / `int16`               |             ✔ / ✔             |  Converted to `integer` in R.         |
-| `u2` / `uint16`              |             ✔ / ✔             |  Converted to `integer` in R.         |
-| `i4` / `int32`               |             ✔ / ✔             |  Converted to `integer` in R.         |
-| `u4` / `uint32`              |             ✔ / ✔             |  Converted to `integer` in R.         |
-| `i8` / `int64`               |             ✔ / ✔             |  Converted to `integer` in R.         |
-| `u8` / `uint64`              |             ✔ / ✔             |  Converted to `integer` in R.         |
-| `f2` / `float16`    |             ✔ / ✔             | Converted to `double` in R.           |
-| `f4` / `float32`  |             ✔ / ✔             | Converted to `double` in R.           |
-| `f8` / `float64`  |             ✔ / ✔             | Converted to `double` in R.           |
-| `complex`             |            ❌ / ❌             |                                                                                                                                                                                 |
-| `timedelta`           |            ❌ / ❌             |                                                                                                                                                                                 |
-| `datetime`            |            ❌ / ❌             |                                                                                                                                                                                 |
-| `string`              |            ✔ / ✔             |  Converted to `character` in R. |
-| `Unicode`             |            ✔ / ✔             |  Converted to `character` in R.               |
-| `void *`              |            ❌ / ❌             |                                                                                                                                                                                 |
-| Structured data types |            ❌ / ❌             |   |
-| Object data type - [VLenUTF8](https://numcodecs.readthedocs.io/en/stable/other/vlen.html#numcodecs.vlen.VLenUTF8) |            ✔ / ✔             | Converted to `character` in R. |
-
-
-Note: no effort is made to assess loss of precision due to conversion.
-
-
-### Compression tools
-
-| Data Type     | Status<br/>(reading / writing) | Notes                                                                                               |
-|---------------|:------------------------------:|-----------------------------------------------------------------------------------------------------|
-| `zlib / gzip` |             ✔ / ✔              | Only system default compression level 6 is enabled for writing.                                     |
-| `bzip2`       |             ✔ / ✔              | Only system default compression level 6 is enabled for writing.                                     |
-| `blosc`       |             ✔ / ✔              | Only system default compression level 5 is enabled for writing.                                     |
-| `LZMA`        |             ✔ / ✔              | Only system default compression level 9 is enabled for writing.                                     |
-| `LZ4`         |             ✔ / ✔              |   |
-| `Zstd`        |             ✔ / ✔              |   |
+- **Zarr V2 and V3** read and write (format auto-detected on open)
+- **Stores:** MemoryStore, DirectoryStore (read/write); HttpStore (read-only)
+- **Data types:** boolean, int8--int64, uint8--uint64, float16/32/64, string, Unicode, VLenUTF8
+- **Compression:** zlib/gzip, bzip2, blosc, LZMA, LZ4, Zstd
+- **Blosc** requires the optional [`blosc`](https://cran.r-project.org/package=blosc) package (`install.packages("blosc")`)
 
 
 ## Development
@@ -116,8 +72,8 @@ pkgdown::build_site()
 ## Resources
 
 - [Discussion of Zarr in R](https://github.com/zarr-developers/community/issues/18)
-- [Rarr](https://github.com/grimbough/Rarr)
-  - Note: `pizzarr` has an optional dependency on Rarr for Blosc (de)compression.
+- [blosc](https://cran.r-project.org/web/packages/blosc/index.html)
+  - Note: `pizzarr` has an optional dependency on `blosc` for Blosc (de)compression.
 - R package development
   - [R packages](https://r-pkgs.org/)
   - [roxygen2 syntax](https://roxygen2.r-lib.org/articles/rd-formatting.html)

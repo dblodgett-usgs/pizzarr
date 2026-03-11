@@ -15,3 +15,7 @@ tests/testthat/test_data
 *.ipynb
 .Renviron
 pkgdown/favicon/
+.claude
+.venv
+CLAUDE.md
+TODO.md

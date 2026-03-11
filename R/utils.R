@@ -1,3 +1,5 @@
+utils::globalVariables("volcano")
+
 #' pizzarr demo data
 #' @details
 #' For directory stores, unzips the store to a temporary directory
@@ -41,14 +43,24 @@ pizzarr_sample <- function(dataset = NULL,
   if(!is.null(dataset)) {
     f <- grepl(dataset, zarr_zips, fixed = TRUE)
     zarr_zips <- zarr_zips[f]
-    
+
     # if dataset not found, stop and print available datasets
     if(length(zarr_zips) == 0) {
       stop("Dataset not found\n\tMust be one of:\n\t  \"",
            paste(avail, collapse = "\"\n\t  \""), "\"")
     }
-    
+
     avail <- avail[f]
+
+    # If multiple matches and query doesn't specify a version,
+    # prefer the v2 variant for backward compatibility.
+    if(length(zarr_zips) > 1 && !grepl("_v[0-9]", dataset)) {
+      v2 <- grepl("_v2", zarr_zips, fixed = TRUE)
+      if(any(v2)) {
+        zarr_zips <- zarr_zips[v2]
+        avail <- avail[v2]
+      }
+    }
   }
   
   # in case zarr_zips is all, loop over them and unzip
@@ -60,9 +72,11 @@ pizzarr_sample <- function(dataset = NULL,
       
       new_z <- file.path(tdir, basename(zarr_zips[z]))
 
-      utils::download.file(paste0("https://github.com/zarr-developers/pizzarr/raw/refs/heads/main/docs/data/", 
-                                           basename(zarr_zips[z])), mode = "wb",
-                                    new_z)
+      url <- paste0("https://github.com/zarr-developers/pizzarr/raw/refs/heads/main/docs/data/",
+                     basename(zarr_zips[z]))
+      client <- crul::HttpClient$new(url = url)
+      res <- client$get(disk = new_z)
+      res$raise_for_status()
       
       zarr_zips[z] <- new_z
     }
@@ -75,76 +89,34 @@ pizzarr_sample <- function(dataset = NULL,
   
 }
 
-#' Convert a string into a character vector.
-#' 
-#' @param s The string.
-#' @return A vector where each element is an individual character.
-#' @keywords internal
-str_to_vec <- function(s) {
-  return(stringr::str_split(s, pattern = "")[[1]])
-}
+#' Create a demo Zarr group containing R's volcano dataset
+#'
+#' Writes the \code{\link[datasets]{volcano}} matrix into a temporary
+#' DirectoryStore as a Zarr array named \code{"volcano"} and returns the
+#' opened group.
+#'
+#' @return A \code{ZarrGroup} containing a single array called \code{"volcano"}.
+#' @export
+#' @examples
+#' g <- zarr_volcano()
+#' v <- g$get_item("volcano")
+#' image(v$get_item("...")$data, main = "Maunga Whau Volcano")
+zarr_volcano <- function() {
+  dir <- file.path(tempdir(TRUE), "volcano.zarr")
 
-#' Create a list of zarray metadata.
-#' @inheritParams zarr_create
-#' @return A list.
-#' @keywords internal
-create_zarray_meta <- function(shape = NA, chunks = NA, dtype = NA, compressor = NA, fill_value = NA, order = NA, filters = NA, dimension_separator = NA) {
-  # Reference: https://zarr.readthedocs.io/en/stable/spec/v2.html#metadata
-  if(is.na(dimension_separator)) {
-    dimension_separator <- "."
-  } else if(!(dimension_separator %in% c(".", "/"))) {
-    stop("dimension_separator must be '.' or '/'.")
-  }
-  if(is_na(compressor)) {
-    compressor <- jsonlite::unbox(compressor)
-  } else if(!is_na(compressor) && !("id" %in% names(compressor))) {
-    stop("compressor must contain an 'id' property when not null.")
-  }
-  if(is_na(filters)) {
-    filters <- jsonlite::unbox(filters)
-  }
-  if(!(order %in% c("C", "F"))) {
-    stop("order must be 'C' or 'F'.")
-  }
-  is_simple_dtype <- (!dtype$is_structured)
-  dtype_str <- dtype$dtype
-  if(is_simple_dtype) {
-    dtype_byteorder <- dtype$byte_order
-    dtype_basictype <- dtype$basic_type
-    # Validation occurs in Dtype constructor.
-    
-    if(dtype_basictype == "f") {
-      if(!is.numeric(fill_value) && !(fill_value %in% c("NaN", "Infinity", "-Infinity"))) {
-        stop("fill_value must be NaN, Infinity, or -Infinity when dtype is float")
-      }
-    }
-    if(dtype_basictype == "S" && !is.na(fill_value)) {
-      # TODO: validate that fill_value is encoded as an ASCII string using the standard Base64 alphabet.
-    }
-  } else {
-    # TODO: validate structured dtypes
-  }
+  unlink(dir, recursive = TRUE, force = TRUE)
 
-  if(is.null(shape)) {
-    shape <-jsonlite::unbox(NA)
-  }
+  z <- DirectoryStore$new(dir)
 
-  
-  # TODO: validate shape param
-  # TODO: validate chunks param
-  # TODO: validate filters param
-  zarray_meta <- list(
-    zarr_format = jsonlite::unbox(2),
-    shape = shape,
-    chunks = chunks,
-    dtype = jsonlite::unbox(dtype_str),
-    compressor = compressor,
-    fill_value = jsonlite::unbox(fill_value),
-    order = jsonlite::unbox(order),
-    filters = filters,
-    dimension_separator = jsonlite::unbox(dimension_separator)
-  )
-  return(zarray_meta)
+  za <- zarr_create(dim(volcano), path = "volcano", store = z, overwrite = TRUE)
+
+  za$set_item("...", volcano)
+
+  g <- zarr_open_group(z)
+
+  g$get_attrs()$set_item("tile", "volcano")
+
+  g
 }
 
 #' Create an empty named list
@@ -304,6 +276,9 @@ compute_size <- function(shape) {
 #' @return Whether the value is NA
 #' @keywords internal
 is_na <- function(val) {
+  if(is.environment(val)) {
+    return(FALSE)
+  }
   if(length(val) != 1) {
     # Including when val is integer(0), character(0), etc.
     return(FALSE)
@@ -362,46 +337,51 @@ get_list_product <- function(dim_indexer_iterables) {
 }
 
 #' @keywords internal
-item_to_key <- function(item) {
-  # Remove leading slash if necessary.
-  if(substr(item, 1, 1) == "/") {
-    key <- substr(item, 2, length(item))
-  } else {
-    key <- item
-  }
-  key
-}
-
-#' @keywords internal
 is_truthy_parallel_option <- function(val) {
   if(is.na(val)) return(FALSE)
-  
+
   if(inherits(val, "cluster")) return(TRUE)
-  
+
   if(val == "future") return(TRUE)
-  
+
   return(as.logical(as.integer(val)))
 }
 
-try_from_zmeta <- function(key, store) {
-  store$get_consolidated_metadata()$metadata[[key]]
+#' Check if the bit64 package is available
+#' @return Logical.
+#' @keywords internal
+has_bit64 <- function() {
+  requireNamespace("bit64", quietly = TRUE)
 }
 
-try_fromJSON <- function(json, warn_message = "Error parsing json was", 
-                         simplifyVector = FALSE) {
-  out <- tryCatch({
-    jsonlite::fromJSON(json, simplifyVector)
-  }, error = \(e) {
-    if(grepl("NaN", e)) {
-      tryCatch({
-        jsonlite::fromJSON(gsub("NaN", "null", json), simplifyVector)
-      }, error = \(e) {
-        warning("\n\n", warn_message, "\n\n", e)
-        NULL
-      })
-    } else {
-      warning("\n\n", warn_message, "\n\n", e)
-      NULL
-    }
-  })
+#' Check if a dtype represents a 64-bit integer type
+#' @param dtype_obj A Dtype instance.
+#' @return Logical.
+#' @keywords internal
+is_int64_dtype <- function(dtype_obj) {
+  dtype_obj$basic_type %in% c("i", "u") && dtype_obj$num_bytes == 8
 }
+
+#' Convert raw bytes to integer64 vector
+#' @param buf Raw vector of 8-byte little-endian integers.
+#' @param n Number of elements to read.
+#' @param endian "little" or "big".
+#' @return A bit64::integer64 vector.
+#' @keywords internal
+raw_to_integer64 <- function(buf, n, endian = "little") {
+  # integer64 stores int64 bit patterns in double's 8 bytes
+  vec <- readBin(con = buf, what = double(), size = 8, n = n, endian = endian)
+  class(vec) <- "integer64"
+  vec
+}
+
+#' Convert integer64 vector to raw bytes
+#' @param x A bit64::integer64 vector.
+#' @param endian "little" or "big".
+#' @return A raw vector.
+#' @keywords internal
+integer64_to_raw <- function(x, endian = "little") {
+  # Strip class so writeBin sees plain doubles (which hold the int64 bits)
+  writeBin(unclass(x), con = raw(), size = 8, endian = endian)
+}
+

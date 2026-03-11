@@ -6,37 +6,41 @@
 #' @description
 #' Instantiate a group from an initialized store.
 #'
+#' @format [R6::R6Class]
 #' @rdname ZarrGroup
 #' @export
 ZarrGroup <- R6::R6Class("ZarrGroup",
   private = list(
-    # store TODO
+    # store A MutableMapping providing the underlying storage for the group.
     #' @keywords internal
     store = NULL,
-    # path TODO
+    # path Storage path for this group within the store.
     #' @keywords internal
     path = NULL,
-    # read_only TODO
+    # read_only TRUE if modification operations are not permitted.
     #' @keywords internal
     read_only = NULL,
-    # chunk_store TODO
+    # chunk_store Separate storage for array chunks. If not provided, the main store handles both chunks and metadata.
     #' @keywords internal
     chunk_store = NULL,
-    # cache_attrs TODO
+    # cache_attrs If TRUE (default), user attributes will be cached for faster access.
     #' @keywords internal
     cache_attrs = NULL,
-    # synchronizer TODO
+    # synchronizer Object used to synchronize write access to the group and its arrays.
     #' @keywords internal
     synchronizer = NULL,
-    # key_prefix TODO
+    # key_prefix Storage path prefix prepended to keys when accessing the store. Set to path + "/" or empty string for root.
     #' @keywords internal
     key_prefix = NULL,
-    # meta TODO
+    # meta Parsed group metadata from .zgroup (V2) or zarr.json (V3).
     #' @keywords internal
     meta = NULL,
-    # attrs TODO
+    # attrs A MutableMapping containing user-defined attributes. Attribute values must be JSON serializable.
     #' @keywords internal
     attrs = NULL,
+    # zarr_format Integer 2L or 3L. Detected from the store on initialization.
+    #' @keywords internal
+    zarr_format = NULL,
     item_path = function(item) {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/hierarchy.py#L302
       # Check if the first character is a forward slash
@@ -50,12 +54,13 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     create_group_nosync = function(name, overwrite = FALSE) {
       path <- private$item_path(name)
 
-      # create terminal group
+      # create terminal group (inherit parent's zarr_format)
       init_group(
         private$store,
         path = path,
         overwrite = overwrite,
-        chunk_store = self$get_chunk_store()
+        chunk_store = self$get_chunk_store(),
+        zarr_format = if (!is.null(private$zarr_format)) private$zarr_format else 2L
       )
 
       # create group instance
@@ -70,7 +75,7 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     },
     create_dataset_nosync = function(name, data = NA, ...) {
       path <- private$item_path(name)
-      
+
       kwargs <- list(...)
 
       if(is.null(kwargs[['synchronizer']])) {
@@ -84,6 +89,9 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
         cache_attrs <- kwargs[['cache_attrs']]
       }
 
+      # Inherit parent group's zarr_format unless explicitly overridden
+      grp_zarr_format <- if (!is.null(private$zarr_format)) private$zarr_format else 2L
+
       if(is_na(data)) {
         a <- zarr_create(
           store = private$store,
@@ -91,6 +99,7 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
           chunk_store = self$get_chunk_store(),
           synchronizer = synchronizer,
           cache_attrs = cache_attrs,
+          zarr_format = grp_zarr_format,
           ...
         )
       } else {
@@ -101,6 +110,7 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
           chunk_store = self$get_chunk_store(),
           synchronizer = synchronizer,
           cache_attrs = cache_attrs,
+          zarr_format = grp_zarr_format,
           ...
         )
       }
@@ -110,13 +120,18 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
   public = list(
     #' @description
     #' Create a new ZarrGroup instance.
-    #' @param store Group store, already initialized.
-    #' @param path character path
-    #' @param read_only logical read only?
-    #' @param chunk_store TODO
-    #' @param synchronizer TODO
-    #' @param cache_metadata logical cache metadata?
-    #' @param cache_attrs logical cache attributes?
+    #' @param store ([Store])\cr
+    #'   Group store, already initialized.
+    #' @param path (`character(1)`)\cr
+    #'   Storage path.
+    #' @param read_only (`logical(1)`)\cr
+    #'   Whether the group is read-only.
+    #' @param chunk_store ([Store] or `NA`)\cr
+    #'   Separate storage for chunks.
+    #' @param synchronizer (`ANY` or `NA`)\cr
+    #'   Object used to synchronize write access.
+    #' @param cache_attrs (`logical(1)`)\cr
+    #'   Whether to cache attributes.
     #' @return A `ZarrGroup` instance.
     initialize = function(store, path = NA, read_only = FALSE, 
                           chunk_store = NA, cache_attrs = TRUE, 
@@ -132,60 +147,82 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
       private$chunk_store <- chunk_store
 
       # guard conditions
+      # contains_array() checks both V2 and V3 formats
       if(contains_array(store, path)) {
         stop("ContainsArrayError(path)")
       }
 
-      m_key <- paste0(private$key_prefix, GROUP_META_KEY)
-      
-      # use consolidated metadata if exists
-      meta <- try_from_zmeta(m_key, store)
-      
-      if(!is.null(meta)) {
-        
-        private$meta <- meta
-        
+      # Detect V3 vs V2 and load metadata accordingly
+      v3_key <- paste0(private$key_prefix, ZARR_JSON)
+      if (store$contains_item(v3_key)) {
+        # V3 group: read zarr.json, validate as group
+        private$zarr_format <- 3L
+        meta_bytes <- store$get_item(v3_key)
+        meta3 <- Metadata3$new()
+        private$meta <- meta3$decode_group_metadata(meta_bytes)
+
+        # V3 attributes are embedded in zarr.json
+        a_key <- paste0(private$key_prefix, ATTRS_KEY)
+        private$attrs <- Attributes$new(store, key = a_key, read_only = read_only,
+                                        cache = cache_attrs, synchronizer = synchronizer,
+                                        zarr_format = 3L)
+        if (!is.null(private$meta$attributes)) {
+          private$attrs$set_cached_v3_attrs(private$meta$attributes)
+        }
       } else {
-        
-        # initialize metadata
-        meta_bytes <- tryCatch({
-          
-          meta_bytes <- store$get_item(m_key)
-          
-        }, error = function(cond) {
-          if(is_key_error(cond)) {
-            stop("GroupNotFoundError(path) in Group$new")
-          } else {
-            stop(cond$message)
-          }
-        })
-        
-        if(!is.null(meta_bytes))
-          private$meta <- private$store$metadata_class$decode_group_metadata(meta_bytes)
-        
+        # V2 group: existing logic unchanged
+        private$zarr_format <- 2L
+        m_key <- paste0(private$key_prefix, GROUP_META_KEY)
+
+        # use consolidated metadata if exists
+        meta <- try_from_zmeta(m_key, store)
+
+        if(!is.null(meta)) {
+          private$meta <- meta
+        } else {
+          # initialize metadata
+          meta_bytes <- tryCatch({
+            meta_bytes <- store$get_item(m_key)
+          }, error = function(cond) {
+            if(is_key_error(cond)) {
+              stop("GroupNotFoundError(path) in Group$new")
+            } else {
+              stop(cond$message)
+            }
+          })
+
+          if(!is.null(meta_bytes))
+            private$meta <- private$store$metadata_class$decode_group_metadata(meta_bytes)
+        }
+
+        # V2 attributes in separate .zattrs file
+        a_key <- paste0(private$key_prefix, ATTRS_KEY)
+        private$attrs <- Attributes$new(store, key = a_key, read_only = read_only,
+                                        cache = cache_attrs, synchronizer = synchronizer,
+                                        zarr_format = 2L)
       }
-      
-      # setup attributes
-      a_key <- paste0(private$key_prefix, ATTRS_KEY)
-      private$attrs <- Attributes$new(store, key = a_key, read_only = read_only, cache = cache_attrs, synchronizer = synchronizer)
     },
     #' @description
     #' Get group store
+    #' @return [Store].
     get_store = function() {
       return(private$store)
     },
     #' @description
     #' Get group path
+    #' @return `character(1)`.
     get_path = function() {
       return(private$path)
     },
     #' @description
     #' Get group metadata
+    #' @return `list()` or `NULL`.
     get_meta = function() {
       return(private$meta)
     },
     #' @description
     #' Get group name
+    #' @return `character(1)`.
     get_name = function() {
       if(!is_na(private$path)) {
         name <- private$path
@@ -198,11 +235,13 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     },
     #' @description
     #' Is store read only?
+    #' @return `logical(1)`.
     get_read_only = function() {
       return(private$read_only)
     },
     #' @description
     #' Get group chunk store
+    #' @return [Store].
     get_chunk_store = function() {
       if(is_na(private$chunk_store)) {
         return(private$store)
@@ -211,24 +250,28 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     },
     #' @description
     #' Get group synchronizer
+    #' @return Synchronizer object or `NA`.
     get_synchronizer = function() {
       return(private$synchronizer)
     },
     #' @description
     #' Get group attributes
+    #' @return [Attributes].
     get_attrs = function() {
       return(private$attrs)
     },
     #' @description
     #' Test for group membership.
-    #' @param item character item to test for
+    #' @param item Character item to test for.
+    #' @return `logical(1)`.
     contains_item = function(item) {
       path <- private$item_path(item)
       return(contains_array(private$store, path) || contains_group(private$store, path))
     },
     #' @description
     #' Obtain a group member.
-    #' @param item character item to test for
+    #' @param item Character item to retrieve.
+    #' @return [ZarrArray] or [ZarrGroup].
     get_item = function(item) {
       if(is.null(item)) {
         #for case with no internet
@@ -259,14 +302,18 @@ ZarrGroup <- R6::R6Class("ZarrGroup",
     },
     #' @description
     #' create a group
-    #' @param name character group name
-    #' @param overwrite logical overwrite?
+    #' @param name Character group name.
+    #' @param overwrite Logical overwrite.
+    #' @return [ZarrGroup].
     create_group = function(name, overwrite = FALSE) {
       return(private$create_group_nosync(name, overwrite = overwrite))
     },
-    #' @param name character group name
-    #' @param data data to add to group
-    #' @param ... Extra arguments to pass to zarr_create() or array().
+    #' @description
+    #' Create a dataset (array) within this group.
+    #' @param name Character dataset name.
+    #' @param data Data to add to group.
+    #' @param ... Extra arguments to pass to `zarr_create()` or `array()`.
+    #' @return [ZarrArray].
     create_dataset = function(name, data = NA, ...) {
       return(private$create_dataset_nosync(name, data = data, ...))
     }

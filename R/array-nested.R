@@ -60,6 +60,7 @@ zero_based_to_one_based <- function(selection, shape) {
 #' @description
 #' Represents a multi-dimensional array that can be
 #' accessed and subsetted via list of Slice instances.
+#' @format [R6::R6Class]
 #' @rdname NestedArray
 #' @importFrom R6 R6Class
 #' @export
@@ -120,12 +121,17 @@ NestedArray <- R6::R6Class("NestedArray",
 
         dtype_rtype <- self$dtype_obj$get_rtype()
 
-        self$data <- array(data=dtype_rtype, dim=shape)
+        if (inherits(dtype_rtype, "integer64")) {
+          self$data <- array(data = double(), dim = shape)
+          class(self$data) <- "integer64"
+        } else {
+          self$data <- array(data = dtype_rtype, dim = shape)
+        }
       } else if(!is.raw(data) && is.null(self$shape)) {
         # Create zero-dimensional array.
 
         self$data <- data # TODO?
-      } else if(!is.raw(data) && (is.array(data) || is.vector(data)) && is.atomic(data)) {
+      } else if(!is.raw(data) && (is.array(data) || is.vector(data) || inherits(data, "integer64")) && is.atomic(data)) {
         # Create array from R atomic vector or array().
         num_shape_elements <- compute_size(shape)
         # Check that data array has same shape as expected
@@ -133,16 +139,19 @@ NestedArray <- R6::R6Class("NestedArray",
           self$data <- data
         } else {
           astype_func <- self$dtype_obj$get_asrtype()
+          is_i64 <- inherits(data, "integer64") || is_int64_dtype(self$dtype_obj)
+          coerced <- astype_func(data)
 
           # Data array did not have the expected shape, so we need to reshape it.
           if(!is_na(order) && order == "C") {
             ordered_shape <- shape[rev(seq_len(length(shape)))]
-            array_from_vec <- array(data = as.array(astype_func(data)), dim = ordered_shape)
-            self$data <- aperm(array_from_vec, rev(seq_len(length(shape))))
+            array_from_vec <- array(data = unclass(coerced), dim = ordered_shape)
+            array_from_vec <- aperm(array_from_vec, rev(seq_len(length(shape))))
           } else {
-            astype_func <- self$dtype_obj$get_asrtype()
-            self$data <- array(data=as.array(astype_func(data)), dim=shape)
+            array_from_vec <- array(data = unclass(coerced), dim = shape)
           }
+          if (is_i64 && has_bit64()) class(array_from_vec) <- "integer64"
+          self$data <- array_from_vec
         }
       } else if(is.raw(data)) {
         # Create array from a raw vector.
@@ -179,6 +188,8 @@ NestedArray <- R6::R6Class("NestedArray",
             self$dtype_obj$num_items,
             endian
           )
+        } else if(is_int64_dtype(self$dtype_obj) && has_bit64()) {
+          vec_from_raw <- raw_to_integer64(buf, num_shape_elements, endian)
         } else {
           vec_from_raw <- readBin(
             con = buf,
@@ -190,22 +201,25 @@ NestedArray <- R6::R6Class("NestedArray",
           )
         }
         
+        is_i64 <- inherits(vec_from_raw, "integer64")
+
         if(private$is_zero_dim) {
-          array_from_vec <- array(data = vec_from_raw, dim = c(1))
+          array_from_vec <- array(data = unclass(vec_from_raw), dim = c(1))
         } else {
           if(!is_na(order) && order == "C") {
-            # Either “C” or “F”, defining the layout of bytes within each chunk of the array.
-            # “C” means row-major order, i.e., the last dimension varies fastest;
-            # “F” means column-major order, i.e., the first dimension varies fastest.
+            # Either "C" or "F", defining the layout of bytes within each chunk of the array.
+            # "C" means row-major order, i.e., the last dimension varies fastest;
+            # "F" means column-major order, i.e., the first dimension varies fastest.
             # Reference: https://zarr.readthedocs.io/en/stable/spec/v2.html#metadata
             ordered_shape <- shape[rev(seq_len(length(shape)))]
-            array_from_vec <- array(data = vec_from_raw, dim = ordered_shape)
+            array_from_vec <- array(data = unclass(vec_from_raw), dim = ordered_shape)
             array_from_vec <- aperm(array_from_vec, rev(seq_len(length(shape))))
           } else {
-            array_from_vec <- array(data = vec_from_raw, dim = shape)
+            array_from_vec <- array(data = unclass(vec_from_raw), dim = shape)
           }
         }
-        
+
+        if (is_i64) class(array_from_vec) <- "integer64"
         self$data <- array_from_vec
       } else if(is_scalar(data)) {
         # Create array from a scalar value.
@@ -241,6 +255,7 @@ NestedArray <- R6::R6Class("NestedArray",
     #' Set a subset of the array.
     #' @param selection A list of slices.
     #' @param value A NestedArray or a base R array.
+    #' @return `NULL` (called for side effects, modifies `self$data` in place).
     set = function(selection, value) {
       # value should be a NestedArray.
       selection_list <- zero_based_to_one_based(selection, self$shape)
@@ -279,25 +294,29 @@ NestedArray <- R6::R6Class("NestedArray",
     #' @description
     #' Flatten the array contents.
     #' @param order Either "C", "F", or NA.
-    #' @returns The data as a flat vector.
+    #' @return The data as a flat vector.
     flatten = function(order = NA) {
       # Transpose first (if needed, based on the ordering).
 
-      # “C” means row-major order, i.e., the last dimension varies fastest;
-      # “F” means column-major order, i.e., the first dimension varies fastest.
+      # "C" means row-major order, i.e., the last dimension varies fastest;
+      # "F" means column-major order, i.e., the first dimension varies fastest.
       # Reference: https://zarr.readthedocs.io/en/stable/spec/v2.html#metadata
+
+      is_i64 <- inherits(self$data, "integer64")
 
       if(!is_na(order) && order == "C" && !private$is_zero_dim) {
         ordered_data <- aperm(self$data, rev(seq_len(length(self$shape))))
       } else {
         ordered_data <- self$data
       }
-      return(as.vector(ordered_data))
+      result <- as.vector(ordered_data)
+      if (is_i64) class(result) <- "integer64"
+      return(result)
     },
     #' @description
     #' Flatten the array contents and convert to a raw vector.
     #' @param order Either "C", "F", or NA.
-    #' @returns The data as a flat raw vector.
+    #' @return The data as a flat `raw()` vector (or plain vector for object dtypes).
     flatten_to_raw = function(order = NA) {
       data_as_vec <- self$flatten(order = order)
 
@@ -321,6 +340,8 @@ NestedArray <- R6::R6Class("NestedArray",
           self$dtype_obj$num_items,
           endian
         )
+      } else if(is_int64_dtype(self$dtype_obj) && inherits(data_as_vec, "integer64")) {
+        buf <- integer64_to_raw(data_as_vec, endian)
       } else {
         buf <- writeBin(
           data_as_vec,
@@ -331,9 +352,9 @@ NestedArray <- R6::R6Class("NestedArray",
       }
       return(buf)
     },
-    #' Convert NestArray object to R array (for S3 method)
-    #'
-    #' @return array
+    #' @description
+    #' Convert NestedArray to a base R array.
+    #' @return `array()`.
     as.array = function() {
       # Consider using drop() to simplify dimensions of 1
       return(self$data)
@@ -343,7 +364,8 @@ NestedArray <- R6::R6Class("NestedArray",
 
 #' S3 method for as.array
 #'
-#' @param x 
+#' @param x Object.
+#' @param ... Not used.
 #' @keywords internal
 #' @export
 as.array.NestedArray = function(x, ...) {

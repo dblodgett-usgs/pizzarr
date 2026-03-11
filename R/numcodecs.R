@@ -4,28 +4,35 @@
 #' @description
 #' Abstract class representing a compressor.
 #'
+#' @format [R6::R6Class]
+#' @family Codec classes
 #' @rdname Codec
 #' @export
 Codec <- R6::R6Class("Codec",
    public = list(
      #' @description
      #' Compress data.
-     #' @param buf The un-compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Compressed data.
      encode = function(buf, zarr_arr) {
        return(buf)
      },
      #' @description
      #' Decompress data.
-     #' @param buf The compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
        return(buf)
      },
     #' @description
-    #' Get Configuration
+    #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        return(jsonlite::unbox(NA))
      }
@@ -46,6 +53,8 @@ warn_if_unk_args <- function(unk_args, compressor_name) {
 #' @description
 #' Class representing a ZSTD compressor
 
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname ZstdCodec
 #' @importFrom qs2 zstd_compress_raw zstd_decompress_raw
 #' @export
@@ -58,7 +67,7 @@ ZstdCodec <- R6::R6Class("ZstdCodec",
     #' @description
     #' Create a new ZSTD compressor.
     #' @param level The compression level, between 1 and 22.
-    #' @param ... not used
+    #' @param ... Not used.
     #' @return A new `ZstdCodec` object.
     initialize = function(level = 1, ...) {
       self$level <- level
@@ -66,8 +75,10 @@ ZstdCodec <- R6::R6Class("ZstdCodec",
     },
     #' @description
     #' Compress data.
-    #' @param buf The un-compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Compressed data.
     encode = function(buf, zarr_arr) {
       # Reference: https://github.com/traversc/qs/blob/84e30f4/R/RcppExports.R#L16
@@ -76,15 +87,18 @@ ZstdCodec <- R6::R6Class("ZstdCodec",
     },
     #' @description
     #' Decompress data.
-    #' @param buf The compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Un-compressed data.
     decode = function(buf, zarr_arr) {
       result <- zstd_decompress_raw(buf)
       return(result)
     },
     #' @description
-    #' Get Configuration
+    #' Get codec configuration as a list.
+    #' @return A named list.
     get_config = function() {
       meta <- list(
         id = jsonlite::unbox("zstd"),
@@ -106,6 +120,8 @@ ZstdCodec <- R6::R6Class("ZstdCodec",
 #' For LZ4 compression, use `BloscCodec$new(cname = "lz4")` instead.
 #' This class will be removed in a future version.
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname Lz4Codec
 #' @export
 Lz4Codec <- R6::R6Class("Lz4Codec",
@@ -117,7 +133,7 @@ Lz4Codec <- R6::R6Class("Lz4Codec",
      #' @description
      #' Create a new LZ4 compressor.
      #' @param acceleration The compression level.
-     #' @param ... not used
+     #' @param ... Not used.
      #' @return A new `Lz4Codec` object.
      initialize = function(acceleration = 1, ...) {
        .Deprecated(
@@ -134,8 +150,10 @@ Lz4Codec <- R6::R6Class("Lz4Codec",
      },
      #' @description
      #' Compress data.
-     #' @param buf The un-compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Compressed data.
      encode = function(buf, zarr_arr) {
        # Reference: https://github.com/traversc/qs/blob/84e30f4/R/RcppExports.R#L24
@@ -159,8 +177,10 @@ Lz4Codec <- R6::R6Class("Lz4Codec",
      },
      #' @description
      #' Decompress data.
-     #' @param buf The compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
        if (!requireNamespace("qs", quietly = TRUE)) {
@@ -175,7 +195,8 @@ Lz4Codec <- R6::R6Class("Lz4Codec",
        return(result)
      },
      #' @description
-     #' Get Configuration
+     #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        meta <- list(
          id = jsonlite::unbox("lz4"),
@@ -192,6 +213,8 @@ Lz4Codec <- R6::R6Class("Lz4Codec",
 #' @description
 #' Class representing a zlib compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname ZlibCodec
 #' @export
 ZlibCodec <- R6::R6Class("ZlibCodec",
@@ -202,7 +225,7 @@ ZlibCodec <- R6::R6Class("ZlibCodec",
      #' @description
      #' Create a new Zlib compressor.
      #' @param level The compression level, between 1 and 22.
-     #' @param ... not used
+     #' @param ... Not used.
      #' @return A new `ZlibCodec` object.
      initialize = function(level = 6, ...) {
       self$level <- level
@@ -211,8 +234,10 @@ ZlibCodec <- R6::R6Class("ZlibCodec",
      },
     #' @description
     #' Compress data.
-    #' @param buf The un-compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Compressed data.
      encode = function(buf, zarr_arr) {
       if(self$level != 6) {
@@ -226,8 +251,10 @@ ZlibCodec <- R6::R6Class("ZlibCodec",
      },
     #' @description
     #' Decompress data.
-    #' @param buf The compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
       # References:
@@ -237,7 +264,8 @@ ZlibCodec <- R6::R6Class("ZlibCodec",
       return(result)
      },
     #' @description
-    #' Get Configuration
+    #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        meta <- list(
          id = jsonlite::unbox("zlib"),
@@ -254,6 +282,8 @@ ZlibCodec <- R6::R6Class("ZlibCodec",
 #' @description
 #' Class representing a gzip compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname GzipCodec
 #' @export
 GzipCodec <- R6::R6Class("GzipCodec",
@@ -264,8 +294,8 @@ GzipCodec <- R6::R6Class("GzipCodec",
      #' @description
      #' Create a new Gzip compressor.
      #' @param level The compression level, between 1 and 22.
+     #' @param ... Not used.
      #' @return A new `GzipCodec` object.
-     #' @param ... not used
      initialize = function(level = 6, ...) {
       # No config options for gzip.
       self$level <- level
@@ -273,8 +303,10 @@ GzipCodec <- R6::R6Class("GzipCodec",
      },
      #' @description
      #' Compress data.
-     #' @param buf The un-compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Compressed data.
      encode = function(buf, zarr_arr) {
       if(self$level != 6) {
@@ -288,15 +320,18 @@ GzipCodec <- R6::R6Class("GzipCodec",
      },
      #' @description
      #' Decompress data.
-     #' @param buf The compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
       result <- memDecompress(buf, type = "gzip", asChar = FALSE)
       return(result)
      },
      #' @description
-     #' Get Configuration
+     #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        meta <- list(
           id = jsonlite::unbox("gzip"),
@@ -313,6 +348,8 @@ GzipCodec <- R6::R6Class("GzipCodec",
 #' @description
 #' Class representing a bz2 compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname Bz2Codec
 #' @export
 Bz2Codec <- R6::R6Class("Bz2Codec",
@@ -323,7 +360,7 @@ Bz2Codec <- R6::R6Class("Bz2Codec",
      #' @description
      #' Create a new Bz2 compressor.
      #' @param level The compression level, between 1 and 22.
-     #' @param ... not used
+     #' @param ... Not used.
      #' @return A new `Bz2Codec` object.
      initialize = function(level = 6, ...) {
       # No config options for bz2.
@@ -332,8 +369,10 @@ Bz2Codec <- R6::R6Class("Bz2Codec",
      },
      #' @description
      #' Compress data.
-     #' @param buf The un-compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Compressed data.
      encode = function(buf, zarr_arr) {
        # References:
@@ -347,15 +386,18 @@ Bz2Codec <- R6::R6Class("Bz2Codec",
      },
      #' @description
      #' Decompress data.
-     #' @param buf The compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
       result <- memDecompress(buf, type = "bzip2", asChar = FALSE)
       return(result)
      },
      #' @description
-     #' Get Configuration
+     #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        meta <- list(
          id = jsonlite::unbox("bz2"),
@@ -372,6 +414,8 @@ Bz2Codec <- R6::R6Class("Bz2Codec",
 #' @description
 #' Class representing a lzma compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname LzmaCodec
 #' @export
 LzmaCodec <- R6::R6Class("LzmaCodec",
@@ -384,8 +428,9 @@ LzmaCodec <- R6::R6Class("LzmaCodec",
      #' @description
      #' Create a new lzma compressor.
      #' @param level The compression level, between 1 and 22.
-     #' @param format only 1 is supported
-     #' @param ... not used
+     #' @param format (`integer(1)`)\cr
+     #'   Only 1 is supported.
+     #' @param ... Not used.
      #' @return A new `LzmaCodec` object.
      initialize = function(level = 9, format = 1, ...) {
       # No config options for lzma.
@@ -398,8 +443,10 @@ LzmaCodec <- R6::R6Class("LzmaCodec",
      },
      #' @description
      #' Compress data.
-     #' @param buf The un-compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Compressed data.
      encode = function(buf, zarr_arr) {
        # References:
@@ -413,15 +460,18 @@ LzmaCodec <- R6::R6Class("LzmaCodec",
      },
      #' @description
      #' Decompress data.
-     #' @param buf The compressed data.
-     #' @param zarr_arr The ZarrArray instance.
+     #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+     #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
      #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
       result <- memDecompress(buf, type = "xz", asChar = FALSE)
       return(result)
      },
      #' @description
-     #' Get Configuration
+     #' Get codec configuration as a list.
+    #' @return A named list.
      get_config = function() {
        meta <- list(
          id = jsonlite::unbox("lzma"),
@@ -439,26 +489,36 @@ LzmaCodec <- R6::R6Class("LzmaCodec",
 #' @description
 #' Class representing a Blosc compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname BloscCodec
 #' @export
 BloscCodec <- R6::R6Class("BloscCodec",
   inherit = Codec,
   public = list(
-    #' @field cname The compression algorithm to use.
+    #' @field cname (`character(1)`)\cr
+    #'   The compression algorithm to use.
     cname = NULL,
-    #' @field clevel The compression level.
+    #' @field clevel (`integer(1)`)\cr
+    #'   The compression level.
     clevel = NULL,
-    #' @field shuffle The shuffle filter to use.
+    #' @field shuffle (`logical(1)` | `integer(1)`)\cr
+    #'   The shuffle filter to use.
     shuffle = NULL,
-    #' @field blocksize The block size.
+    #' @field blocksize (`integer(1)` | `NA`)\cr
+    #'   The block size.
     blocksize = NULL,
     #' @description
     #' Create a new Blosc compressor.
-    #' @param cname The compression algorithm to use.
-    #' @param clevel The compression level.
-    #' @param shuffle The shuffle filter to use.
-    #' @param blocksize The block size.
-    #' @param ... not used
+    #' @param cname (`character(1)`)\cr
+    #'   The compression algorithm to use.
+    #' @param clevel (`integer(1)`)\cr
+    #'   The compression level.
+    #' @param shuffle (`logical(1)` | `integer(1)`)\cr
+    #'   The shuffle filter to use.
+    #' @param blocksize (`integer(1)` | `NA`)\cr
+    #'   The block size.
+    #' @param ... Not used.
     #' @return A new `BloscCodec` object.
     initialize = function(cname = "lz4", clevel = 5, shuffle = TRUE, blocksize = NA, ...) {
       self$cname <- cname
@@ -466,44 +526,48 @@ BloscCodec <- R6::R6Class("BloscCodec",
       self$shuffle <- shuffle
       self$blocksize <- blocksize # TODO: use
       # No config options for blosc.
-      if (!require("Rarr", quietly = TRUE)) {
-        stop("Rarr package must be installed to use the Blosc codec. Install with BiocManager::install('Rarr')")
+      if (!requireNamespace("blosc", quietly = TRUE)) {
+        stop("blosc package must be installed to use the Blosc codec. Install with install.packages('blosc')")
       }
       warn_if_unk_args(list(...), "BloscCodec")
     },
     #' @description
     #' Compress data.
-    #' @param buf The un-compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The un-compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Compressed data.
     encode = function(buf, zarr_arr) {
-      if(self$cname != "lz4" || self$clevel != 5) {
-        stop("Only lz4 compression level 5 is enabled for writing.")
-      }
       dtype_size <- zarr_arr$get_dtype()$num_bytes
-       result <- .Call(
-        "compress_chunk_BLOSC",
+      shuffle_str <- if (is.logical(self$shuffle)) {
+        if (self$shuffle) "shuffle" else "noshuffle"
+      } else {
+        c("noshuffle", "shuffle", "bitshuffle")[as.integer(self$shuffle) + 1L]
+      }
+      result <- blosc::blosc_compress(
         buf,
-        as.integer(dtype_size),
-        PACKAGE = "Rarr"
+        compressor = self$cname,
+        level = as.integer(self$clevel),
+        shuffle = shuffle_str,
+        typesize = as.integer(dtype_size)
       )
       return(result)
     },
     #' @description
     #' Decompress data.
-    #' @param buf The compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Un-compressed data.
     decode = function(buf, zarr_arr) {
-      result <- .Call(
-        "decompress_chunk_BLOSC",
-        buf,
-        PACKAGE = "Rarr"
-      )
+      result <- blosc::blosc_decompress(buf)
       return(result)
     },
     #' @description
-    #' Get Configuration
+    #' Get codec configuration as a list.
+    #' @return A named list.
     get_config = function() {
        meta <- list(
          id = jsonlite::unbox("blosc"),
@@ -522,6 +586,8 @@ BloscCodec <- R6::R6Class("BloscCodec",
 #' @description
 #' Class representing a VLenUtf8 compressor
 #'
+#' @format [R6::R6Class] inheriting from [Codec].
+#' @family Codec classes
 #' @rdname VLenUtf8Codec
 #' @export
 VLenUtf8Codec <- R6::R6Class("VLenUtf8Codec",
@@ -529,14 +595,16 @@ VLenUtf8Codec <- R6::R6Class("VLenUtf8Codec",
   public = list(
     #' @description
     #' Compress data.
-    #' @param vec_of_strings The un-compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`character()`)\cr
+    #'   The un-compressed data (character vector).
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Compressed data.
-    encode = function(vec_of_strings, zarr_arr) {
+    encode = function(buf, zarr_arr) {
       # Kind: array to bytes
       # Reference: https://github.com/zarr-developers/numcodecs/blob/cb155432e36536e17a2d054c8c24b7bf6f4a7347/numcodecs/vlen.pyx#L74
 
-      num_strings <- length(vec_of_strings)
+      num_strings <- length(buf)
 
       encoded_values <- list()
       encoded_lengths <- integer(num_strings)
@@ -545,7 +613,7 @@ VLenUtf8Codec <- R6::R6Class("VLenUtf8Codec",
 
       # first iteration to convert to bytes
       for(i in seq_len(num_strings)) {
-        orig_str <- vec_of_strings[i]
+        orig_str <- buf[i]
         if(is.na(orig_str) || is.null(orig_str)) {
           # treat these as missing value, normalize
           orig_str <- ""
@@ -588,8 +656,10 @@ VLenUtf8Codec <- R6::R6Class("VLenUtf8Codec",
     },
     #' @description
     #' Decompress data.
-    #' @param buf The compressed data.
-    #' @param zarr_arr The ZarrArray instance.
+    #' @param buf (`raw()`)\cr
+    #'   The compressed data.
+    #' @param zarr_arr ([ZarrArray])\cr
+    #'   The ZarrArray instance.
     #' @return Un-compressed data.
     decode = function(buf, zarr_arr) {
       # Kind: bytes to array
@@ -626,7 +696,8 @@ VLenUtf8Codec <- R6::R6Class("VLenUtf8Codec",
       return(vec_of_strings)
     },
     #' @description
-    #' Get Configuration
+    #' Get codec configuration as a list.
+    #' @return A named list.
     get_config = function() {
        meta <- list(
          id = jsonlite::unbox("vlen-utf8")
@@ -673,4 +744,243 @@ get_codec <- function(config) {
 #' @returns A Zstd compressor instance.
 get_default_compressor <- function() {
   return(ZstdCodec$new())
+}
+
+# Resolve a V3 codec pipeline into V2-compatible compressor/filters.
+# Reference: https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html#codecs
+#
+# V3 codecs are an ordered list with three roles:
+#   - array-to-array: "transpose" (memory layout reordering)
+#   - array-to-bytes: "endian"/"bytes" (byte order specification)
+#   - bytes-to-bytes: "gzip", "zstd", "blosc", etc. (compression)
+#
+# For read (decode), codecs are applied in reverse order:
+#   1. bytes-to-bytes codecs decompress the data
+#   2. The endian codec tells us byte order for interpreting raw data
+#   3. The transpose codec tells us memory layout order
+#
+# @param codecs_list List of codec entries from V3 zarr.json "codecs" field.
+#   Each entry has $name and optional $configuration.
+# @return Named list with:
+#   $compressor - Codec instance for decompression (or NA if none)
+#   $filters    - List of additional Codec instances (or NA if none)
+#   $endian     - "little" or "big"
+#   $order      - "C" or "F"
+# @keywords internal
+resolve_v3_codecs <- function(codecs_list) {
+  endian <- "little"  # V3 default
+  order <- "C"        # V3 default (C-contiguous)
+  bytes_to_bytes <- list()
+
+  for (codec_entry in codecs_list) {
+    codec_name <- codec_entry$name
+    config <- codec_entry$configuration
+    if (is.null(config)) config <- list()
+
+    if (codec_name %in% c("endian", "bytes")) {
+      # array-to-bytes codec: specifies byte order.
+      # "endian" is the zarrita name; "bytes" is the modern zarr-python name.
+      if (!is.null(config$endian)) {
+        endian <- config$endian
+      }
+    } else if (codec_name == "transpose") {
+      # array-to-array codec: specifies memory layout.
+      # order="F" means Fortran (column-major) ordering.
+      if (!is.null(config$order) && config$order == "F") {
+        order <- "F"
+      }
+    } else {
+      # bytes-to-bytes codec: compression.
+      # Convert V3 codec config to V2 format for get_codec().
+      v2_config <- v3_codec_to_v2_config(codec_name, config)
+      bytes_to_bytes <- append(bytes_to_bytes, list(get_codec(v2_config)))
+    }
+  }
+
+  # Map to V2 compressor/filters pattern:
+  # - If one bytes-to-bytes codec: it's the compressor, no filters
+  # - If multiple: last is compressor, rest are filters
+  # - If none: no compression (NA)
+  if (length(bytes_to_bytes) == 0) {
+    compressor <- NA
+    filters <- NA
+  } else if (length(bytes_to_bytes) == 1) {
+    compressor <- bytes_to_bytes[[1]]
+    filters <- NA
+  } else {
+    compressor <- bytes_to_bytes[[length(bytes_to_bytes)]]
+    filters <- bytes_to_bytes[1:(length(bytes_to_bytes) - 1)]
+  }
+
+  list(
+    compressor = compressor,
+    filters = filters,
+    endian = endian,
+    order = order
+  )
+}
+
+# Map a V3 codec name + config to a V2-style config list for get_codec().
+# Reference: https://zarr-specs.readthedocs.io/en/latest/v3/codecs/
+# V3 uses "name" field; V2 uses "id" field.
+#
+# @param codec_name Character. V3 codec name (e.g., "gzip", "blosc").
+# @param config List. V3 codec configuration.
+# @return Named list with "id" field suitable for get_codec().
+# @keywords internal
+v3_codec_to_v2_config <- function(codec_name, config) {
+  V3_TO_V2_ID <- list(
+    "gzip"  = "gzip",
+    "zstd"  = "zstd",
+    "blosc" = "blosc",
+    "zlib"  = "zlib",
+    "bz2"   = "bz2",
+    "lzma"  = "lzma"
+  )
+
+  v2_id <- V3_TO_V2_ID[[codec_name]]
+  if (is.null(v2_id)) {
+    stop("Unsupported V3 codec: '", codec_name,
+         "'. Supported codecs: ", paste(names(V3_TO_V2_ID), collapse = ", "))
+  }
+
+  # Build V2-style config with "id" field
+  v2_config <- config
+  v2_config$id <- v2_id
+
+  if (v2_id == "blosc") {
+    # V3 blosc uses string shuffle values; V2 BloscCodec expects logical/integer.
+    # For decode, blosc auto-detects shuffle from the compressed header,
+    # but we convert for constructor compatibility.
+    if (!is.null(v2_config$shuffle) && is.character(v2_config$shuffle)) {
+      v2_config$shuffle <- switch(v2_config$shuffle,
+        "noshuffle"  = 0L,
+        "shuffle"    = 1L,
+        "bitshuffle" = 2L,
+        as.integer(v2_config$shuffle)
+      )
+    }
+    # Strip typesize: not a BloscCodec constructor parameter.
+    # Blosc reads typesize from the compressed data header during decode.
+    v2_config$typesize <- NULL
+  }
+
+  if (v2_id == "zstd") {
+    # V3 zstd may include "checksum" field not used by ZstdCodec.
+    v2_config$checksum <- NULL
+  }
+
+  v2_config
+}
+
+# Convert a V2 codec config (with $id) to a V3 codec entry (with $name + $configuration).
+# Inverse of v3_codec_to_v2_config.
+#
+# @param config Named list. V2 codec config with "$id" field (as from get_config()).
+# @param dtype Character or NULL. V2 dtype string for blosc typesize (e.g., "<f4").
+# @return Named list with "$name" and optional "$configuration".
+# @keywords internal
+v2_config_to_v3_codec <- function(config, dtype = NULL) {
+  codec_id <- as.character(config$id)
+
+  V2_TO_V3_NAME <- list(
+    "gzip"  = "gzip",
+    "zstd"  = "zstd",
+    "blosc" = "blosc",
+    "zlib"  = "zlib",
+    "bz2"   = "bz2",
+    "lzma"  = "lzma"
+  )
+
+  v3_name <- V2_TO_V3_NAME[[codec_id]]
+  if (is.null(v3_name)) {
+    stop("Cannot convert V2 codec '", codec_id, "' to V3 codec: unsupported codec")
+  }
+
+  # Build config without the "id" field
+  v3_cfg <- config[names(config) != "id"]
+
+  if (codec_id == "blosc") {
+    # Convert integer shuffle to string ("noshuffle", "shuffle", "bitshuffle")
+    if (!is.null(v3_cfg$shuffle)) {
+      shuffle_int <- as.integer(v3_cfg$shuffle)
+      v3_cfg$shuffle <- jsonlite::unbox(switch(as.character(shuffle_int),
+        "0" = "noshuffle",
+        "1" = "shuffle",
+        "2" = "bitshuffle",
+        "shuffle"
+      ))
+    }
+    # Add typesize (required in V3 blosc)
+    typesize <- if (!is.null(dtype)) get_dtype_numbytes(dtype) else 0L
+    v3_cfg$typesize <- jsonlite::unbox(as.integer(typesize))
+    # Ensure blocksize is present
+    if (is.null(v3_cfg$blocksize)) {
+      v3_cfg$blocksize <- jsonlite::unbox(0L)
+    }
+  }
+
+  if (codec_id == "zstd") {
+    # zarr-python includes checksum in V3 zstd config
+    if (is.null(v3_cfg$checksum)) {
+      v3_cfg$checksum <- jsonlite::unbox(FALSE)
+    }
+  }
+
+  result <- list(name = jsonlite::unbox(v3_name))
+  if (length(v3_cfg) > 0) {
+    result$configuration <- v3_cfg
+  }
+  result
+}
+
+# Build a V3 codec pipeline from V2 compressor, filters, and dtype.
+# Pipeline order (write/encode direction):
+#   1. ArrayBytesCodec: "bytes" (with endian) or "vlen-utf8" if VLenUtf8 filter present
+#   2. BytesBytesCodec: compressor (if any)
+#
+# @param compressor Codec object or NA.
+# @param filters List of Codec objects or NA.
+# @param dtype Character. V2 dtype string (e.g., "<f8").
+# @return List of V3 codec entry lists.
+# @keywords internal
+build_v3_codec_pipeline <- function(compressor, filters, dtype) {
+  codecs <- list()
+
+  # Check for vlen-utf8 filter (it becomes the ArrayBytesCodec in V3)
+  has_vlen <- FALSE
+  if (!is_na(filters) && is.list(filters)) {
+    has_vlen <- any(sapply(filters, function(f) {
+      inherits(f, "VLenUtf8Codec") ||
+        (!is.null(f$id) && as.character(f$id) == "vlen-utf8")
+    }))
+  }
+
+  # 1. ArrayBytesCodec (exactly one, required)
+  if (has_vlen) {
+    codecs <- append(codecs, list(list(name = jsonlite::unbox("vlen-utf8"))))
+  } else {
+    dtype_info <- v2_dtype_to_v3_dtype(dtype)
+    if (is.na(dtype_info$endian)) {
+      # Single-byte type: omit endian field entirely
+      codecs <- append(codecs, list(list(name = jsonlite::unbox("bytes"))))
+    } else {
+      codecs <- append(codecs, list(list(
+        name = jsonlite::unbox("bytes"),
+        configuration = list(endian = jsonlite::unbox(dtype_info$endian))
+      )))
+    }
+  }
+
+  # 2. BytesBytesCodec (compressor, if any)
+  if (!is_na(compressor)) {
+    compressor_cfg <- if (inherits(compressor, "Codec")) {
+      compressor$get_config()
+    } else {
+      compressor
+    }
+    codecs <- append(codecs, list(v2_config_to_v3_codec(compressor_cfg, dtype)))
+  }
+
+  codecs
 }

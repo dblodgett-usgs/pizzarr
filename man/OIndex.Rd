@@ -14,7 +14,7 @@ The Zarr OIndex class.
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{array}}{array}
+\item{\code{array}}{The array instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -38,7 +38,7 @@ Create a new OIndex instance.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{array}}{array}
+\item{\code{array}}{The array instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -58,7 +58,7 @@ get method for the Oindex instance
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{selection}
+\item{\code{selection}}{Selection to apply.}
 }
 \if{html}{\out{</div>}}
 }

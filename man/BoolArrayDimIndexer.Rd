@@ -5,33 +5,33 @@
 \alias{BoolArrayDimIndexer}
 \title{BoolArrayDimIndexer Class}
 \description{
-TODO
+Indexer for a boolean array selection along one dimension, selecting elements where the mask is TRUE.
 }
 \details{
 The Zarr BoolArrayDimIndexer class.
 }
 \keyword{internal}
 \section{Super class}{
-\code{pizzarr::DimIndexer} -> \code{BoolArrayDimIndexer}
+\code{\link[pizzarr:DimIndexer]{pizzarr::DimIndexer}} -> \code{BoolArrayDimIndexer}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{dim_sel}}{selection on dimension}
+\item{\code{dim_sel}}{Selection on dimension.}
 
-\item{\code{dim_len}}{dimension length}
+\item{\code{dim_len}}{Dimension length.}
 
-\item{\code{dim_chunk_len}}{dimension chunk length}
+\item{\code{dim_chunk_len}}{Dimension chunk length.}
 
-\item{\code{num_chunks}}{number of chunks}
+\item{\code{num_chunks}}{Number of chunks.}
 
-\item{\code{chunk_nitems}}{number of items per chunk}
+\item{\code{chunk_nitems}}{Number of items per chunk.}
 
-\item{\code{chunk_nitems_cumsum}}{offsets into the output array}
+\item{\code{chunk_nitems_cumsum}}{Offsets into the output array.}
 
-\item{\code{dim_chunk_ixs}}{chunks that should be visited}
+\item{\code{dim_chunk_ixs}}{Chunks that should be visited.}
 
-\item{\code{dim_out_sel}}{TODO}
+\item{\code{dim_out_sel}}{Output array indices for the selected elements.}
 }
 \if{html}{\out{</div>}}
 }
@@ -55,11 +55,11 @@ Create a new BoolArrayDimIndexer instance.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{dim_sel}}{integer dimension selection}
+\item{\code{dim_sel}}{Integer dimension selection.}
 
-\item{\code{dim_len}}{integer dimension length}
+\item{\code{dim_len}}{Integer dimension length.}
 
-\item{\code{dim_chunk_len}}{integer dimension chunk length}
+\item{\code{dim_chunk_len}}{Integer dimension chunk length.}
 }
 \if{html}{\out{</div>}}
 }

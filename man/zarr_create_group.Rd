@@ -10,7 +10,8 @@ zarr_create_group(
   chunk_store = NA,
   cache_attrs = TRUE,
   synchronizer = NA,
-  path = NA
+  path = NA,
+  zarr_format = 2L
 )
 }
 \arguments{
@@ -34,6 +35,10 @@ Array synchronizer.}
 
 \item{path}{: string, bytes, optional
 Path under which array is stored.}
+
+\item{zarr_format}{: int, optional
+Zarr format version. Use \code{2L} (default) for Zarr V2 or \code{3L}
+for Zarr V3.}
 }
 \value{
 ZarrGroup

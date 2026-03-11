@@ -13,7 +13,8 @@ test_that("demo data", {
 
   expect_error(pizzarr_sample("borked"), "Dataset not found")
   
-  expect_true(grepl("bcsd.zarr", pizzarr_sample("bcsd")))
+  expect_true(grepl("bcsd_v2.zarr", pizzarr_sample("bcsd")))
+  expect_true(grepl("bcsd_v3.zarr", pizzarr_sample("bcsd_v3")))
   
 })
 

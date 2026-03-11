@@ -51,7 +51,7 @@ test_that("LzmaCodec encode/decode round-trip", {
 })
 
 test_that("BloscCodec encode/decode round-trip", {
-  skip_if_not_installed("Rarr")
+  skip_if_not_installed("blosc")
   a <- zarr_create(
     shape = c(8),
     chunks = c(8),

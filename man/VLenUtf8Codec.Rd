@@ -4,12 +4,27 @@
 \name{VLenUtf8Codec}
 \alias{VLenUtf8Codec}
 \title{VLenUtf8Codec Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Codec}.
+}
 \description{
 Class representing a VLenUtf8 compressor
 }
 \details{
 Variable-length UTF-8 codec for Zarr
 }
+\seealso{
+Other Codec classes: 
+\code{\link{BloscCodec}},
+\code{\link{Bz2Codec}},
+\code{\link{Codec}},
+\code{\link{GzipCodec}},
+\code{\link{Lz4Codec}},
+\code{\link{LzmaCodec}},
+\code{\link{ZlibCodec}},
+\code{\link{ZstdCodec}}
+}
+\concept{Codec classes}
 \section{Super class}{
 \code{\link[pizzarr:Codec]{pizzarr::Codec}} -> \code{VLenUtf8Codec}
 }
@@ -28,15 +43,17 @@ Variable-length UTF-8 codec for Zarr
 \subsection{Method \code{encode()}}{
 Compress data.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{VLenUtf8Codec$encode(vec_of_strings, zarr_arr)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{VLenUtf8Codec$encode(buf, zarr_arr)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{vec_of_strings}}{The un-compressed data.}
+\item{\code{buf}}{(\code{character()})\cr
+The un-compressed data (character vector).}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -56,9 +73,11 @@ Decompress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -70,11 +89,14 @@ Un-compressed data.
 \if{html}{\out{<a id="method-VLenUtf8Codec-get_config"></a>}}
 \if{latex}{\out{\hypertarget{method-VLenUtf8Codec-get_config}{}}}
 \subsection{Method \code{get_config()}}{
-Get Configuration
+Get codec configuration as a list.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{VLenUtf8Codec$get_config()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A named list.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-VLenUtf8Codec-clone"></a>}}

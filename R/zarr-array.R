@@ -9,6 +9,7 @@
 #' literals are supported: "..." selects all remaining array dimensions and ":" selects all of a specific 
 #' array dimension.
 #'
+#' @format [R6::R6Class]
 #' @rdname ZarrArray
 #' @export
 ZarrArray <- R6::R6Class("ZarrArray",
@@ -37,53 +38,72 @@ ZarrArray <- R6::R6Class("ZarrArray",
     # write_empty_chunks If True, all chunks will be stored regardless of their contents. If False (default), each chunk is compared to the array's fill value prior to storing. If a chunk is uniformly equal to the fill value, then that chunk is not be stored, and the store entry for that chunk's key is deleted.
     #' @keywords internal
     write_empty_chunks = NULL,
-    # key_prefix TODO
+    # key_prefix Storage path prefix prepended to chunk keys when accessing the store. Set to path + "/" or empty string for root.
     #' @keywords internal
     key_prefix = NULL,
-    # is_view TODO
+    # is_view TRUE if this array is a view on another array, sharing the same underlying store data.
     #' @keywords internal
     is_view = NULL,
-    # attrs TODO
+    # attrs A MutableMapping containing user-defined attributes. Attribute values must be JSON serializable.
     #' @keywords internal
     attrs = NULL,
-    # meta TODO
+    # meta Parsed array metadata from .zarray (V2) or zarr.json (V3).
     #' @keywords internal
     meta = NULL,
-    # shape TODO
+    # shape Integer vector describing the length of each dimension of the array.
     #' @keywords internal
     shape = NULL,
-    # chunks TODO
+    # chunks Integer vector describing the length of each dimension of a chunk.
     #' @keywords internal
     chunks = NULL,
-    # dtype TODO
+    # dtype Dtype object representing the data type of the array.
     #' @keywords internal
     dtype = NULL,
-    # fill_value TODO
+    # fill_value A value used for uninitialized portions of the array.
     #' @keywords internal
     fill_value = NULL,
-    # order TODO
+    # order A string indicating the order in which bytes are arranged within chunks ("C" for row-major, "F" for column-major).
     #' @keywords internal
     order = NULL,
-    # dimension_separator TODO
+    # dimension_separator Separator character used in chunk keys, typically "." (flat) or "/" (nested directory structure).
     #' @keywords internal
     dimension_separator = NULL,
-    # compressor TODO
+    # compressor Primary compression codec used to compress chunk data before storage.
     #' @keywords internal
     compressor = NULL,
-    # filters TODO
+    # filters One or more codecs used to transform data prior to compression.
     #' @keywords internal
     filters = NULL,
-    # vindex TODO
+    # zarr_format: integer, 2L or 3L. Determines which metadata format is in use.
+    #' @keywords internal
+    zarr_format = NULL,
+    # chunk_key_encoding: list with $name and $configuration$separator (V3 only).
+    # V3 default: name="default", separator="/", producing keys like "c/0/1/2".
+    #' @keywords internal
+    chunk_key_encoding = NULL,
+    # vindex Shortcut for vectorized (inner) indexing, supporting coordinate-style selection using integer arrays.
     #' @keywords internal
     vindex = NULL,
-    # oindex TODO
+    # oindex Shortcut for orthogonal (outer) indexing, allowing independent selection per dimension using integer, slice, integer array, or boolean array.
     #' @keywords internal
     oindex = NULL,
     # (Re)load metadata from store without synchronization (file locking).
+    # Detects V3 (zarr.json) vs V2 (.zarray) format automatically.
     load_metadata_nosync = function() {
 
+      # Check for V3 zarr.json first, then fall back to V2 .zarray.
+      # Reference: zarr-python checks zarr.json first for V3 format detection.
+      v3_key <- paste0(private$key_prefix, ZARR_JSON)
+      if (private$store$contains_item(v3_key)) {
+        private$load_metadata_v3_nosync()
+        return()
+      }
+
+      # V2 path (existing code, unchanged)
+      private$zarr_format <- 2L
+
       mkey <- paste0(private$key_prefix, ARRAY_META_KEY)
-      
+
       meta <- try_from_zmeta(mkey, private$store)
       
       if(is.null(meta)) {
@@ -134,6 +154,86 @@ ZarrArray <- R6::R6Class("ZarrArray",
       }
       private$dtype <- normalize_dtype(meta$dtype, object_codec = object_codec)
     },
+    # Load V3 array metadata from zarr.json.
+    # Reference: https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html
+    # V3 zarr.json contains: zarr_format, node_type, shape, data_type,
+    # chunk_grid, chunk_key_encoding, codecs, fill_value, attributes,
+    # dimension_names.
+    load_metadata_v3_nosync = function() {
+      mkey <- paste0(private$key_prefix, ZARR_JSON)
+      meta_bytes <- private$store$get_item(mkey)
+
+      # Decode and validate as V3 array
+      meta3 <- Metadata3$new()
+      meta <- meta3$decode_array_metadata(meta_bytes)
+
+      private$meta <- meta
+      private$zarr_format <- 3L
+
+      # --- shape ---
+      if (is.list(meta$shape)) {
+        private$shape <- as.integer(meta$shape)
+      } else {
+        private$shape <- meta$shape
+      }
+
+      # --- chunks from chunk_grid ---
+      # V3 chunk_grid must be "regular" with a chunk_shape configuration.
+      if (is.null(meta$chunk_grid) || meta$chunk_grid$name != "regular") {
+        stop("Only 'regular' chunk_grid is supported for V3 arrays")
+      }
+      chunk_shape <- meta$chunk_grid$configuration$chunk_shape
+      if (is.list(chunk_shape)) {
+        private$chunks <- as.integer(chunk_shape)
+      } else {
+        private$chunks <- chunk_shape
+      }
+
+      # --- chunk_key_encoding ---
+      # V3 default: name="default", separator="/", chunk keys like "c/0/1/2"
+      # V3 v2-compat: name="v2", separator=".", chunk keys like "0.1.2"
+      private$chunk_key_encoding <- meta$chunk_key_encoding
+      if (is.null(private$chunk_key_encoding)) {
+        private$chunk_key_encoding <- list(
+          name = "default",
+          configuration = list(separator = "/")
+        )
+      }
+      # Set dimension_separator for compatibility with code that reads it
+      sep <- private$chunk_key_encoding$configuration$separator
+      private$dimension_separator <- if (!is.null(sep)) sep else "/"
+
+      # --- codecs -> compressor, filters, order, endian ---
+      # V3 codec pipeline replaces V2 compressor + filters.
+      # resolve_v3_codecs() maps V3 codecs to V2-compatible structures
+      # so decode_chunk() works unchanged.
+      codec_result <- resolve_v3_codecs(meta$codecs)
+      private$compressor <- codec_result$compressor
+      private$filters <- codec_result$filters
+      private$order <- codec_result$order
+
+      # --- dtype ---
+      # V3 uses string names like "float64"; convert to V2 numpy-style
+      # so the existing Dtype class works unchanged.
+      v2_dtype_str <- v3_dtype_to_v2_dtype(meta$data_type,
+                                            endian = codec_result$endian)
+
+      # Check for object codec (vlen-utf8) in filters
+      object_codec <- NA
+      if (!is_na(private$filters)) {
+        for (f in private$filters) {
+          if (inherits(f, "VLenUtf8Codec")) {
+            object_codec <- f
+            break
+          }
+        }
+      }
+      private$dtype <- normalize_dtype(v2_dtype_str, object_codec = object_codec)
+
+      # --- fill_value ---
+      # V3 fill_value is required (not optional like V2).
+      private$fill_value <- meta$fill_value
+    },
     # method_description
     # Load or reload metadata from store.
     load_metadata = function() {
@@ -160,15 +260,37 @@ ZarrArray <- R6::R6Class("ZarrArray",
       if(private$is_view) {
         stop("Operation not permitted for views")
       }
-      if(!is.na(private$compressor)) {
+
+      if (!is.null(private$zarr_format) && private$zarr_format == 3L) {
+        # V3: rebuild and rewrite zarr.json with updated metadata
+        v3_meta <- create_v3_array_meta(
+          shape = private$shape,
+          chunks = private$chunks,
+          dtype = private$dtype$dtype,
+          compressor = private$compressor,
+          fill_value = private$fill_value,
+          order = private$order,
+          filters = private$filters,
+          chunk_key_encoding = private$chunk_key_encoding,
+          attributes = if (!is.null(private$attrs)) private$attrs$to_list() else obj_list()
+        )
+        mkey <- paste0(private$key_prefix, ZARR_JSON)
+        meta3 <- Metadata3$new()
+        encoded_meta <- meta3$encode_array_metadata(v3_meta)
+        private$store$set_item(mkey, encoded_meta)
+        return(invisible(NULL))
+      }
+
+      # V2 path
+      if(!is_na(private$compressor)) {
         compressor_config <- private$compressor$get_config()
       } else {
         compressor_config <- NA
       }
-      if(!is.na(private$filters)) {
+      if(!is_na(private$filters)) {
         filters_config <- list()
         for(filter in private$filters) {
-          append(filters_config, filter$get_config)
+          filters_config <- append(filters_config, list(filter$get_config()))
         }
       } else {
         filters_config <- NA
@@ -176,25 +298,47 @@ ZarrArray <- R6::R6Class("ZarrArray",
       zarray_meta <- list(
         shape = private$shape,
         chunks = private$chunks,
-        dtype = private$dtype$dtype,
+        dtype = jsonlite::unbox(private$dtype$dtype),
         compressor = compressor_config,
-        fill_value = private$vill_value,
-        order = private$order,
-        filters = filters_config
+        fill_value = jsonlite::unbox(private$fill_value),
+        order = jsonlite::unbox(private$order),
+        filters = filters_config,
+        dimension_separator = jsonlite::unbox(private$dimension_separator)
       )
       mkey <- paste0(private$key_prefix, ARRAY_META_KEY)
 
       encoded_meta <- private$store$metadata_class$encode_array_metadata(zarray_meta)
       private$store$set_item(mkey, encoded_meta)
     },
-    # method_description
-    # TODO
+    # Build the store key for a chunk at the given coordinates.
+    # V2: "key_prefix/0.1.2" (dimension_separator between coords)
+    # V3 default: "key_prefix/c/0/1/2" (prefix "c" + separator between coords)
+    # V3 v2-compat: "key_prefix/0.1.2" (no prefix, configured separator)
     chunk_key = function(chunk_coords) {
+      if (!is.null(private$zarr_format) && private$zarr_format == 3L) {
+        # V3 chunk key encoding
+        # Reference: https://zarr-specs.readthedocs.io/en/latest/v3/core/v3.0.html#chunk-key-encoding
+        encoding_name <- private$chunk_key_encoding$name
+        sep <- private$chunk_key_encoding$configuration$separator
+        if (is.null(sep)) sep <- "/"
+
+        if (encoding_name == "default") {
+          # Default V3: prefix "c" + separator + coords
+          # e.g., coords (0,1,2) -> "c/0/1/2"
+          coord_part <- do.call(paste, c(as.list(chunk_coords), sep = sep))
+          return(paste0(private$key_prefix, "c", sep, coord_part))
+        } else if (encoding_name == "v2") {
+          # V2-compatible: no prefix, just coords with separator
+          return(paste0(private$key_prefix, do.call(paste, c(as.list(chunk_coords), sep = sep))))
+        } else {
+          stop("Unsupported chunk_key_encoding: ", encoding_name)
+        }
+      }
+      # V2 chunk key (existing behavior)
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L2063
       return(paste0(private$key_prefix, do.call(paste, c(as.list(chunk_coords), sep = private$dimension_separator))))
     },
-    # method_description
-    # TODO
+    # Compute the number of chunks along each dimension of the array.
     compute_cdata_shape = function() {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L428
       if(is.null(private$shape)) {
@@ -251,15 +395,14 @@ ZarrArray <- R6::R6Class("ZarrArray",
         }
       }
     },
-    # method_description
-    # TODO
+    # Retrieve data for a zero-dimensional array.
     get_basic_selection_zd = function(selection = NA, out = NA, fields = NA) {
       # Special case basic selection for zero-dimensional array
       # Check selection is valid
       if(!is.null(selection) && selection != "...") {
         stop("err_too_many_indices(selection, ())")
       }
-      selection <- ensure_list(selection)  # TODO
+      selection <- ensure_list(selection)
       # Obtain encoded data for chunk
       c_key <- private$chunk_key(c(0))
 
@@ -295,14 +438,21 @@ ZarrArray <- R6::R6Class("ZarrArray",
       }
       return(out)
     },
-    # method_description
-    # TODO
+    # Retrieve data for an N-dimensional array using basic (integer/slice) selection.
     get_basic_selection_nd = function(selection = NA, out = NA, fields = NA) {
-      indexer <- BasicIndexer$new(selection, self)
+      # Route negative-step slices to orthogonal selection
+      sel_list <- if(is.list(selection)) selection else list(selection)
+      has_neg_step <- any(vapply(sel_list, function(s) {
+        is_slice(s) && !is.na(s$step) && s$step < 0
+      }, logical(1)))
+      if(has_neg_step) {
+        indexer <- OrthogonalIndexer$new(selection, self)
+      } else {
+        indexer <- BasicIndexer$new(selection, self)
+      }
       return(private$get_selection(indexer, out = out, fields = fields))
     },
-    # method_description
-    # TODO
+    # Retrieve data by iterating over chunks that overlap the indexer selection, extracting data into the output array.
     get_selection = function(indexer, out = NA, fields = NA) {
       # Reference: https://github.com/gzuidhof/zarr.js/blob/292804/src/core/index.ts#L304
       # We iterate over all chunks which overlap the selection and thus contain data
@@ -343,8 +493,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
       return(out)
 
     },
-    # method_description
-    # TODO
+    # Set data for a zero-dimensional array.
     set_basic_selection_zd = function(selection, value, fields = NA) {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/core.py#L1625
 
@@ -406,14 +555,12 @@ ZarrArray <- R6::R6Class("ZarrArray",
       c_data <- private$encode_chunk(chunk_raw)
       self$get_chunk_store()$set_item(c_key, c_data)
     },
-    # method_description
-    # TODO
+    # Set data for an N-dimensional array using basic (integer/slice) selection.
     set_basic_selection_nd = function(selection, value, fields = NA) {
       indexer <- BasicIndexer$new(selection, self)
       return(private$set_selection(indexer, value = value, fields = fields))
     },
-    # method_description
-    # TODO
+    # Set data by iterating over chunks that overlap the indexer selection, replacing data from the value array.
     set_selection = function(indexer, value, fields = NA) {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L1682
       # Reference: https://github.com/gzuidhof/zarr.js/blob/15e3a3f00eb19f0133018fb65f002311ea53bb7c/src/core/index.ts#L566
@@ -434,10 +581,12 @@ ZarrArray <- R6::R6Class("ZarrArray",
           # Setting a single value
         } else if (is_scalar(value)) {
           # Setting a scalar value
-        } else if("array" %in% class(value)) {
-          if (!all(ensure_integer_vec(dim(value)) == selection_shape_vec)) {
+        } else if("array" %in% class(value) || (is.atomic(value) && is.vector(value))) {
+          if (!is.null(dim(value)) && !all(ensure_integer_vec(dim(value)) == selection_shape_vec)) {
             stop("Shape mismatch in source array and set selection: ${dim(value)} and ${selectionShape}")
           }
+          value <- NestedArray$new(value, shape = selection_shape_vec, dtype=private$dtype, order = private$order)
+        } else if (inherits(value, "integer64")) {
           value <- NestedArray$new(value, shape = selection_shape_vec, dtype=private$dtype, order = private$order)
         } else if ("NestedArray" %in% class(value)) {
           if (!all(ensure_integer_vec(value$shape) == selection_shape_vec)) {
@@ -467,14 +616,12 @@ ZarrArray <- R6::R6Class("ZarrArray",
         return()
       }
     },
-    # method_description
-    # TODO
+    # Decode a chunk and extract the selected region into the output array.
     process_chunk = function(out, cdata, chunk_selection, drop_axes, out_is_ndarray, fields, out_selection, partial_read_decode = FALSE) {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L1755
       # TODO
     },
-    # method_description
-    # TODO
+    # Extract the portion of a value array corresponding to a single chunk projection.
     get_chunk_value = function(proj, indexer, value, selection_shape) {
       # Reference: https://github.com/gzuidhof/zarr.js/blob/15e3a3f00eb19f0133018fb65f002311ea53bb7c/src/core/index.ts#L550
       
@@ -620,10 +767,6 @@ ZarrArray <- R6::R6Class("ZarrArray",
     chunk_setitem = function(chunk_coords, chunk_selection, value, fields = NA) {
       # Reference: https://github.com/gzuidhof/zarr.js/blob/15e3a3f00eb19f0133018fb65f002311ea53bb7c/src/core/index.ts#L625
       
-      if (private$order == "C" && self$get_ndim() > 1) {
-        stop("Setting content for arrays in C-order is not yet supported.")
-      }
-
       # Obtain key for chunk storage
       chunk_key <- private$chunk_key(chunk_coords)
 
@@ -666,7 +809,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
           if (is_key_error(cond)) {
             # Chunk is not initialized
             chunk_data <- dtype_constr(chunk_size)
-            if (!is.null(private$fill_value)) { # TODO: should this be is.na
+            if (!is_na(private$fill_value)) {
               chunk_fill(chunk_data, private$fill_value)
             }
             # From base R array.
@@ -789,25 +932,61 @@ ZarrArray <- R6::R6Class("ZarrArray",
 
       return(cdata)
     },
-    # method_description
-    # TODO
-    append_nosync = function(data, axis = 0) {
-      # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L2141
-      # TODO
+    # Append data to the array along the specified axis without synchronization.
+    # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L2141
+    append_nosync = function(data, axis = 1) {
+      if (!is.array(data)) {
+        data <- as.array(data)
+      }
+
+      old_shape <- private$shape
+      data_shape <- dim(data)
+      if (length(data_shape) != length(old_shape)) {
+        stop("incompatible number of dimensions for append")
+      }
+      for (i in seq_along(old_shape)) {
+        if (i != axis && data_shape[i] != old_shape[i]) {
+          stop("shape mismatch on non-append axis")
+        }
+      }
+
+      new_shape <- old_shape
+      new_shape[axis] <- old_shape[axis] + data_shape[axis]
+      do.call(self$resize, as.list(new_shape))
+
+      selection <- list()
+      for (i in seq_along(new_shape)) {
+        if (i == axis) {
+          selection[[i]] <- slice(old_shape[axis] + 1, new_shape[axis])
+        } else {
+          selection[[i]] <- slice(1, new_shape[i])
+        }
+      }
+
+      self$set_item(selection, data)
     }
   ),
   public = list(
     #' @description
     #' Create a new ZarrArray instance.
-    #' @param store Array store already initialized.
-    #' @param path character path
-    #' @param read_only logical read only?
-    #' @param chunk_store TODO
-    #' @param synchronizer TODO
-    #' @param cache_metadata logical cache metadata?
-    #' @param cache_attrs logical cache attributes?
-    #' @param write_empty_chunks logical write empty chunks?
-    #' @return An `Array` instance.
+    #' @param store ([Store])\cr
+    #'   Array store, already initialized.
+    #' @param path (`character(1)`)\cr
+    #'   Storage path.
+    #' @param read_only (`logical(1)`)\cr
+    #'   Whether the array is read-only.
+    #' @param chunk_store ([Store] or `NA`)\cr
+    #'   Separate storage for chunks. If not provided, `store` will be used
+    #'   for both chunks and metadata.
+    #' @param synchronizer (`ANY` or `NA`)\cr
+    #'   Object used to synchronize write access to the array.
+    #' @param cache_metadata (`logical(1)`)\cr
+    #'   Whether to cache metadata.
+    #' @param cache_attrs (`logical(1)`)\cr
+    #'   Whether to cache attributes.
+    #' @param write_empty_chunks (`logical(1)`)\cr
+    #'   Whether to write empty chunks.
+    #' @return A [ZarrArray] instance.
     initialize = function(store, path = NA, read_only = FALSE, 
                           chunk_store = NA, synchronizer = NA, 
                           cache_metadata = TRUE, cache_attrs = TRUE, 
@@ -831,23 +1010,36 @@ ZarrArray <- R6::R6Class("ZarrArray",
       private$load_metadata()
 
       akey <- paste0(private$key_prefix, ATTRS_KEY)
-      private$attrs <- Attributes$new(store, key = akey)
+      if (!is.null(private$zarr_format) && private$zarr_format == 3L) {
+        # V3: attributes are embedded in zarr.json, not in a separate .zattrs.
+        # Create Attributes object and pre-populate cache from parsed metadata.
+        private$attrs <- Attributes$new(store, key = akey, zarr_format = 3L)
+        if (!is.null(private$meta$attributes)) {
+          private$attrs$set_cached_v3_attrs(private$meta$attributes)
+        }
+      } else {
+        # V2: attributes in separate .zattrs file (existing behavior)
+        private$attrs <- Attributes$new(store, key = akey, zarr_format = 2L)
+      }
 
-      private$vindex <- OIndex$new(self)
-      private$oindex <- VIndex$new(self)
+      private$oindex <- OIndex$new(self)
+      private$vindex <- VIndex$new(self)
     },
     #' @description
     #' get store from array.
+    #' @return [Store].
     get_store = function() {
       return(private$store)
     },    
     #' @description
     #' get array path
+    #' @return `character(1)` or `NA`.
     get_path = function() {
       return(private$path)
     },
     #' @description
     #' get full array name
+    #' @return `character(1)` or `NA`.
     get_name = function() {
       if(!is.na(private$path)) {
         name <- private$path
@@ -861,6 +1053,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' get the basename of an array
+    #' @return `character(1)` or `NA`.
     get_basename = function() {
       name <- self$get_name()
       if(!is.na(name)) {
@@ -871,17 +1064,21 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' get the read only property of an array (TRUE/FALSE)
+    #' @return `logical(1)`.
     get_read_only = function() {
       return(private$read_only)
     },
     #' @description
     #' set the read only property of an array
-    #' @param val value to set
+    #' @param val (`logical(1)`)\cr
+    #'   Value to set.
+    #' @return `NULL` (called for side effects).
     set_read_only = function(val) {
       private$read_only <- val
     },
     #' @description
     #' get the chunk store for an array
+    #' @return [Store].
     get_chunk_store = function() {
       if(is_na(private$chunk_store)) {
         return(private$store)
@@ -891,137 +1088,163 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' get the shape of an array
+    #' @return `integer()`.
     get_shape = function() {
       private$refresh_metadata()
       return(private$shape)
     },
     #' @description
     #' set or reset the size of an array
-    #' @param value numeric size to set
+    #' @param value (`integer()`)\cr
+    #'   Numeric size to set.
+    #' @return `NULL` (called for side effects).
     set_shape = function(value) {
       self$resize(value)
     },
     #' @description
     #' Change the shape of the array by growing or shrinking one or more dimensions.
-    #' @param ... arguments for do.call
+    #' @param ... Arguments for do.call.
+    #' @return `NULL` (called for side effects).
     resize = function(...) {
       args <- list(...)
       do.call(private$resize_nosync, args)
     },
     #' @description
     #' get the chunk metadata of an array
+    #' @return `integer()`.
     get_chunks = function() {
       return(private$chunks)
     },
     #' @description
     #' get the Dtype of an array
+    #' @return [Dtype].
     get_dtype = function() {
       return(private$dtype)
     },
     #' @description
     #' get the compressor of an array
+    #' @return [Codec] or `NA`.
     get_compressor = function() {
       return(private$compressor)
     },
     #' @description
     #' get the fill value of an array
+    #' @return Scalar fill value.
     get_fill_value = function() {
       return(private$fill_value)
     },
     #' @description
     #' set the fill value of an array
-    #' @param val fill value to use
+    #' @param val Fill value to use.
+    #' @return `NULL` (called for side effects).
     set_fill_value = function(val) {
       private$fill_value <- val
       private$flush_metadata_nosync()
     },
     #' @description
     #' get the storage order metadata of an array.
+    #' @return `character(1)`, `"C"` or `"F"`.
     get_order = function() {
       return(private$order)
     },
     #' @description
     #' get the filters metadata of an array
+    #' @return `list()` of [Codec] objects or `NA`.
     get_filters = function() {
       return(private$filters)
     },
     #' @description
-    #' get the synchronizer of an array TODO: not implemented
+    #' Get the synchronizer used to coordinate write access to the array.
+    #' @return Synchronizer object or `NA`.
     get_synchronizer = function() {
       return(private$synchronizer)
     },
     #' @description
     #' get attributes of array
+    #' @return [Attributes].
     get_attrs = function() {
       return(private$attrs)
     },
     #' @description
     #' get number of dimensions of array
+    #' @return `integer(1)`.
     get_ndim = function() {
       return(length(private$shape))
     },
     #' @description
-    #' get size of an array TODO: not implemented
+    #' Get the total number of elements in the array.
+    #' @return `numeric(1)`.
     get_size = function() {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L383
       # TODO
     },
     #' @description
-    #' TODO: not implemented
+    #' Get the size in bytes of each item in the array.
+    #' @return `integer(1)`.
     get_itemsize = function() {
       # TODO
     },
     #' @description
     #' get number of bytes of an array
+    #' @return `numeric(1)`.
     get_nbytes = function() {
       private$refresh_metadata()
       return(self$get_size() * self$get_itemsize())
     },
     #' @description
-    #' TODO
+    #' Get the total number of stored bytes for the array, including metadata and compressed chunk data.
+    #' @return `numeric(1)`.
     get_nbytes_stored = function() {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L413
       # TODO
     },
     #' @description
-    #' TODO
+    #' Get the number of chunks along each dimension of the array.
+    #' @return `numeric()`.
     get_cdata_shape = function() {
       private$refresh_metadata()
       return(private$compute_cdata_shape())
     },
     #' @description
-    #' TODO
+    #' Get the total number of chunks in the array.
+    #' @return `integer(1)`.
     get_nchunks = function() {
       # TODO
     },
     #' @description
-    #' TODO
+    #' Get the number of chunks that have been initialized with data.
+    #' @return `integer(1)`.
     get_nchunks_initialized = function() {
       # TODO
     },
     #' @description
     #' get is_view metadata of array
+    #' @return `logical(1)`.
     get_is_view = function() {
       return(private$is_view)
     },
     #' @description
     #' get orthogonal index of array
+    #' @return [OIndex].
     get_oindex = function() {
       return(private$oindex)
     },
     #' @description
     #' get vectorized index of array
+    #' @return [VIndex].
     get_vindex = function() {
       return(private$vindex)
     },
     #' @description
     #' get write empty chunks setting of array
+    #' @return `logical(1)`.
     get_write_empty_chunks = function() {
       return(private$write_empty_chunks)
     },
     #' @description
     #' check if another object refers to the same array. does not check array data
-    #' @param other other object to check
+    #' @param other Other object to check.
+    #' @return `logical(1)`.
     equals = function(other) {
       return(all(c(
         class(other)[[1]] == "Array",
@@ -1032,14 +1255,16 @@ ZarrArray <- R6::R6Class("ZarrArray",
       )))
     },
     #' @description
-    #' TODO
-    #' @param start start of slice
-    #' @param end end of slice
+    #' Iterate over the array or a range of it, yielding successive slices along the first dimension. Uses chunk caching for efficient sequential access.
+    #' @param start Start index of the iteration range (1-based, inclusive).
+    #' @param end End index of the iteration range (1-based, inclusive).
+    #' @return `list()` of [NestedArray] slices.
     islice = function(start = NA, end = NA) {
       # TODO
     },
     #' @description
-    #' TODO
+    #' Return the length of the first dimension. Raises an error for zero-dimensional arrays.
+    #' @return `integer(1)`.
     length = function() {
       if(private$shape) {
         return(private$shape[1])
@@ -1050,7 +1275,8 @@ ZarrArray <- R6::R6Class("ZarrArray",
     },
     #' @description
     #' Subset the array.
-    #' @returns A subset of the array, as a NestedArray instance.
+    #' @param selection Selection specifying the subset to retrieve.
+    #' @return [NestedArray].
     get_item = function(selection) {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L580
       # Reference: https://github.com/gzuidhof/zarr.js/blob/master/src/core/index.ts#L266
@@ -1064,10 +1290,11 @@ ZarrArray <- R6::R6Class("ZarrArray",
       }
     },
     #' @description
-    #' get a selection of an array based on a "basic"list of slices
-
-    #' @param out TODO
-    #' @param fields TODO
+    #' Get a selection of an array based on a "basic" list of slices.
+    #' @param selection Selection specifying the subset to retrieve.
+    #' @param out Not yet implemented.
+    #' @param fields Not yet implemented.
+    #' @return [NestedArray].
     get_basic_selection = function(selection = NA, out = NA, fields = NA) {
       # Refresh metadata
       if(!private$cache_metadata) {
@@ -1080,10 +1307,11 @@ ZarrArray <- R6::R6Class("ZarrArray",
       return(private$get_basic_selection_nd(selection, out = out, fields = fields))
     },
     #' @description
-    #' TODO
-
-    #' @param out TODO
-    #' @param fields TODO
+    #' Retrieve data using orthogonal (outer) indexing.
+    #' @param selection Selection specifying the subset to retrieve.
+    #' @param out Not yet implemented.
+    #' @param fields Not yet implemented.
+    #' @return [NestedArray].
     get_orthogonal_selection = function(selection = NA, out = NA, fields = NA) {
       
       # Refresh metadata
@@ -1095,33 +1323,37 @@ ZarrArray <- R6::R6Class("ZarrArray",
       return(private$get_selection(indexer, out = out, fields = fields))
     },
     #' @description
-    #' TODO
-
-    #' @param out TODO
-    #' @param fields TODO
+    #' Retrieve data using coordinate (point) indexing. Not yet implemented.
+    #' @param selection Selection specifying the subset to retrieve.
+    #' @param out Not yet implemented.
+    #' @param fields Not yet implemented.
+    #' @return [NestedArray].
     get_coordinate_selection = function(selection = NA, out = NA, fields = NA) {
       # TODO
     },
     #' @description
-    #' TODO
-
-    #' @param out TODO
-    #' @param fields TODO
+    #' Retrieve data using a boolean mask. Not yet implemented.
+    #' @param selection Selection specifying the subset to retrieve.
+    #' @param out Not yet implemented.
+    #' @param fields Not yet implemented.
+    #' @return [NestedArray].
     get_mask_selection = function(selection = NA, out = NA, fields = NA) {
       # TODO
     },
     #' @description
     #' Set a subset of the array.
-
+    #' @param selection Selection specifying the subset to set.
     #' @param value The value to set, as an R array() or a Zarr NestedArray instance.
+    #' @return `NULL` (called for side effects).
     set_item = function(selection, value) {
       self$set_basic_selection(selection, value)
     },
     #' @description
-    #' TODO
-
-    #' @param value TODO
-    #' @param fields TODO
+    #' Set a selection of the array using basic (integer/slice) indexing.
+    #' @param selection Selection specifying the subset to set.
+    #' @param value The value to set.
+    #' @param fields Not yet implemented.
+    #' @return `NULL` (called for side effects).
     set_basic_selection = function(selection, value, fields = NA) {
       # Handle zero-dimensional arrays
       if(is.null(private$shape) || length(private$shape) == 0) {
@@ -1130,76 +1362,86 @@ ZarrArray <- R6::R6Class("ZarrArray",
       return(private$set_basic_selection_nd(selection, value = value, fields = fields))
     },
     #' @description
-    #' TODO
-
-    #' @param value TODO
-    #' @param fields TODO
+    #' Set data using orthogonal (outer) indexing. Not yet implemented.
+    #' @param selection Selection specifying the subset to set.
+    #' @param value Not yet implemented.
+    #' @param fields Not yet implemented.
+    #' @return `NULL` (called for side effects).
     set_orthogonal_selection = function(selection, value, fields = NA) {
       # TODO
     },
     #' @description
-    #' TODO
-
-    #' @param value TODO
-    #' @param fields TODO
+    #' Set data using coordinate (point) indexing. Not yet implemented.
+    #' @param selection Selection specifying the subset to set.
+    #' @param value Not yet implemented.
+    #' @param fields Not yet implemented.
+    #' @return `NULL` (called for side effects).
     set_coordinate_selection = function(selection, value, fields = NA) {
       # TODO
     },
     #' @description
-    #' TODO
-
-    #' @param value TODO
-    #' @param fields TODO
+    #' Set data using a boolean mask. Not yet implemented.
+    #' @param selection Selection specifying the subset to set.
+    #' @param value Not yet implemented.
+    #' @param fields Not yet implemented.
+    #' @return `NULL` (called for side effects).
     set_mask_selection = function(selection, value, fields = NA) {
       # TODO
     },
     #' @description
-    #' TODO
+    #' Get array diagnostic info. Not yet implemented.
+    #' @return `character(1)`.
     get_info = function() {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L2141
       # TODO
     },
     #' @description
-    #' TODO
-    #' @param hashname name of hash
+    #' Compute a checksum digest of the array data. Not yet implemented.
+    #' @param hashname Name of hash.
+    #' @return `character(1)`.
     get_digest = function(hashname = "sha1") {
       # TODO
     },
     #' @description
-    #' TODO
-    #' @param hashname name of hash
+    #' Compute a hex-string checksum digest. Not yet implemented.
+    #' @param hashname Name of hash.
+    #' @return `character(1)`.
     get_hexdigest = function(hashname = "sha1") {
       # TODO
     },
     #' @description
-    #' TODO
-    #' @param data data to append
-    #' @param axis axis to append
-    append = function(data, axis = 0) {
+    #' Append data to the array along the specified axis.
+    #' @param data Data to append. Will be coerced to array if needed.
+    #' @param axis Axis to append along (1-indexed, R convention). Default 1.
+    #' @return `NULL` (called for side effects).
+    append = function(data, axis = 1) {
       private$append_nosync(data, axis)
     },
     #' @description
-    #' TODO
-    #' @param shape TODO
-    #' @param chunks TODO
-    #' @param dtype TODO
-    #' @param fill_value TODO
-    #' @param filters TODO
-    #' @param read_only TODO
-    #' @param synchronizer TODO
-    view = function(shape = NA, chunks = NA, dtype = NA, fill_value = NA, 
+    #' Return a view on the array with modified interpretation. Not yet implemented.
+    #' @param shape Not yet implemented.
+    #' @param chunks Not yet implemented.
+    #' @param dtype Not yet implemented.
+    #' @param fill_value Not yet implemented.
+    #' @param filters Not yet implemented.
+    #' @param read_only Not yet implemented.
+    #' @param synchronizer Not yet implemented.
+    #' @return [ZarrArray].
+    view = function(shape = NA, chunks = NA, dtype = NA, fill_value = NA,
                     filters = NA, read_only = NA, synchronizer = NA) {
       # TODO
     },
     #' @description
-    #' TODO
-    #' @param dtype TODO
+    #' Return a view with a different dtype. Not yet implemented.
+    #' @param dtype Not yet implemented.
+    #' @return [ZarrArray].
     astype = function(dtype) {
       # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0/zarr/core.py#L2586
       # TODO
     },
     #' @description
-    #' TODO
+    #' Get the dimension separator used in chunk keys.
+    #' @return `character(1)`.
     get_dimension_separator = function() {
       return(private$dimension_separator)
     },
@@ -1227,13 +1469,14 @@ ZarrArray <- R6::R6Class("ZarrArray",
     #' Assign values for a selection using bracket notation (for S3 method).
     #' @param ... Contains the slicing parameters, one for each dimension.
     #' Use empty space to get whole dimension e.g. \code{[1:5,,]}
+    #' @return Always raises an error.
     #' @keywords internal
     `[<-` = function(...) {
       stop("Assignment using bracket notation is not yet supported - use set_item() directly")
     },
     #' @description
     #' Convert Zarr object to R array (for S3 method). Note that this loads all data into memory.
-    #' @return array
+    #' @return An R `array`.
     as.array = function() {
       return(self$get_item("...")$data)
     }
@@ -1242,8 +1485,8 @@ ZarrArray <- R6::R6Class("ZarrArray",
 
 #' S3 method for custom bracket subsetting
 #'
-#' @param obj object
-#' @param ... dots
+#' @param obj Object.
+#' @param ... Dots.
 #' @keywords internal 
 #' @export
 `[.ZarrArray` <- function(obj, ...) {
@@ -1252,8 +1495,10 @@ ZarrArray <- R6::R6Class("ZarrArray",
 
 #' S3 method for custom bracket assignment
 #'
-#' @param value array or ZarrArray
-#' @keywords internal 
+#' @param obj Object.
+#' @param ... Dots.
+#' @param value Array or ZarrArray.
+#' @keywords internal
 #' @export
 `[<-.ZarrArray` <- function(obj, ..., value) {
   obj$`[<-`(value)
@@ -1261,8 +1506,8 @@ ZarrArray <- R6::R6Class("ZarrArray",
 
 #' S3 method for as.array
 #'
-#' @param x object 
-#' @param ... not used
+#' @param x Object.
+#' @param ... Not used.
 #' @keywords internal
 #' @export
 as.array.ZarrArray = function(x, ...) {
@@ -1274,9 +1519,9 @@ as.array.ZarrArray = function(x, ...) {
 #' @description
 #' given information about user preferences and environment conditions, returns a function
 #' and cluster object.
-#' @param on_windows logical indicating if windows restrictions should apply
-#' @param parallel_option integer, or "future" to control how parallelization occurs.
-#' @param progress logical to control whether `pbapply` is used such that progress is printed.
+#' @param on_windows Logical indicating if windows restrictions should apply.
+#' @param parallel_option Integer, or "future" to control how parallelization occurs.
+#' @param progress Logical to control whether `pbapply` is used such that progress is printed.
 #' @return list containing the function to use in parallel operations, a cluster object to be used 
 #' in parallel operations, and whether or not the cluster object needs to be closed.
 #' 
@@ -1315,14 +1560,14 @@ get_parallel_settings <- function(on_windows = (.Platform$OS.type == "windows"),
           apply_func <- function(X, FUN, ..., cl = NULL) {
             pbapply::pblapply(X, FUN, ..., 
                               future.globals = FALSE,
-                              future.packages = "Rarr",
+                              future.packages = "blosc",
                               future.seed = TRUE, cl = cl)
           }
         } else {
           apply_func <- function(X, FUN, ..., cl = NULL) {
             future.apply::future_lapply(X, FUN, ..., 
                                         future.globals = FALSE,
-                                        future.packages = "Rarr",
+                                        future.packages = "blosc",
                                         future.seed=TRUE)
           }
         } }

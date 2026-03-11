@@ -5,7 +5,13 @@
 \title{Initialize a group store. Note that this is a low-level function and there should be no
 need to call this directly from user code.}
 \usage{
-init_group(store, overwrite = FALSE, path = NA, chunk_store = NA)
+init_group(
+  store,
+  overwrite = FALSE,
+  path = NA,
+  chunk_store = NA,
+  zarr_format = 2L
+)
 }
 \arguments{
 \item{store}{: Store

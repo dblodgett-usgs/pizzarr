@@ -5,29 +5,29 @@
 \alias{SliceDimIndexer}
 \title{SliceDimIndexer Class}
 \description{
-TODO
+Indexer for a slice selection along one dimension.
 }
 \details{
 The Zarr SliceDimIndexer class.
 }
 \keyword{internal}
 \section{Super class}{
-\code{pizzarr::DimIndexer} -> \code{SliceDimIndexer}
+\code{\link[pizzarr:DimIndexer]{pizzarr::DimIndexer}} -> \code{SliceDimIndexer}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{dim_len}}{dimension length}
+\item{\code{dim_len}}{Dimension length.}
 
-\item{\code{dim_chunk_len}}{dimension chunk length}
+\item{\code{dim_chunk_len}}{Dimension chunk length.}
 
-\item{\code{num_chunks}}{number of chunks}
+\item{\code{num_chunks}}{Number of chunks.}
 
-\item{\code{start}}{start}
+\item{\code{start}}{Start index.}
 
-\item{\code{stop}}{stop}
+\item{\code{stop}}{Stop index.}
 
-\item{\code{step}}{step}
+\item{\code{step}}{Step size.}
 }
 \if{html}{\out{</div>}}
 }
@@ -51,11 +51,11 @@ Create a new SliceDimIndexer instance.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{dim_sel}}{integer dimension selection}
+\item{\code{dim_sel}}{Integer dimension selection.}
 
-\item{\code{dim_len}}{integer dimension length}
+\item{\code{dim_len}}{Integer dimension length.}
 
-\item{\code{dim_chunk_len}}{integer dimension chunk length}
+\item{\code{dim_chunk_len}}{Integer dimension chunk length.}
 }
 \if{html}{\out{</div>}}
 }
@@ -67,13 +67,13 @@ A \code{SliceDimIndexer} instance.
 \if{html}{\out{<a id="method-SliceDimIndexer-iter"></a>}}
 \if{latex}{\out{\hypertarget{method-SliceDimIndexer-iter}{}}}
 \subsection{Method \code{iter()}}{
-TODO
+Iterate over chunks that overlap the slice, yielding a ChunkDimProjection for each.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{SliceDimIndexer$iter()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-TODO
+A list of ChunkDimProjection objects.
 }
 }
 \if{html}{\out{<hr>}}

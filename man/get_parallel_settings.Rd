@@ -11,11 +11,11 @@ get_parallel_settings(
 )
 }
 \arguments{
-\item{on_windows}{logical indicating if windows restrictions should apply}
+\item{on_windows}{Logical indicating if windows restrictions should apply.}
 
-\item{parallel_option}{integer, or "future" to control how parallelization occurs.}
+\item{parallel_option}{Integer, or "future" to control how parallelization occurs.}
 
-\item{progress}{logical to control whether \code{pbapply} is used such that progress is printed.}
+\item{progress}{Logical to control whether \code{pbapply} is used such that progress is printed.}
 }
 \value{
 list containing the function to use in parallel operations, a cluster object to be used

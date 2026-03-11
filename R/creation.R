@@ -1,40 +1,4 @@
 #' @keywords internal
-path_to_prefix <- function(path) {
-    # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/_storage/store.py#L134
-    # assume path already normalized
-    if(!is.na(path) && stringr::str_length(path) > 0) {
-        prefix <- paste0(path, '/')
-    } else {
-        prefix <- ""
-    }
-    return(prefix)
-}
-
-#' @keywords internal
-contains_array <- function(store, path=NA) {
-    # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/storage.py#L91
-    # Return True if the store contains an array at the given logical path.
-    path <- normalize_storage_path(path)
-    prefix <- path_to_prefix(path)
-    key <- paste0(prefix, ARRAY_META_KEY)
-    ret <- store$contains_item(key)
-    return(!is.null(ret) && ret)
-}
-
-#' @keywords internal
-contains_group <- function(store, path=NA) {
-    # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/storage.py#L99
-    # Return True if the store contains a group at the given logical path.
-
-    path <- normalize_storage_path(path)
-    prefix <- path_to_prefix(path)
-    key <- paste0(prefix, GROUP_META_KEY)
-    ret <- store$contains_item(key)
-    
-    return(!is.null(ret) && ret)
-}
-
-#' @keywords internal
 rmdir <- function(store, path=NA) {
     # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/storage.py#L130
 
@@ -62,7 +26,8 @@ init_array_metadata <- function(
     chunk_store=NA,
     filters=NA,
     object_codec=NA,
-    dimension_separator=NA
+    dimension_separator=NA,
+    zarr_format=2L
 ) {
     # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/storage.py#L358
     if(is_na(compressor)) {
@@ -158,20 +123,35 @@ init_array_metadata <- function(
     }
 
     # initialize metadata
-    zarray_meta <- create_zarray_meta(
-        shape=shape,
-        chunks=chunks,
-        dtype=dtype,
-        compressor=compressor_config,
-        fill_value=fill_value,
-        order=order,
-        filters=filters_config,
-        dimension_separator=dimension_separator
-    )
-    key <- paste0(path_to_prefix(path), ARRAY_META_KEY)
-
-    encoded_meta <- store$metadata_class$encode_array_metadata(zarray_meta)
-    store$set_item(key, encoded_meta)
+    if (zarr_format == 3L) {
+        v3_meta <- create_v3_array_meta(
+            shape = shape,
+            chunks = chunks,
+            dtype = dtype$dtype,
+            compressor = compressor,
+            fill_value = fill_value,
+            order = order,
+            filters = filters
+        )
+        key <- paste0(path_to_prefix(path), ZARR_JSON)
+        meta3 <- Metadata3$new()
+        encoded_meta <- meta3$encode_array_metadata(v3_meta)
+        store$set_item(key, encoded_meta)
+    } else {
+        zarray_meta <- create_zarray_meta(
+            shape=shape,
+            chunks=chunks,
+            dtype=dtype,
+            compressor=compressor_config,
+            fill_value=fill_value,
+            order=order,
+            filters=filters_config,
+            dimension_separator=dimension_separator
+        )
+        key <- paste0(path_to_prefix(path), ARRAY_META_KEY)
+        encoded_meta <- store$metadata_class$encode_array_metadata(zarray_meta)
+        store$set_item(key, encoded_meta)
+    }
 }
 
 #' @keywords internal
@@ -179,7 +159,8 @@ init_group_metadata <- function(
     store,
     overwrite = FALSE,
     path = NA,
-    chunk_store = NA
+    chunk_store = NA,
+    zarr_format = 2L
 ) {
     # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/storage.py#L493
     
@@ -197,13 +178,18 @@ init_group_metadata <- function(
     }
 
     # initialize metadata
-    # N.B., currently no metadata properties are needed, however there may
-    # be in future
-    zgroup_meta <- obj_list()
-    key <- paste0(path_to_prefix(path), GROUP_META_KEY)
-
-    encoded_meta <- store$metadata_class$encode_group_metadata(zgroup_meta)
-    store$set_item(key, encoded_meta)
+    if (zarr_format == 3L) {
+        key <- paste0(path_to_prefix(path), ZARR_JSON)
+        meta3 <- Metadata3$new()
+        encoded_meta <- meta3$encode_group_metadata()
+        store$set_item(key, encoded_meta)
+    } else {
+        # N.B., currently no metadata properties are needed, however there may be in future
+        zgroup_meta <- obj_list()
+        key <- paste0(path_to_prefix(path), GROUP_META_KEY)
+        encoded_meta <- store$metadata_class$encode_group_metadata(zgroup_meta)
+        store$set_item(key, encoded_meta)
+    }
 }
 
 #' @keywords internal
@@ -211,7 +197,8 @@ require_parent_group <- function(
     path,
     store,
     chunk_store,
-    overwrite
+    overwrite,
+    zarr_format = 2L
 ) {
     # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/storage.py#L206
     # assume path is normalized
@@ -221,14 +208,14 @@ require_parent_group <- function(
             p <- paste(segments[0:i], collapse="/")
             if(contains_array(store, p)) {
                 # Parent contained an array, so overwrite as group.
-                init_group_metadata(store, path=p, chunk_store=chunk_store, overwrite=overwrite)
+                init_group_metadata(store, path=p, chunk_store=chunk_store, overwrite=overwrite, zarr_format=zarr_format)
             } else if (!contains_group(store, p)) {
-                init_group_metadata(store, path=p, chunk_store=chunk_store)
+                init_group_metadata(store, path=p, chunk_store=chunk_store, zarr_format=zarr_format)
             }
         }
     }
 
-} 
+}
 
 
 
@@ -276,7 +263,8 @@ init_array <- function(
     chunk_store = NA,
     filters=NA,
     object_codec=NA,
-    dimension_separator=NA
+    dimension_separator=NA,
+    zarr_format=2L
 ) {
     if(is_na(compressor)) {
         compressor <- "default"
@@ -289,7 +277,7 @@ init_array <- function(
     path <- normalize_storage_path(path)
 
     # ensure parent group initialized
-    require_parent_group(path, store=store, chunk_store=chunk_store, overwrite=overwrite)
+    require_parent_group(path, store=store, chunk_store=chunk_store, overwrite=overwrite, zarr_format=zarr_format)
 
     init_array_metadata(
         store,
@@ -304,7 +292,8 @@ init_array <- function(
         chunk_store=chunk_store,
         filters=filters,
         object_codec=object_codec,
-        dimension_separator=dimension_separator
+        dimension_separator=dimension_separator,
+        zarr_format=zarr_format
     )
 
 }
@@ -317,19 +306,21 @@ init_group <- function(
     store,
     overwrite = FALSE,
     path = NA,
-    chunk_store = NA
+    chunk_store = NA,
+    zarr_format = 2L
 ) {
     # normalize path
     path <- normalize_storage_path(path)
 
     # ensure parent group initialized
-    require_parent_group(path, store=store, chunk_store=chunk_store, overwrite=overwrite)
+    require_parent_group(path, store=store, chunk_store=chunk_store, overwrite=overwrite, zarr_format=zarr_format)
 
     init_group_metadata(
         store,
         overwrite=overwrite,
         path=path,
-        chunk_store=chunk_store
+        chunk_store=chunk_store,
+        zarr_format=zarr_format
     )
 }
 
@@ -362,6 +353,9 @@ init_group <- function(
 #'     is deleted. This setting enables sparser storage, as only chunks with
 #'     non-fill-value data are stored, at the expense of overhead associated
 #'     with checking the data of each chunk.
+#' @param zarr_format : int, optional
+#'     Zarr format version. Use \code{2L} (default) for Zarr V2 or \code{3L}
+#'     for Zarr V3.
 #' @returns ZarrArray
 #' @export
 zarr_create <- function(
@@ -382,13 +376,14 @@ zarr_create <- function(
     read_only=FALSE,
     object_codec=NA,
     dimension_separator=NA,
-    write_empty_chunks=TRUE
+    write_empty_chunks=TRUE,
+    zarr_format=2L
 ) {
     # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/creation.py#L18
     if(is_na(compressor)) {
         compressor <- "default"
     }
-    if(is.na(fill_value)) {
+    if(is.na(fill_value) && !is.nan(fill_value)) {
         fill_value <- 0
     }
     if(is.na(order)) {
@@ -402,7 +397,7 @@ zarr_create <- function(
     init_array(store, shape=shape, chunks=chunks, dtype=dtype, compressor=compressor,
                fill_value=fill_value, order=order, overwrite=overwrite, path=path,
                chunk_store=chunk_store, filters=filters, object_codec=object_codec,
-               dimension_separator=dimension_separator)
+               dimension_separator=dimension_separator, zarr_format=zarr_format)
 
     
     # instantiate array
@@ -460,7 +455,8 @@ zarr_create_group <- function(
     chunk_store = NA,
     cache_attrs = TRUE,
     synchronizer = NA,
-    path = NA
+    path = NA,
+    zarr_format = 2L
 ) {
     # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/hierarchy.py#L1061
     # handle polymorphic store arg
@@ -472,7 +468,8 @@ zarr_create_group <- function(
             store,
             overwrite = overwrite,
             chunk_store = chunk_store,
-            path = path
+            path = path,
+            zarr_format = zarr_format
         )
     }
     return(ZarrGroup$new(
@@ -500,7 +497,8 @@ zarr_open_group <- function(
     synchronizer = NA,
     path = NA,
     chunk_store = NA,
-    storage_options = NA
+    storage_options = NA,
+    zarr_format = 2L
 ) {
     # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/hierarchy.py#L1119
 
@@ -515,6 +513,12 @@ zarr_open_group <- function(
     }
     path <- normalize_storage_path(path)
 
+    # Auto-detect V3 format from existing store
+    v <- detect_zarr_version(store, path)
+    if (!is.na(v) && v == 3L) {
+      zarr_format <- 3L
+    }
+
     # ensure store is initialized
 
     if(mode == "r" || mode == "r+") {
@@ -526,14 +530,14 @@ zarr_open_group <- function(
         }
 
     } else if (mode == 'w') {
-        init_group(store, overwrite=TRUE, path=path, chunk_store=chunk_store)
+        init_group(store, overwrite=TRUE, path=path, chunk_store=chunk_store, zarr_format=zarr_format)
 
     } else if(mode == "a") {
         if (!contains_group(store, path)) {
             if(contains_array(store, path)) {
                 stop("ContainsArrayError(path)")
             }
-            init_group(store, path=path, chunk_store=chunk_store)
+            init_group(store, path=path, chunk_store=chunk_store, zarr_format=zarr_format)
         }
     } else if(mode == "w-" || mode == "x") {
         if (contains_array(store, path)) {
@@ -541,7 +545,7 @@ zarr_open_group <- function(
         } else if (contains_group(store, path)) {
             stop("ContainsGroupError(path)")
         } else {
-            init_group(store, path=path, chunk_store=chunk_store)
+            init_group(store, path=path, chunk_store=chunk_store, zarr_format=zarr_format)
         }
     }
 
@@ -584,13 +588,14 @@ zarr_open_array <- function(
     cache_attrs=TRUE,
     object_codec=NA,
     dimension_separator=NA,
-    write_empty_chunks=TRUE
+    write_empty_chunks=TRUE,
+    zarr_format=2L
 ) {
     # Reference: https://github.com/zarr-developers/zarr-python/blob/5dd4a0e6cdc04c6413e14f57f61d389972ea937c/zarr/creation.py#L376
     if(is_na(compressor)) {
         compressor <- "default"
     }
-    if(is.na(fill_value)) {
+    if(is.na(fill_value) && !is.nan(fill_value)) {
         fill_value <- 0
     }
     if(is.na(order)) {
@@ -608,6 +613,12 @@ zarr_open_array <- function(
     }
     path <- normalize_storage_path(path)
 
+    # Auto-detect V3 format from existing store
+    v <- detect_zarr_version(store, path)
+    if (!is.na(v) && v == 3L) {
+      zarr_format <- 3L
+    }
+
     # ensure store is initialized
     if(mode == "r" || mode == "r+") {
         if (!contains_array(store, path)) {
@@ -622,7 +633,8 @@ zarr_open_array <- function(
             store, shape=shape, chunks=chunks, dtype=dtype,
             compressor=compressor, fill_value=fill_value,
             order=order, filters=filters, overwrite=TRUE, path=path,
-            object_codec=object_codec, chunk_store=chunk_store
+            object_codec=object_codec, chunk_store=chunk_store,
+            zarr_format=zarr_format
         )
 
     } else if(mode == "a") {
@@ -634,7 +646,8 @@ zarr_open_array <- function(
                 store, shape=shape, chunks=chunks, dtype=dtype,
                 compressor=compressor, fill_value=fill_value,
                 order=order, filters=filters, path=path,
-                object_codec=object_codec, chunk_store=chunk_store
+                object_codec=object_codec, chunk_store=chunk_store,
+                zarr_format=zarr_format
             )
         }
     } else if(mode == "w-" || mode == "x") {
@@ -647,7 +660,8 @@ zarr_open_array <- function(
                 store, shape=shape, chunks=chunks, dtype=dtype,
                 compressor=compressor, fill_value=fill_value,
                 order=order, filters=filters, path=path,
-                object_codec=object_codec, chunk_store=chunk_store
+                object_codec=object_codec, chunk_store=chunk_store,
+                zarr_format=zarr_format
             )
         }
     }

@@ -4,6 +4,8 @@
 #' @description
 #' Class representing an abstract store
 #'
+#' @format [R6::R6Class]
+#' @family Store classes
 #' @rdname Store
 #' @export
 Store <- R6::R6Class("Store",
@@ -28,7 +30,7 @@ Store <- R6::R6Class("Store",
       }
    ),
    public = list(
-    #' @field metadata_class TODO
+    #' @field metadata_class The metadata encoder/decoder for this store.
     #' @keywords internal
     metadata_class = NULL,
     #' @description 
@@ -42,33 +44,39 @@ Store <- R6::R6Class("Store",
       self$metadata_class <- Metadata2$new()
     },
     #' @description
-    #' test if Store is readable
+    #' Test if Store is readable.
+    #' @return Logical.
     is_readable = function() {
       return(private$readable)
     },
     #' @description
-    #' test if Store is writeable
+    #' Test if Store is writeable.
+    #' @return Logical.
     is_writeable = function() {
       return(private$writeable)
     },
     #' @description
-    #' test if Store is eraseable
+    #' Test if Store is eraseable.
+    #' @return Logical.
     is_erasable = function() {
       return(private$erasable)
     },
     #' @description
-    #' test if Store is listable
+    #' Test if Store is listable.
+    #' @return Logical.
     is_listable = function() {
       return(private$listable)
     },
     #' @description
-    #' close the store
+    #' Close the store.
+    #' @return `NULL`.
     close = function() {
       # Do nothing by default
     },
     #' @description
-    #' list the store directory
-    #' @param path character path
+    #' List the store directory.
+    #' @param path character path.
+    #' @return Character vector of keys.
     listdir = function(path=NA) {
       if(is.na(path)) {
         path <- ""
@@ -77,9 +85,10 @@ Store <- R6::R6Class("Store",
       return(private$listdir_from_keys(path))
     },
     #' @description
-    #' rename a Store
-    #' @param src_path character source path
-    #' @param dst_path character destination path
+    #' Rename a Store path.
+    #' @param src_path character source path.
+    #' @param dst_path character destination path.
+    #' @return `NULL` (called for side effects).
     rename = function(src_path, dst_path) {
       if(!self$is_erasable()) {
         stop("Store is not erasable, cannot call 'rename'")
@@ -87,8 +96,9 @@ Store <- R6::R6Class("Store",
       private$rename_from_keys(src_path, dst_path)
     },
     #' @description
-    #' remove a path within a Store
-    #' @param path character path
+    #' Remove a path within a Store.
+    #' @param path character path.
+    #' @return `NULL` (called for side effects).
     rmdir = function(path) {
       if(!self$is_erasable()) {
         stop("Store is not erasable, cannot call 'rmdir'")
@@ -107,6 +117,7 @@ Store <- R6::R6Class("Store",
      #' Set an item in the store.
      #' @param key The item key.
      #' @param value The item value as a vector of type raw.
+     #' @return `NULL` (called for side effects).
      set_item = function(key, value) {
 
      },
@@ -119,6 +130,7 @@ Store <- R6::R6Class("Store",
      },
     #' @description
     #' Get consolidated metadata if it exists.
+    #' @return A list or `NULL`.
     get_consolidated_metadata = function() {
       return(private$zmetadata)
     }
@@ -133,6 +145,8 @@ Store <- R6::R6Class("Store",
 #' @description
 #' Store class using directories and files on a standard file system.
 #'
+#' @format [R6::R6Class] inheriting from [Store].
+#' @family Store classes
 #' @rdname DirectoryStore
 #' @export
 DirectoryStore <- R6::R6Class("DirectoryStore",
@@ -171,6 +185,7 @@ DirectoryStore <- R6::R6Class("DirectoryStore",
     #' Set an item in the store.
     #' @param key The item key.
     #' @param value The item value as a vector of type raw.
+    #' @return `NULL` (called for side effects).
     set_item = function(key, value) {
       fp <- file.path(self$root, key)
       dir.create(dirname(fp), recursive = TRUE, showWarnings = FALSE)
@@ -187,8 +202,9 @@ DirectoryStore <- R6::R6Class("DirectoryStore",
       return(file.exists(fp))
     },
     #' @description
-    #' remove a path within a Store
-    #' @param path character path
+    #' Remove a path within a Store.
+    #' @param path Character path.
+    #' @return `NULL` (called for side effects).
     rmdir = function(path=NA) {
       path <- normalize_storage_path(path)
       dir_path <- self$root
@@ -200,8 +216,9 @@ DirectoryStore <- R6::R6Class("DirectoryStore",
       }
     },
     #' @description
-    #' list the store directory
-    #' @param key character key
+    #' List the store directory.
+    #' @param key Character key.
+    #' @return `character()` vector of entries.
     listdir = function(key=NA) {
       if(is_na(key)) {
         dir_path <- self$root
@@ -228,6 +245,8 @@ DirectoryStore <- R6::R6Class("DirectoryStore",
 #' Store class that uses a hierarchy of list objects,
 #' thus all data will be held in main memory.
 #'
+#' @format [R6::R6Class] inheriting from [Store].
+#' @family Store classes
 #' @rdname MemoryStore
 #' @export
 MemoryStore <- R6::R6Class("MemoryStore",
@@ -282,6 +301,7 @@ MemoryStore <- R6::R6Class("MemoryStore",
      #' Set an item in the store.
      #' @param item The item key.
      #' @param value The item value as a vector of type raw.
+     #' @return `NULL` (called for side effects).
      set_item = function(item, value) {
        segments <- strsplit(item, "/")[[1]]
        if(length(segments) > 1) {
@@ -323,8 +343,9 @@ MemoryStore <- R6::R6Class("MemoryStore",
        return(result)
      },
      #' @description
-     #' list the store directory
-     #' @param key character key
+     #' List the store directory.
+     #' @param key Character key.
+     #' @return `character()` vector of entries.
      listdir = function(key=NA) {
       item <- self$get_item(key)
       if(!is.list(item)) {
@@ -333,8 +354,9 @@ MemoryStore <- R6::R6Class("MemoryStore",
       return(sort(names(item)))
      },
      #' @description
-     #' remove a path within a Store
-     #' @param item character item
+     #' Remove a path within a Store.
+     #' @param item Character item.
+     #' @return `NULL` (called for side effects).
      rmdir = function(item) {
       if(is_na(item) || item == "") {
         self$root <- obj_list()
@@ -344,6 +366,17 @@ MemoryStore <- R6::R6Class("MemoryStore",
      }
    )
 )
+
+#' @keywords internal
+item_to_key <- function(item) {
+  # Remove leading slash if necessary.
+  if(substr(item, 1, 1) == "/") {
+    key <- substr(item, 2, length(item))
+  } else {
+    key <- item
+  }
+  key
+}
 
 # Reference: https://github.com/manzt/zarrita.js/blob/main/packages/storage/src/fetch.ts
 
@@ -361,6 +394,8 @@ MemoryStore <- R6::R6Class("MemoryStore",
 #' Set the option "pizzarr.progress_bar" to TRUE to get a progress bar for long running reads.
 #' 
 #' For more, see `vignette("parallel").`
+#' @format [R6::R6Class] inheriting from [Store].
+#' @family Store classes
 #' @rdname HttpStore
 #' @importFrom memoise memoise timeout
 #' @export
@@ -463,11 +498,15 @@ HttpStore <- R6::R6Class("HttpStore",
     }
   ),
   public = list(
-    #' @description 
-    #' Create a `HttpStore` object 
-    #' @param url character url of store
-    #' @param options crul options
-    #' @param headers crul headers
+    #' @description
+    #' Create a `HttpStore` object
+    #' @param url (`character(1)`)\cr
+    #'   URL of the store.
+    #' @param options (`list()` or `NA`)\cr
+    #'   Options passed to crul.
+    #' @param headers (`list()` or `NA`)\cr
+    #'   Headers passed to crul.
+    #' @return A new `HttpStore` object.
     initialize = function(url, options = NA, headers = NA) {
       super$initialize()
       # Remove trailing slash if necessary.
@@ -532,7 +571,7 @@ HttpStore <- R6::R6Class("HttpStore",
     },
     #' @description
     #' Fetches .zmetadata from the store evaluates its names
-    #' @return character vector of unique keys that do note  start with a `.`. 
+    #' @return Character vector of unique keys that do not start with a `.`.
     listdir = function() {
 
       if(!is.null(private$zmetadata)) {
@@ -551,14 +590,16 @@ HttpStore <- R6::R6Class("HttpStore",
       return(out)
       
     },
-    #' @description 
+    #' @description
     #' Get cache time of http requests.
+    #' @return `numeric(1)`.
     get_cache_time_seconds = function() {
       return(private$cache_time_seconds)
     },
     #' @description
     #' Set cache time of http requests.
-    #' @param seconds number of seconds until cache is invalid -- 0 for no cache
+    #' @param seconds Number of seconds until cache is invalid -- 0 for no cache.
+    #' @return `NULL` (called for side effects).
     set_cache_time_seconds = function(seconds) {
       private$cache_time_seconds <- seconds
       # We need to re-memoize.

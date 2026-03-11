@@ -4,6 +4,9 @@
 \name{Lz4Codec}
 \alias{Lz4Codec}
 \title{Lz4Codec Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Codec}.
+}
 \description{
 Class representing a LZ4 compressor
 }
@@ -17,6 +20,18 @@ For LZ4 compression, use \code{BloscCodec$new(cname = "lz4")} instead.
 This class will be removed in a future version.
 }
 
+\seealso{
+Other Codec classes: 
+\code{\link{BloscCodec}},
+\code{\link{Bz2Codec}},
+\code{\link{Codec}},
+\code{\link{GzipCodec}},
+\code{\link{LzmaCodec}},
+\code{\link{VLenUtf8Codec}},
+\code{\link{ZlibCodec}},
+\code{\link{ZstdCodec}}
+}
+\concept{Codec classes}
 \keyword{internal}
 \section{Super class}{
 \code{\link[pizzarr:Codec]{pizzarr::Codec}} -> \code{Lz4Codec}
@@ -52,7 +67,7 @@ Create a new LZ4 compressor.
 \describe{
 \item{\code{acceleration}}{The compression level.}
 
-\item{\code{...}}{not used}
+\item{\code{...}}{Not used.}
 }
 \if{html}{\out{</div>}}
 }
@@ -72,9 +87,11 @@ Compress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The un-compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The un-compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -94,9 +111,11 @@ Decompress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -108,11 +127,14 @@ Un-compressed data.
 \if{html}{\out{<a id="method-Lz4Codec-get_config"></a>}}
 \if{latex}{\out{\hypertarget{method-Lz4Codec-get_config}{}}}
 \subsection{Method \code{get_config()}}{
-Get Configuration
+Get codec configuration as a list.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Lz4Codec$get_config()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A named list.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Lz4Codec-clone"></a>}}

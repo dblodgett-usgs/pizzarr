@@ -1,0 +1,157 @@
+---
+title: "Zarr V3 Cross-Implementation Interop"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Zarr V3 Cross-Implementation Interop}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  out.width = "100%",
+  message = FALSE
+)
+sample_dir <- tools::R_user_dir("pizzarr")
+clean <- !dir.exists(sample_dir)
+```
+
+This vignette demonstrates
+pizzarr reading a Zarr V3 store that was written by
+[zarr-python](https://github.com/zarr-developers/zarr-python) 3.x ---
+showing that the two implementations are interoperable.
+
+The test store includes arrays with various data types, compression
+codecs, chunk layouts, fill values, and nested groups. It was generated
+with the script bundled in this project at:
+`inst/extdata/fixtures/v3/generate-v3-zarr-python.py`.
+
+## Summary
+
+- **Data types**: bool, uint8, int16, int32, float32, float64
+- **Compression**: uncompressed, gzip, zstd, blosc
+- **Layouts**: 1D, 2D, 3D; contiguous and ragged chunks
+- **Fill values**: default (0) and custom (-9999)
+- **Groups**: nested groups with attributes
+- **Array metadata**: per-array attributes (units, long_name)
+
+## Open the store
+
+```{r}
+library(pizzarr)
+
+store_path <- pizzarr_sample("fixtures/v3/zarr_python_v3.zarr")
+root <- zarr_open(store_path)
+```
+
+## Root-level attributes
+
+zarr-python embedded these attributes when it created the store:
+
+```{r}
+root$get_attrs()$to_list()
+```
+
+## Reading different data types
+
+### Integer (int32, gzip compressed)
+
+```{r}
+a <- root$get_item("int32_1d")
+a$get_shape()
+a$as.array()
+```
+
+### Float64 (zstd compressed)
+
+```{r}
+a <- root$get_item("float64_1d")
+a$as.array()
+```
+
+### Boolean (uncompressed)
+
+```{r}
+a <- root$get_item("bool_1d")
+a$as.array()
+```
+
+### Unsigned integer (uint8, chunked)
+
+```{r}
+a <- root$get_item("uint8_1d")
+a$as.array()
+```
+
+### Float32 (blosc compressed)
+
+```{r}
+a <- root$get_item("float32_1d")
+a$as.array()
+```
+
+## Multi-dimensional arrays
+
+### 2D int16 (gzip)
+
+```{r}
+a <- root$get_item("int16_2d")
+a$get_shape()
+a$as.array()
+```
+
+### 3D float64 (zstd)
+
+```{r}
+a <- root$get_item("float64_3d")
+a$get_shape()
+a$as.array()
+```
+
+## Fill values
+
+The `with_fill` array was created with `fill_value = -9999.0` and only
+the first chunk was written. The second chunk returns fill values:
+
+```{r}
+a <- root$get_item("with_fill")
+a$as.array()
+```
+
+## Ragged (non-aligned) chunks
+
+When the array shape is not evenly divisible by the chunk shape, edge
+chunks are smaller. This 5x7 array uses 3x4 chunks:
+```{r}
+a <- root$get_item("ragged_2d")
+a$get_shape()
+a$as.array()
+```
+
+## Nested groups and array attributes
+
+The store contains a sub-group with attributes and two arrays that carry
+their own metadata:
+
+```{r}
+g <- root$get_item("var_group")
+g$get_attrs()$to_list()
+```
+
+```{r}
+temp <- g$get_item("temperature")
+temp$get_attrs()$to_list()
+temp$as.array()
+```
+
+```{r}
+pres <- g$get_item("pressure")
+pres$get_attrs()$to_list()
+pres$as.array()
+```
+
+```{r, include=FALSE}
+if(clean) unlink(sample_dir, recursive = TRUE)
+```

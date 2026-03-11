@@ -13,12 +13,12 @@ The Zarr OrthogonalIndexer class.
 }
 \keyword{internal}
 \section{Super class}{
-\code{pizzarr::Indexer} -> \code{OrthogonalIndexer}
+\code{\link[pizzarr:Indexer]{pizzarr::Indexer}} -> \code{OrthogonalIndexer}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{dim_indexers}}{TODO}
+\item{\code{dim_indexers}}{List of per-dimension indexers (IntDimIndexer, SliceDimIndexer, IntArrayDimIndexer, or BoolArrayDimIndexer).}
 }
 \if{html}{\out{</div>}}
 }
@@ -34,7 +34,7 @@ The Zarr OrthogonalIndexer class.
 \if{html}{\out{<a id="method-OrthogonalIndexer-new"></a>}}
 \if{latex}{\out{\hypertarget{method-OrthogonalIndexer-new}{}}}
 \subsection{Method \code{new()}}{
-Create a new VIndex instance.
+Create a new OrthogonalIndexer instance.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{OrthogonalIndexer$new(selection, array)}\if{html}{\out{</div>}}
 }
@@ -42,14 +42,14 @@ Create a new VIndex instance.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{selection}}{selection as with ZarrArray, scalar, string, or Slice. "..." and ":" supported for string}
+\item{\code{selection}}{Selection as with ZarrArray: scalar, string, or Slice.}
 
-\item{\code{array}}{ZarrArray object that will be indexed}
+\item{\code{array}}{\link{ZarrArray} object that will be indexed.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A \code{VIndex} instance.
+An \code{OrthogonalIndexer} instance.
 }
 }
 \if{html}{\out{<hr>}}

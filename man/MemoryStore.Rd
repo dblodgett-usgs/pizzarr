@@ -4,6 +4,9 @@
 \name{MemoryStore}
 \alias{MemoryStore}
 \title{MemoryStore Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Store}.
+}
 \description{
 Store class that uses a hierarchy of list objects,
 thus all data will be held in main memory.
@@ -11,6 +14,13 @@ thus all data will be held in main memory.
 \details{
 MemoryStore for Zarr
 }
+\seealso{
+Other Store classes: 
+\code{\link{DirectoryStore}},
+\code{\link{HttpStore}},
+\code{\link{Store}}
+}
+\concept{Store classes}
 \keyword{internal}
 \section{Super class}{
 \code{\link[pizzarr:Store]{pizzarr::Store}} -> \code{MemoryStore}
@@ -119,6 +129,9 @@ Set an item in the store.
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+\code{NULL} (called for side effects).
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MemoryStore-contains_item"></a>}}
@@ -144,7 +157,7 @@ A boolean value.
 \if{html}{\out{<a id="method-MemoryStore-listdir"></a>}}
 \if{latex}{\out{\hypertarget{method-MemoryStore-listdir}{}}}
 \subsection{Method \code{listdir()}}{
-list the store directory
+List the store directory.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MemoryStore$listdir(key = NA)}\if{html}{\out{</div>}}
 }
@@ -152,16 +165,19 @@ list the store directory
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{key}}{character key}
+\item{\code{key}}{Character key.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{character()} vector of entries.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MemoryStore-rmdir"></a>}}
 \if{latex}{\out{\hypertarget{method-MemoryStore-rmdir}{}}}
 \subsection{Method \code{rmdir()}}{
-remove a path within a Store
+Remove a path within a Store.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MemoryStore$rmdir(item)}\if{html}{\out{</div>}}
 }
@@ -169,9 +185,12 @@ remove a path within a Store
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{item}}{character item}
+\item{\code{item}}{Character item.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}

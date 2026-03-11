@@ -20,7 +20,7 @@ Slice <- R6::R6Class("Slice",
     #' @param stop integer stop index of slice
     #' @param step integer step size of slice
     initialize = function(start, stop = NA, step = NA) {
-      if(is.na(stop)) {
+      if(is.na(stop) && is.na(step)) {
         stop <- start
         start <- NA
       }
@@ -97,9 +97,20 @@ Slice <- R6::R6Class("Slice",
 #' Convenience function for the internal Slice R6 class constructor.
 #' @param start The start index.
 #' @param stop The stop index.
-#' @param step The step size.
+#' @param step The step size. Negative values reverse the direction of the
+#'   slice, matching Python/NumPy semantics (e.g., `step = -1` iterates
+#'   backward from `start` toward `stop`).
 #' @param zero_based The index of the dimension. By default, FALSE for R-like behavior.
 #' @return A Slice instance with the specified parameters.
+#' @examples
+#' g <- zarr_volcano()
+#' v <- g$get_item("volcano")
+#'
+#' # Reverse the first 5 columns of row 1 (zero-based: 5:0:-1)
+#' v$get_orthogonal_selection(list(zb_slice(0, 1), zb_slice(5, 0, -1)))
+#'
+#' # Full reverse of row 1 (zero-based: -1::-1)
+#' v$get_orthogonal_selection(list(zb_slice(0, 1), zb_slice(-1, NA, -1)))
 #' @export
 slice <- function(start, stop = NA, step = NA, zero_based = FALSE) {
   start_offset <- ifelse(zero_based, 0, -1)
@@ -119,10 +130,16 @@ slice <- function(start, stop = NA, step = NA, zero_based = FALSE) {
   ))
 }
 
-#' Convenience function for the internal Slice R6 class constructor 
+#' Convenience function for the internal Slice R6 class constructor
 #' with zero-based indexing and exclusive stop index.
 #' @inheritParams slice
 #' @inherit slice return
+#' @examples
+#' # Equivalent to Python's arr[5:0:-1]
+#' zb_slice(5, 0, -1)
+#'
+#' # Equivalent to Python's arr[-1::-1] (full reverse)
+#' zb_slice(-1, NA, -1)
 #' @export
 zb_slice <- function(start, stop = NA, step = NA) {
   return(slice(start, stop, step, zero_based = TRUE))

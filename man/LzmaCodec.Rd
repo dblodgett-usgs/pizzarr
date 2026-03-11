@@ -4,12 +4,27 @@
 \name{LzmaCodec}
 \alias{LzmaCodec}
 \title{LzmaCodec Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Codec}.
+}
 \description{
 Class representing a lzma compressor
 }
 \details{
 Lzma compressor for Zarr
 }
+\seealso{
+Other Codec classes: 
+\code{\link{BloscCodec}},
+\code{\link{Bz2Codec}},
+\code{\link{Codec}},
+\code{\link{GzipCodec}},
+\code{\link{Lz4Codec}},
+\code{\link{VLenUtf8Codec}},
+\code{\link{ZlibCodec}},
+\code{\link{ZstdCodec}}
+}
+\concept{Codec classes}
 \section{Super class}{
 \code{\link[pizzarr:Codec]{pizzarr::Codec}} -> \code{LzmaCodec}
 }
@@ -46,9 +61,10 @@ Create a new lzma compressor.
 \describe{
 \item{\code{level}}{The compression level, between 1 and 22.}
 
-\item{\code{format}}{only 1 is supported}
+\item{\code{format}}{(\code{integer(1)})\cr
+Only 1 is supported.}
 
-\item{\code{...}}{not used}
+\item{\code{...}}{Not used.}
 }
 \if{html}{\out{</div>}}
 }
@@ -68,9 +84,11 @@ Compress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The un-compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The un-compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -90,9 +108,11 @@ Decompress data.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{buf}}{The compressed data.}
+\item{\code{buf}}{(\code{raw()})\cr
+The compressed data.}
 
-\item{\code{zarr_arr}}{The ZarrArray instance.}
+\item{\code{zarr_arr}}{(\link{ZarrArray})\cr
+The ZarrArray instance.}
 }
 \if{html}{\out{</div>}}
 }
@@ -104,11 +124,14 @@ Un-compressed data.
 \if{html}{\out{<a id="method-LzmaCodec-get_config"></a>}}
 \if{latex}{\out{\hypertarget{method-LzmaCodec-get_config}{}}}
 \subsection{Method \code{get_config()}}{
-Get Configuration
+Get codec configuration as a list.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{LzmaCodec$get_config()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+A named list.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-LzmaCodec-clone"></a>}}

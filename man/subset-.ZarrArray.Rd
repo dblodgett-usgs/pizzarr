@@ -7,7 +7,11 @@
 \method{[}{ZarrArray}(obj, ...) <- value
 }
 \arguments{
-\item{value}{array or ZarrArray}
+\item{obj}{Object.}
+
+\item{...}{Dots.}
+
+\item{value}{Array or ZarrArray.}
 }
 \description{
 S3 method for custom bracket assignment

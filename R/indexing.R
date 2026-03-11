@@ -39,19 +39,19 @@ is_pure_fancy_indexing <- function(selection, ndim = length(selection)) {
 #' @keywords internal
 OIndex <- R6::R6Class("OIndex",
   public = list(
-    #' @field array array
+    #' @field array The array instance.
     #' @keywords internal
     array = NULL,
     #' @description
     #' Create a new OIndex instance.
-    #' @param array array
+    #' @param array The array instance.
     #' @return An `OIndex` instance.
     initialize = function(array) {
       self$array <- array
     },
     #' @description
     #' get method for the Oindex instance
-    #' @param selection selection
+    #' @param selection Selection to apply.
     #' @return An `OIndex` instance.
     get_item = function(selection) {
       # self$array <- array$get
@@ -71,12 +71,12 @@ OIndex <- R6::R6Class("OIndex",
 #' @keywords internal
 VIndex <- R6::R6Class("VIndex",
   public = list(
-    #' @field array array
+    #' @field array The array instance.
     #' @keywords internal
     array = NULL,
     #' @description
     #' Create a new VIndex instance.
-    #' @param array array
+    #' @param array The array instance.
     #' @return A `VIndex` instance.
     initialize = function(array) {
       self$array <- array
@@ -90,26 +90,26 @@ VIndex <- R6::R6Class("VIndex",
 #' @title IntDimIndexer Class
 #' @docType class
 #' @description
-#'  TODO
+#' Indexer for a single integer selection along one dimension.
 #' @rdname IntDimIndexer
 #' @keywords internal
 IntDimIndexer <- R6::R6Class("IntDimIndexer",
   inherit = DimIndexer,
   public = list(
-    #' @field dim_sel TODO
+    #' @field dim_sel Normalized integer index for this dimension.
     #' @keywords internal
     dim_sel = NULL,
-    #' @field dim_len TODO
+    #' @field dim_len Length of the array along this dimension.
     #' @keywords internal
     dim_len = NULL,
-    #' @field dim_chunk_len TODO
+    #' @field dim_chunk_len Length of a chunk along this dimension.
     #' @keywords internal
     dim_chunk_len = NULL,
     #' @description
     #' Create a new IntDimIndexer instance.
-    #' @param dim_sel integer dimension selection
-    #' @param dim_len integer dimension length
-    #' @param dim_chunk_len integer dimension chunk length
+    #' @param dim_sel Integer dimension selection.
+    #' @param dim_len Integer dimension length.
+    #' @param dim_chunk_len Integer dimension chunk length.
     #' @return A `IntDimIndexer` instance.
     initialize = function(dim_sel, dim_len, dim_chunk_len) {
       # Normalize
@@ -120,8 +120,8 @@ IntDimIndexer <- R6::R6Class("IntDimIndexer",
       self$dim_chunk_len <- dim_chunk_len
       self$num_items <- 1
     },
-    #' @description 
-    #' TODO
+    #' @description
+    #' Compute the chunk dimension projection for the single selected index.
     #' @return a `ChunkDimProjection` instance
     iter = function() {
       # TODO: use generator/yield features from async package
@@ -146,35 +146,35 @@ IntDimIndexer <- R6::R6Class("IntDimIndexer",
 #' @title SliceDimIndexer Class
 #' @docType class
 #' @description
-#'  TODO
+#' Indexer for a slice selection along one dimension.
 #' @rdname SliceDimIndexer
 #' @keywords internal
 SliceDimIndexer <- R6::R6Class("SliceDimIndexer",
   inherit = DimIndexer,
   public = list(
-    #' @field dim_len dimension length
+    #' @field dim_len Dimension length.
     #' @keywords internal
     dim_len = NULL,
-    #' @field dim_chunk_len dimension chunk length
+    #' @field dim_chunk_len Dimension chunk length.
     #' @keywords internal
     dim_chunk_len = NULL,
-    #' @field num_chunks number of chunks
+    #' @field num_chunks Number of chunks.
     #' @keywords internal
     num_chunks = NULL,
-    #' @field start start
+    #' @field start Start index.
     #' @keywords internal
     start = NULL,
-    #' @field stop stop
+    #' @field stop Stop index.
     #' @keywords internal
     stop = NULL,
-    #' @field step step
+    #' @field step Step size.
     #' @keywords internal
     step = NULL,
     #' @description
     #' Create a new SliceDimIndexer instance.
-    #' @param dim_sel integer dimension selection
-    #' @param dim_len integer dimension length
-    #' @param dim_chunk_len integer dimension chunk length
+    #' @param dim_sel Integer dimension selection.
+    #' @param dim_len Integer dimension length.
+    #' @param dim_chunk_len Integer dimension chunk length.
     #' @return A `SliceDimIndexer` instance.
     initialize = function(dim_sel, dim_len, dim_chunk_len) {
       # Reference: https://github.com/gzuidhof/zarr.js/blob/292804/src/core/indexing.ts#L311
@@ -190,9 +190,9 @@ SliceDimIndexer <- R6::R6Class("SliceDimIndexer",
       self$num_items <- max(0, ceiling((self$stop - self$start) / self$step))
       self$num_chunks <- ceiling(self$dim_len / self$dim_chunk_len)
     },
-    #' @description 
-    #' TODO
-    #' @return TODO
+    #' @description
+    #' Iterate over chunks that overlap the slice, yielding a ChunkDimProjection for each.
+    #' @return A list of ChunkDimProjection objects.
     iter = function() {
       # TODO: use generator/yield features from async package
       dim_chunk_index_from <- floor(self$start / self$dim_chunk_len)
@@ -266,21 +266,21 @@ SliceDimIndexer <- R6::R6Class("SliceDimIndexer",
 #' @description
 #'  An indexer class to normalize a selection of an array and provide an iterator 
 #'  of indexes over the dimensions of an array.
-#' @param selection selection as with ZarrArray, scalar, string, or Slice. "..." and ":" supported for string 
-#' @param array ZarrArray object that will be indexed
 #' @rdname BasicIndexer
 #' @keywords internal
 BasicIndexer <- R6::R6Class("BasicIndexer",
   inherit = Indexer,
   public = list(
-    #' @field dim_indexers TODO
+    #' @field dim_indexers List of per-dimension indexers (IntDimIndexer or SliceDimIndexer).
     #' @keywords internal
     dim_indexers = NULL,
     #' @description
-    #' Create a new VIndex instance.
-    #' @return A `VIndex` instance.
+    #' Create a new BasicIndexer instance.
+    #' @param selection Selection as with ZarrArray: scalar, string, or Slice.
+    #' @param array [ZarrArray] object that will be indexed.
+    #' @return A `BasicIndexer` instance.
     initialize = function(selection, array) {
-      
+
       shape <- array$get_shape()
       chunks <- array$get_chunks()
 
@@ -369,19 +369,19 @@ BasicIndexer <- R6::R6Class("BasicIndexer",
 #' @description
 #'  An indexer class to normalize a selection of an array and provide an iterator 
 #'  of indexes over the dimensions of an array.
-#' @param selection selection as with ZarrArray, scalar, string, or Slice. "..." and ":" supported for string 
-#' @param array ZarrArray object that will be indexed
 #' @rdname OrthogonalIndexer
 #' @keywords internal
 OrthogonalIndexer <- R6::R6Class("OrthogonalIndexer",
                             inherit = Indexer,
                             public = list(
-                              #' @field dim_indexers TODO
+                              #' @field dim_indexers List of per-dimension indexers (IntDimIndexer, SliceDimIndexer, IntArrayDimIndexer, or BoolArrayDimIndexer).
                               #' @keywords internal
                               dim_indexers = NULL,
                               #' @description
-                              #' Create a new VIndex instance.
-                              #' @return A `VIndex` instance.
+                              #' Create a new OrthogonalIndexer instance.
+                              #' @param selection Selection as with ZarrArray: scalar, string, or Slice.
+                              #' @param array [ZarrArray] object that will be indexed.
+                              #' @return An `OrthogonalIndexer` instance.
                               initialize = function(selection, array) {
                                 
                                 shape <- array$get_shape()
@@ -404,7 +404,19 @@ OrthogonalIndexer <- R6::R6Class("OrthogonalIndexer",
                                   if(is_integer(dim_sel)) {
                                     dim_indexer <- IntDimIndexer$new(dim_sel, dim_len, dim_chunk_len)
                                   } else if(is_slice(dim_sel)) {
-                                    dim_indexer <- SliceDimIndexer$new(dim_sel, dim_len, dim_chunk_len)
+                                    if(!is.na(dim_sel$step) && dim_sel$step < 0) {
+                                      # Convert negative-step slice to integer vector
+                                      si <- dim_sel$indices(dim_len)
+                                      n <- si[4]
+                                      if(n > 0) {
+                                        dim_sel <- seq(from = si[1], by = si[3], length.out = n)
+                                        dim_indexer <- IntArrayDimIndexer$new(dim_sel, dim_len, dim_chunk_len)
+                                      } else {
+                                        dim_indexer <- IntArrayDimIndexer$new(integer(0), dim_len, dim_chunk_len)
+                                      }
+                                    } else {
+                                      dim_indexer <- SliceDimIndexer$new(dim_sel, dim_len, dim_chunk_len)
+                                    }
                                   } else if(is_bool_vec(dim_sel)) {
                                     dim_indexer <- BoolArrayDimIndexer$new(dim_sel, dim_len, dim_chunk_len)
                                   } else if(is_integer_vec(dim_sel)) {
@@ -479,7 +491,7 @@ OrthogonalIndexer <- R6::R6Class("OrthogonalIndexer",
 #' @title Order Class
 #' @docType class
 #' @description
-#'  TODO
+#'  Determines the sort order of an integer array selection (increasing, decreasing, or unordered).
 #' @rdname Order
 #' @keywords internal
 Order <- R6::R6Class("Order",
@@ -498,7 +510,7 @@ Order <- R6::R6Class("Order",
                        UNORDERED = 3,
                        #' @description
                        #' checking order of numbers
-                       #' @param a vector of numbers
+                       #' @param a Vector of numbers.
                        check = function(a){
                          diff_a <- diff(a)
                          diff_positive <- diff_a >= 0
@@ -521,44 +533,44 @@ Order <- R6::R6Class("Order",
 #' @title IntArrayDimIndexer Class
 #' @docType class
 #' @description
-#'  TODO
+#'  Indexer for an integer array selection along one dimension, supporting fancy/advanced indexing.
 #' @rdname IntArrayDimIndexer
 #' @keywords internal
 IntArrayDimIndexer <- R6::R6Class("IntArrayDimIndexer",
                                inherit = DimIndexer,
                                public = list(
-                                 #' @field dim_len dimension length
+                                 #' @field dim_len Dimension length.
                                  #' @keywords internal
                                  dim_len = NULL,
-                                 #' @field dim_chunk_len dimension chunk length
+                                 #' @field dim_chunk_len Dimension chunk length.
                                  #' @keywords internal
                                  dim_chunk_len = NULL,
-                                 #' @field num_chunks number of chunks
+                                 #' @field num_chunks Number of chunks.
                                  #' @keywords internal
                                  num_chunks = NULL,
-                                 #' @field dim_sel selection on dimension
+                                 #' @field dim_sel Selection on dimension.
                                  #' @keywords internal
                                  dim_sel = NULL,
-                                 #' @field dim_out_sel TODO
+                                 #' @field dim_out_sel Output array indices corresponding to each selected element, reordered when selection is not increasing.
                                  #' @keywords internal
                                  dim_out_sel = NULL,
-                                 #' @field order order
+                                 #' @field order Memory order.
                                  #' @keywords internal
                                  order = NULL,
-                                 #' @field chunk_nitems number of items per chunk
+                                 #' @field chunk_nitems Number of items per chunk.
                                  #' @keywords internal
                                  chunk_nitems = NULL, 
-                                 #' @field dim_chunk_ixs chunks that should be visited
+                                 #' @field dim_chunk_ixs Chunks that should be visited.
                                  #' @keywords internal
                                  dim_chunk_ixs = NULL,
-                                 #' @field chunk_nitems_cumsum offsets into the output array
+                                 #' @field chunk_nitems_cumsum Offsets into the output array.
                                  #' @keywords internal
                                  chunk_nitems_cumsum = NULL, 
                                  #' @description
                                  #' Create a new IntArrayDimIndexer instance.
-                                 #' @param dim_sel integer dimention selection
-                                 #' @param dim_len integer dimension length
-                                 #' @param dim_chunk_len integer dimension chunk length
+                                 #' @param dim_sel Integer dimension selection.
+                                 #' @param dim_len Integer dimension length.
+                                 #' @param dim_chunk_len Integer dimension chunk length.
                                  #' @param sel_order order
                                  #' @return A `IntArrayDimIndexer` instance.
                                  initialize = function(dim_sel, dim_len, dim_chunk_len, sel_order = Order$public_fields$UNKNOWN) {
@@ -667,41 +679,41 @@ IntArrayDimIndexer <- R6::R6Class("IntArrayDimIndexer",
 #' @title BoolArrayDimIndexer Class
 #' @docType class
 #' @description
-#'  TODO
+#'  Indexer for a boolean array selection along one dimension, selecting elements where the mask is TRUE.
 #' @rdname BoolArrayDimIndexer
 #' @keywords internal
 BoolArrayDimIndexer <- R6::R6Class("BoolArrayDimIndexer",
                                    inherit = DimIndexer,
                                    public = list(
-                                     #' @field dim_sel selection on dimension
+                                     #' @field dim_sel Selection on dimension.
                                      #' @keywords internal
                                      dim_sel = NULL,
-                                     #' @field dim_len dimension length
+                                     #' @field dim_len Dimension length.
                                      #' @keywords internal
                                      dim_len = NULL,
-                                     #' @field dim_chunk_len dimension chunk length
+                                     #' @field dim_chunk_len Dimension chunk length.
                                      #' @keywords internal
                                      dim_chunk_len = NULL,
-                                     #' @field num_chunks number of chunks
+                                     #' @field num_chunks Number of chunks.
                                      #' @keywords internal
                                      num_chunks = NULL,
-                                     #' @field chunk_nitems number of items per chunk
+                                     #' @field chunk_nitems Number of items per chunk.
                                      #' @keywords internal
                                      chunk_nitems = NULL, 
-                                     #' @field chunk_nitems_cumsum offsets into the output array
+                                     #' @field chunk_nitems_cumsum Offsets into the output array.
                                      #' @keywords internal
                                      chunk_nitems_cumsum = NULL, 
-                                     #' @field dim_chunk_ixs chunks that should be visited
+                                     #' @field dim_chunk_ixs Chunks that should be visited.
                                      #' @keywords internal
                                      dim_chunk_ixs = NULL,
-                                     #' @field dim_out_sel TODO
+                                     #' @field dim_out_sel Output array indices for the selected elements.
                                      #' @keywords internal
                                      dim_out_sel = NULL,
                                      #' @description
                                      #' Create a new BoolArrayDimIndexer instance.
-                                     #' @param dim_sel integer dimension selection
-                                     #' @param dim_len integer dimension length
-                                     #' @param dim_chunk_len integer dimension chunk length
+                                     #' @param dim_sel Integer dimension selection.
+                                     #' @param dim_len Integer dimension length.
+                                     #' @param dim_chunk_len Integer dimension chunk length.
                                      #' @return A `BoolArrayDimIndexer` instance.
                                      initialize = function(dim_sel, dim_len, dim_chunk_len) {
                                        

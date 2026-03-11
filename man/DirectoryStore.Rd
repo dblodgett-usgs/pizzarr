@@ -4,12 +4,22 @@
 \name{DirectoryStore}
 \alias{DirectoryStore}
 \title{DirectoryStore Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Store}.
+}
 \description{
 Store class using directories and files on a standard file system.
 }
 \details{
 DirectoryStore for Zarr
 }
+\seealso{
+Other Store classes: 
+\code{\link{HttpStore}},
+\code{\link{MemoryStore}},
+\code{\link{Store}}
+}
+\concept{Store classes}
 \keyword{internal}
 \section{Super class}{
 \code{\link[pizzarr:Store]{pizzarr::Store}} -> \code{DirectoryStore}
@@ -104,6 +114,9 @@ Set an item in the store.
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+\code{NULL} (called for side effects).
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DirectoryStore-contains_item"></a>}}
@@ -129,7 +142,7 @@ A boolean value.
 \if{html}{\out{<a id="method-DirectoryStore-rmdir"></a>}}
 \if{latex}{\out{\hypertarget{method-DirectoryStore-rmdir}{}}}
 \subsection{Method \code{rmdir()}}{
-remove a path within a Store
+Remove a path within a Store.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DirectoryStore$rmdir(path = NA)}\if{html}{\out{</div>}}
 }
@@ -137,16 +150,19 @@ remove a path within a Store
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{path}}{character path}
+\item{\code{path}}{Character path.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DirectoryStore-listdir"></a>}}
 \if{latex}{\out{\hypertarget{method-DirectoryStore-listdir}{}}}
 \subsection{Method \code{listdir()}}{
-list the store directory
+List the store directory.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DirectoryStore$listdir(key = NA)}\if{html}{\out{</div>}}
 }
@@ -154,9 +170,12 @@ list the store directory
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{key}}{character key}
+\item{\code{key}}{Character key.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{character()} vector of entries.
 }
 }
 \if{html}{\out{<hr>}}

@@ -4,6 +4,9 @@
 \name{HttpStore}
 \alias{HttpStore}
 \title{HttpStore Class}
+\format{
+\link[R6:R6Class]{R6::R6Class} inheriting from \link{Store}.
+}
 \description{
 Store class that uses HTTP requests.
 Read-only. Depends on the \code{crul} package.
@@ -21,6 +24,13 @@ Set the option "pizzarr.progress_bar" to TRUE to get a progress bar for long run
 
 For more, see \verb{vignette("parallel").}
 }
+\seealso{
+Other Store classes: 
+\code{\link{DirectoryStore}},
+\code{\link{MemoryStore}},
+\code{\link{Store}}
+}
+\concept{Store classes}
 \section{Super class}{
 \code{\link[pizzarr:Store]{pizzarr::Store}} -> \code{HttpStore}
 }
@@ -63,13 +73,19 @@ Create a \code{HttpStore} object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{url}}{character url of store}
+\item{\code{url}}{(\code{character(1)})\cr
+URL of the store.}
 
-\item{\code{options}}{crul options}
+\item{\code{options}}{(\code{list()} or \code{NA})\cr
+Options passed to crul.}
 
-\item{\code{headers}}{crul headers}
+\item{\code{headers}}{(\code{list()} or \code{NA})\cr
+Headers passed to crul.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A new \code{HttpStore} object.
 }
 }
 \if{html}{\out{<hr>}}
@@ -122,7 +138,7 @@ Fetches .zmetadata from the store evaluates its names
 }
 
 \subsection{Returns}{
-character vector of unique keys that do note  start with a \code{.}.
+Character vector of unique keys that do not start with a \code{.}.
 }
 }
 \if{html}{\out{<hr>}}
@@ -134,6 +150,9 @@ Get cache time of http requests.
 \if{html}{\out{<div class="r">}}\preformatted{HttpStore$get_cache_time_seconds()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+\code{numeric(1)}.
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-HttpStore-set_cache_time_seconds"></a>}}
@@ -147,9 +166,12 @@ Set cache time of http requests.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{seconds}}{number of seconds until cache is invalid -- 0 for no cache}
+\item{\code{seconds}}{Number of seconds until cache is invalid -- 0 for no cache.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}

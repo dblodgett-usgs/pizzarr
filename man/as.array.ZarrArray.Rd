@@ -7,9 +7,9 @@
 \method{as.array}{ZarrArray}(x, ...)
 }
 \arguments{
-\item{x}{object}
+\item{x}{Object.}
 
-\item{...}{not used}
+\item{...}{Not used.}
 }
 \description{
 S3 method for as.array

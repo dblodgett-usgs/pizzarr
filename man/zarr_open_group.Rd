@@ -11,7 +11,8 @@ zarr_open_group(
   synchronizer = NA,
   path = NA,
   chunk_store = NA,
-  storage_options = NA
+  storage_options = NA,
+  zarr_format = 2L
 )
 }
 \arguments{
@@ -42,6 +43,10 @@ for storage of both chunks and metadata.}
 \item{storage_options}{: dict
 If using an fsspec URL to create the store, these will be passed to
 the backend implementation. Ignored otherwise.}
+
+\item{zarr_format}{: int, optional
+Zarr format version. Use \code{2L} (default) for Zarr V2 or \code{3L}
+for Zarr V3.}
 }
 \value{
 ZarrGroup

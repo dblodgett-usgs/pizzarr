@@ -3,18 +3,18 @@ Type: Package
 Title: Slice into Zarr Arrays in R
 Version: 0.1.0
 Authors@R: c(
+    person(given = "David",
+           family = "Blodgett",
+           role = c("cre", "aut"),
+           email = "dblodgett@usgs.gov",
+           comment = c(ORCID = "0000-0001-9489-1710")),
     person(
       given = "Mark",
       family = "Keller",
       email = "mark_keller@g.harvard.edu",
-      role = c("cre", "aut"),
+      role = c("aut"),
       comment = c(ORCID = "0000-0003-3003-874X")
-    ),
-    person(given = "David", 
-           family = "Blodgett", 
-           role = c("ctb"), 
-           email = "dblodgett@usgs.gov",
-           comment = c(ORCID = "0000-0001-9489-1710"))
+    )
   )
 Description: An implementation of chunked, compressed, 
   N-dimensional arrays for R. Zarr spec V2 (2024) 
@@ -34,7 +34,7 @@ Imports:
     utils
 Encoding: UTF-8
 LazyData: true
-Roxygen: list(markdown = TRUE)
+Roxygen: list(markdown = TRUE, r6 = TRUE)
 RoxygenNote: 7.3.3
 Suggests:
     testthat,
@@ -44,13 +44,14 @@ Suggests:
     pkgdown,
     rmarkdown,
     crul,
-    Rarr,
+    blosc,
     vcr (>= 0.6.0),
     pbapply,
     parallel,
     future,
     future.apply,
     bench,
+    bit64,
     qs,
     withr
 Remotes: qsbase/qs

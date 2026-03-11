@@ -18,7 +18,8 @@ init_array(
   chunk_store = NA,
   filters = NA,
   object_codec = NA,
-  dimension_separator = NA
+  dimension_separator = NA,
+  zarr_format = 2L
 )
 }
 \arguments{

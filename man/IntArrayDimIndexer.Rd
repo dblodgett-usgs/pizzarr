@@ -5,35 +5,35 @@
 \alias{IntArrayDimIndexer}
 \title{IntArrayDimIndexer Class}
 \description{
-TODO
+Indexer for an integer array selection along one dimension, supporting fancy/advanced indexing.
 }
 \details{
 The Zarr IntArrayDimIndexer class.
 }
 \keyword{internal}
 \section{Super class}{
-\code{pizzarr::DimIndexer} -> \code{IntArrayDimIndexer}
+\code{\link[pizzarr:DimIndexer]{pizzarr::DimIndexer}} -> \code{IntArrayDimIndexer}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{dim_len}}{dimension length}
+\item{\code{dim_len}}{Dimension length.}
 
-\item{\code{dim_chunk_len}}{dimension chunk length}
+\item{\code{dim_chunk_len}}{Dimension chunk length.}
 
-\item{\code{num_chunks}}{number of chunks}
+\item{\code{num_chunks}}{Number of chunks.}
 
-\item{\code{dim_sel}}{selection on dimension}
+\item{\code{dim_sel}}{Selection on dimension.}
 
-\item{\code{dim_out_sel}}{TODO}
+\item{\code{dim_out_sel}}{Output array indices corresponding to each selected element, reordered when selection is not increasing.}
 
-\item{\code{order}}{order}
+\item{\code{order}}{Memory order.}
 
-\item{\code{chunk_nitems}}{number of items per chunk}
+\item{\code{chunk_nitems}}{Number of items per chunk.}
 
-\item{\code{dim_chunk_ixs}}{chunks that should be visited}
+\item{\code{dim_chunk_ixs}}{Chunks that should be visited.}
 
-\item{\code{chunk_nitems_cumsum}}{offsets into the output array}
+\item{\code{chunk_nitems_cumsum}}{Offsets into the output array.}
 }
 \if{html}{\out{</div>}}
 }
@@ -62,11 +62,11 @@ Create a new IntArrayDimIndexer instance.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{dim_sel}}{integer dimention selection}
+\item{\code{dim_sel}}{Integer dimension selection.}
 
-\item{\code{dim_len}}{integer dimension length}
+\item{\code{dim_len}}{Integer dimension length.}
 
-\item{\code{dim_chunk_len}}{integer dimension chunk length}
+\item{\code{dim_chunk_len}}{Integer dimension chunk length.}
 
 \item{\code{sel_order}}{order}
 }
