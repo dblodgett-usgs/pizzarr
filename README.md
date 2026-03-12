@@ -1,10 +1,15 @@
 # pizzarr <a href="https://zarr-developers.github.io/pizzarr/"><img src="man/figures/logo.png" align="right" height="139" alt="pizzarr website" /></a>
 
+[![codecov](https://codecov.io/gh/zarr-developers/pizzarr/graph/badge.svg?token=vhidertN9l)](https://codecov.io/gh/zarr-developers/pizzarr)
+[![R-CMD-check](https://github.com/zarr-developers/pizzarr/actions/workflows/R-CMD-Check.yml/badge.svg)](https://github.com/zarr-developers/pizzarr/actions/workflows/R-CMD-Check.yml) 
+[![logs](https://cranlogs.r-pkg.org/badges/pizzarr)](https://cran.r-project.org/package=pizzarr)
+[![CRAN status](https://www.r-pkg.org/badges/version/pizzarr)](https://CRAN.R-project.org/package=pizzarr)
+
 A Zarr implementation for R.
 
 ## Installation
 
-Installation requires R 4.0.0 or greater.
+Installation requires R 4.1.0 or greater.
 
 ```r
 install.packages("devtools")
