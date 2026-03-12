@@ -19,3 +19,6 @@ pkgdown/favicon/
 .venv
 CLAUDE.md
 TODO.md
+
+/.quarto/
+**/*.quarto_ipynb
