@@ -1,0 +1,297 @@
+---
+title: "Zarr Operations Cookbook"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Zarr Operations Cookbook}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  out.width = "100%"
+)
+```
+
+This vignette covers common zarr array operations: persistent storage,
+compression, resizing, filters, and advanced indexing.
+
+```{r}
+library(pizzarr)
+```
+
+## Persistent arrays
+
+Create an array on disk, close the session, and reopen it later.
+
+```{r}
+path <- file.path(tempdir(), "example.zarr")
+
+# Create a persistent array backed by a DirectoryStore
+z <- zarr_open_array(
+  store = path, mode = "w",
+  shape = c(5, 10), chunks = c(5, 5), dtype = "<f4"
+)
+
+# Write data
+z$set_item("...", array(1:50, dim = c(5, 10)))
+
+z$get_shape()
+```
+
+Reopen the same path in read mode:
+
+```{r}
+z2 <- zarr_open_array(store = path, mode = "r")
+
+z2$get_shape()
+
+z2$get_item("...")$data
+```
+
+For quick save/load of an existing array:
+
+```{r}
+save_path <- file.path(tempdir(), "saved.zarr")
+
+# Save an R array directly
+zarr_save_array(save_path, zarr_create_array(
+  data = volcano, shape = dim(volcano), dtype = "<f8"
+))
+
+# Reopen
+z3 <- zarr_open_array(save_path, mode = "r")
+
+all.equal(z3$as.array(), volcano)
+```
+
+## Compression
+
+By default, pizzarr uses Zstandard compression. You can choose a different
+compressor when creating an array.
+
+### Zstandard (default)
+
+```{r}
+z_zstd <- zarr_create(
+  shape = c(100, 100), dtype = "<f4",
+  compressor = ZstdCodec$new(level = 3)
+)
+
+z_zstd$get_compressor()$get_config()
+```
+
+### Gzip
+
+```{r}
+z_gzip <- zarr_create(
+  shape = c(100, 100), dtype = "<f4",
+  compressor = GzipCodec$new(level = 5)
+)
+
+z_gzip$get_compressor()$get_config()
+```
+
+### Blosc (with algorithm selection)
+
+```{r}
+z_blosc <- zarr_create(
+  shape = c(100, 100), dtype = "<f4",
+  compressor = BloscCodec$new(cname = "lz4", clevel = 5, shuffle = TRUE)
+)
+
+z_blosc$get_compressor()$get_config()
+```
+
+### No compression
+
+```{r}
+z_none <- zarr_create(
+  shape = c(100, 100), dtype = "<f4",
+  compressor = NA
+)
+
+is.na(z_none$get_compressor())
+```
+
+## Resizing arrays
+
+Arrays can be resized after creation. Data in the overlapping region is
+preserved; new regions are filled with the fill value.
+
+```{r}
+z <- zarr_create(
+  shape = c(5, 10), chunks = c(5, 5),
+  dtype = "<i4", fill_value = 0L,
+  compressor = "default"
+)
+
+z$set_item("...", array(1:50, dim = c(5, 10)))
+
+z$get_shape()
+
+# Grow the array
+z$resize(10, 20)
+
+z$get_shape()
+
+# Original data is preserved in the top-left corner
+z[1:5, 1:10]$data
+
+# New region is filled with fill_value
+z[6:10, 1:5]$data
+```
+
+Shrinking removes chunks that fall outside the new shape:
+
+```{r}
+z$resize(3, 4)
+
+z$get_shape()
+
+z$get_item("...")$data
+```
+
+## Appending data
+
+Use `append()` to grow an array along an axis, adding new data at the end.
+This is equivalent to zarr-python's `z.append(data, axis=0)`, but uses
+R's 1-based axis indexing (axis 1 = first dimension).
+
+```{r}
+z <- zarr_create(
+  shape = c(3, 4), chunks = c(3, 4),
+  dtype = "<i4", fill_value = 0L
+)
+
+z$set_item("...", array(1:12, dim = c(3, 4)))
+
+z$as.array()
+```
+
+Append new rows (axis 1, the default):
+
+```{r}
+new_rows <- array(13:20, dim = c(2, 4))
+
+z$append(new_rows)
+
+z$get_shape()
+
+z$as.array()
+```
+
+Append new columns (axis 2):
+
+```{r}
+new_cols <- array(21:30, dim = c(5, 2))
+
+z$append(new_cols, axis = 2)
+
+z$get_shape()
+
+z$as.array()
+```
+
+## Filters
+
+Filters transform chunk data before compression. They are codec instances
+passed as a list to the `filters` parameter. A common use case is
+variable-length UTF-8 string arrays, which require `VLenUtf8Codec` as a filter.
+
+```{r}
+words <- c("alpha", "bravo", "charlie", "delta")
+
+z_str <- zarr_create_array(
+  data = array(words, dim = length(words)),
+  shape = length(words), dtype = "|O",
+  object_codec = VLenUtf8Codec$new()
+)
+
+z_str$get_item("...")$data
+
+z_str$get_filters()
+```
+
+## Advanced indexing
+
+Beyond basic slicing with `slice()` or `[`, pizzarr supports orthogonal
+indexing for independent selection along each dimension.
+
+### Setup
+
+```{r}
+z <- zarr_create_array(
+  data = matrix(1:30, nrow = 5, ncol = 6),
+  shape = c(5, 6), dtype = "<i4"
+)
+
+z$as.array()
+```
+
+### Basic slicing with `[`
+
+The bracket operator uses orthogonal indexing internally:
+
+```{r}
+# Select rows 1-3, columns 2-4
+z[1:3, 2:4]$data
+```
+
+### Orthogonal selection with integer arrays
+
+Select specific rows and columns independently. Note that
+`get_orthogonal_selection` uses zero-based indices (like zarr-python),
+while the `[` operator uses R's one-based indexing:
+
+```{r}
+z$get_orthogonal_selection(list(c(0L, 2L, 4L), zb_slice(0, 6)))$data
+```
+
+### Boolean (mask) dimension indexing
+
+Select dimensions using logical vectors:
+
+```{r}
+row_mask <- c(TRUE, FALSE, TRUE, FALSE, TRUE)
+
+z$get_orthogonal_selection(list(row_mask, zb_slice(0, 6)))$data
+```
+
+### Using the OIndex object
+
+The `$get_oindex()` accessor provides the same orthogonal indexing:
+
+```{r}
+oi <- z$get_oindex()
+
+oi$get_item(list(c(0L, 4L), c(1L, 3L, 5L)))$data
+```
+
+### Slicing with step
+
+Select every other row, every third column using `seq()` in bracket notation:
+
+```{r}
+z[seq(1, 5, 2), seq(1, 6, 3)]$data
+```
+
+### Ellipsis and colon shorthand
+
+`"..."` selects all remaining dimensions; `":"` selects all along one dimension.
+These work with `get_item()`:
+
+```{r}
+# All rows, column 1
+z$get_item(list(":", 1))$data
+
+# Row 1, all columns
+z$get_item(list(1, "..."))$data
+```
+
+```{r, include = FALSE}
+unlink(file.path(tempdir(), "example.zarr"), recursive = TRUE)
+unlink(file.path(tempdir(), "saved.zarr"), recursive = TRUE)
+```

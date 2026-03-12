@@ -11,11 +11,6 @@ authors:
   Mark Keller:
     href: https://github.com/keller-mark
 
-navbar:
-  structure:
-    left:  [home, get-started, reference, articles, news]
-    right: [github]
-
 reference:
 - title: "Arrays"
   desc: >
@@ -100,8 +95,8 @@ articles:
   - title: Tutorials
     navbar: Tutorials
     contents:
-      - pizzarr
       - basics
+      - zarr-operations
       - ome-ngff
       - remote-ome-ngff
       - remote-anndata
