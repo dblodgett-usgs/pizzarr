@@ -23,7 +23,7 @@ Language: en-US
 License: MIT + file LICENSE
 BugReports: https://github.com/zarr-developers/pizzarr/issues
 URL: https://github.com/zarr-developers/pizzarr
-Depends: R (>= 4.0.0)
+Depends: R (>= 4.1.0)
 Imports:
     jsonlite,
     stats,
