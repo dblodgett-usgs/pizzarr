@@ -9,7 +9,7 @@ A Zarr implementation for R.
 
 ## Installation
 
-Installation requires R 4.0.0 or greater.
+Installation requires R 4.1.0 or greater.
 
 ```r
 install.packages("devtools")
