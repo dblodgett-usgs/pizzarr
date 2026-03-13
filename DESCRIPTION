@@ -52,7 +52,6 @@ Suggests:
     future.apply,
     bench,
     bit64,
-    qs,
     withr
 Config/testthat/parallel: true
 Config/testthat/edition: 3
