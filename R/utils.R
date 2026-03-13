@@ -158,29 +158,6 @@ check_selection_length <- function(selection, shape) {
   }
 }
 
-# Returns both the sliceIndices per dimension and the output shape after slicing.
-# Reference: https://github.com/gzuidhof/zarr.js/blob/master/src/core/indexing.ts#L22
-#' @keywords internal
-selection_to_slice_indices <- function(selection, shape) {
-  slice_indices_result <- list()
-  out_shape <- c()
-
-  for(i in seq_along(selection)) {
-    s <- selection[i]
-    if(is.numeric(s)) {
-      slice_indices_result <- append(slice_indices_result, s)
-    } else {
-      x <- s$indices(shape[i])
-      dim_length <- x[4]
-      out_shape <- c(out_shape, dim_length)
-      slice_indices_result <- append(slice_indices_result, x)
-    }
-  }
-  return(list(
-    slice_indices_result = slice_indices_result,
-    out_shape = out_shape
-  ))
-}
 
 #' @keywords internal
 filter_list <- function(l, pred) {
@@ -297,6 +274,7 @@ chunk_fill <- function(chunk, value) {
 
   # Need to do equivalent of chunk.fill(value) in JS
   chunk[] <- value
+  chunk
 }
 
 #' Check if an error is a KeyError.

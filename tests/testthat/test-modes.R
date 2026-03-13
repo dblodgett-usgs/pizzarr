@@ -174,3 +174,93 @@ test_that("zarr_open mode='r' fails when nothing exists", {
   store <- MemoryStore$new()
   expect_error(zarr_open(store, mode = "r"))
 })
+
+# =============================================================================
+# Gap 6: Additional mode matrix coverage — cross-type errors
+# =============================================================================
+
+test_that("zarr_open_group mode='r' errors with ContainsArrayError when only array exists", {
+  store <- MemoryStore$new()
+  create_existing_array(store)
+  expect_error(zarr_open_group(store, mode = "r"), "ContainsArrayError")
+})
+
+test_that("zarr_open_group mode='r+' errors with ContainsArrayError when only array exists", {
+  store <- MemoryStore$new()
+  create_existing_array(store)
+  expect_error(zarr_open_group(store, mode = "r+"), "ContainsArrayError")
+})
+
+test_that("zarr_open_array mode='r' errors with ContainsGroupError when only group exists", {
+  store <- MemoryStore$new()
+  create_existing_group(store)
+  expect_error(zarr_open_array(store, mode = "r"), "ContainsGroupError")
+})
+
+test_that("zarr_open_array mode='r+' errors with ContainsGroupError when only group exists", {
+  store <- MemoryStore$new()
+  create_existing_group(store)
+  expect_error(zarr_open_array(store, mode = "r+"), "ContainsGroupError")
+})
+
+test_that("zarr_open_group mode='a' errors with ContainsArrayError when array exists", {
+  store <- MemoryStore$new()
+  create_existing_array(store)
+  expect_error(zarr_open_group(store, mode = "a"), "ContainsArrayError")
+})
+
+test_that("zarr_open_group mode='w-' errors with ContainsGroupError when group exists", {
+  store <- MemoryStore$new()
+  create_existing_group(store)
+  expect_error(zarr_open_group(store, mode = "w-"), "ContainsGroupError")
+})
+
+test_that("zarr_open_group mode='w-' errors with ContainsArrayError when array exists", {
+  store <- MemoryStore$new()
+  create_existing_array(store)
+  expect_error(zarr_open_group(store, mode = "w-"), "ContainsArrayError")
+})
+
+test_that("zarr_open_array mode='w-' errors with ContainsGroupError when group exists", {
+  store <- MemoryStore$new()
+  create_existing_group(store)
+  expect_error(zarr_open_array(store, mode = "w-"), "ContainsGroupError")
+})
+
+test_that("zarr_open mode='w' without shape opens as group", {
+  store <- MemoryStore$new()
+  result <- zarr_open(store, mode = "w")
+  expect_s3_class(result, "ZarrGroup")
+})
+
+test_that("zarr_open mode='a' without shape and no existing data opens as group", {
+  store <- MemoryStore$new()
+  result <- zarr_open(store, mode = "a")
+  expect_s3_class(result, "ZarrGroup")
+})
+
+test_that("zarr_open mode='a' with existing array opens as array", {
+  store <- MemoryStore$new()
+  create_existing_array(store)
+  result <- zarr_open(store, mode = "a")
+  expect_s3_class(result, "ZarrArray")
+})
+
+test_that("zarr_open_group mode='r' returns read-only group", {
+  store <- MemoryStore$new()
+  create_existing_group(store)
+  g <- zarr_open_group(store, mode = "r")
+  expect_true(g$get_read_only())
+})
+
+test_that("zarr_open_group mode='x' is alias for 'w-'", {
+  store <- MemoryStore$new()
+  g <- zarr_open_group(store, mode = "x")
+  expect_s3_class(g, "ZarrGroup")
+})
+
+test_that("zarr_open_group mode='x' fails if group already exists", {
+  store <- MemoryStore$new()
+  create_existing_group(store)
+  expect_error(zarr_open_group(store, mode = "x"))
+})

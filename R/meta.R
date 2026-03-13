@@ -102,12 +102,21 @@ try_from_zmeta <- function(key, store) {
   store$get_consolidated_metadata()$metadata[[key]]
 }
 
-# Encode a fill_value for V3 zarr.json.
-# V3 requires special float values as JSON strings: NaN, Infinity, -Infinity.
-# Normal numeric values are returned as unboxed scalars.
-# @param fill_value The fill value to encode.
-# @return A value suitable for inclusion in a jsonlite::toJSON call.
-# @keywords internal
+#' Encode a fill_value for V3 zarr.json.
+#' V3 requires special float values as JSON strings: NaN, Infinity, -Infinity.
+#' Normal numeric values are returned as unboxed scalars.
+#' @param fill_value The fill value to encode.
+#' @return A value suitable for inclusion in a jsonlite::toJSON call.
+#' @keywords internal
+decode_fill_value_v3 <- function(fill_value) {
+  if (is.character(fill_value) && length(fill_value) == 1) {
+    if (fill_value == "NaN") return(NaN)
+    if (fill_value == "Infinity") return(Inf)
+    if (fill_value == "-Infinity") return(-Inf)
+  }
+  fill_value
+}
+
 encode_fill_value_v3 <- function(fill_value) {
   if (is.numeric(fill_value) && length(fill_value) == 1) {
     # NOTE: in R, is.na(NaN) == TRUE, so check is.nan() first

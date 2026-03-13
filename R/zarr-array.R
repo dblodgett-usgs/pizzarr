@@ -232,7 +232,8 @@ ZarrArray <- R6::R6Class("ZarrArray",
 
       # --- fill_value ---
       # V3 fill_value is required (not optional like V2).
-      private$fill_value <- meta$fill_value
+      # V3 encodes NaN/Infinity/-Infinity as JSON strings; decode back to numeric.
+      private$fill_value <- decode_fill_value_v3(meta$fill_value)
     },
     # method_description
     # Load or reload metadata from store.
@@ -700,7 +701,9 @@ ZarrArray <- R6::R6Class("ZarrArray",
         cond <- part1_result$value
         if(is_key_error(cond)) {
           # fill with scalar if cKey doesn't exist in store
-          if(!is_na(private$fill_value)) {
+          # NaN is a valid fill value; is.na(NaN)==TRUE so check is.nan first
+          if ((is.numeric(private$fill_value) && is.nan(private$fill_value)) ||
+              !is_na(private$fill_value)) {
             out$set(out_selection, as_scalar(private$fill_value))
           }
         } else {
@@ -748,7 +751,9 @@ ZarrArray <- R6::R6Class("ZarrArray",
       }, error = function(cond) {
         if(is_key_error(cond)) {
           # fill with scalar if cKey doesn't exist in store
-          if(!is_na(private$fill_value)) {
+          # NaN is a valid fill value; is.na(NaN)==TRUE so check is.nan first
+          if ((is.numeric(private$fill_value) && is.nan(private$fill_value)) ||
+              !is_na(private$fill_value)) {
             out$set(out_selection, as_scalar(private$fill_value))
           }
         } else {
@@ -786,9 +791,19 @@ ZarrArray <- R6::R6Class("ZarrArray",
             dtype = private$dtype,
             order = private$order
           )
+        } else {
+          # Ensure the value data is coerced to the target dtype's R type
+          as_dtype_func <- private$dtype$get_asrtype()
+          coerced_data <- as_dtype_func(value$data)
+          dim(coerced_data) <- dim(value$data)
+          chunk <- NestedArray$new(
+            coerced_data,
+            shape = private$chunks,
+            dtype = private$dtype,
+            order = private$order
+          )
         }
-        # value was already a NestedArray
-        chunk_raw <- value$flatten_to_raw(order = private$order)
+        chunk_raw <- chunk$flatten_to_raw(order = private$order)
       } else {
         # partially replace the contents of this chunk
 
@@ -809,8 +824,11 @@ ZarrArray <- R6::R6Class("ZarrArray",
           if (is_key_error(cond)) {
             # Chunk is not initialized
             chunk_data <- dtype_constr(chunk_size)
-            if (!is_na(private$fill_value)) {
-              chunk_fill(chunk_data, private$fill_value)
+            # NaN is a valid fill value; is.na(NaN)==TRUE so check is.nan first
+            if (is.numeric(private$fill_value) && is.nan(private$fill_value)) {
+              chunk_data <- chunk_fill(chunk_data, private$fill_value)
+            } else if (!is_na(private$fill_value)) {
+              chunk_data <- chunk_fill(chunk_data, private$fill_value)
             }
             # From base R array.
             return(NestedArray$new(

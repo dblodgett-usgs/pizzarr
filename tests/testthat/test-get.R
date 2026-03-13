@@ -108,7 +108,8 @@ test_that("get_basic_selection_2d(zero-based) - can set_item for subset", {
 
     sel <- z$get_item("...")
 
-    expected_out <- array(data=NA, dim=c(2, 10))
+    # fill_value=NA normalizes to 0.0 for float dtype
+    expected_out <- array(data=0, dim=c(2, 10))
     expected_out[1, 1:5] <- c(1, 3, 5, 7, 9)
     expected_out[2, 1:5] <- c(2, 4, 6, 8, 10)
 
