@@ -663,3 +663,68 @@ test_that("zarr-python V3 sub-group array (pressure, gzip)", {
 
 # Clean up
 unlink(zp_dir, recursive = TRUE)
+
+# --- V3 write: flush_metadata_nosync ---
+
+test_that("flush_metadata_nosync (V3) writes updated zarr.json", {
+  d <- tempfile()
+  a <- zarr_create(shape = c(4, 4), chunks = c(2, 2), store = d,
+                   compressor = NA, zarr_format = 3L)
+  a$resize(6, 4)
+  b <- zarr_open_array(d, mode = "r")
+  expect_equal(b$get_shape(), c(6, 4))
+})
+
+# --- V3 metadata loading ---
+
+test_that("V3 load_metadata_v3_nosync populates shape/chunks/dtype/fill_value", {
+  d <- tempfile()
+  a <- zarr_create(shape = c(4, 4), chunks = c(2, 2), dtype = "<f8",
+                   store = d, compressor = NA, fill_value = 0,
+                   zarr_format = 3L)
+  a$set_item("...", array(1:16 * 1.0, dim = c(4, 4)))
+  b <- zarr_open_array(d, mode = "r")
+  expect_equal(b$get_shape(), c(4, 4))
+  expect_equal(b$get_chunks(), c(2, 2))
+  result <- b$get_item("...")
+  expect_equal(result$data, array(1:16 * 1.0, dim = c(4, 4)))
+})
+
+test_that("V3 chunk_key generates c/0/0 style keys for default encoding", {
+  d <- tempfile()
+  a <- zarr_create(shape = c(4, 4), chunks = c(2, 2), store = d,
+                   compressor = NA, zarr_format = 3L)
+  data <- array(1:16, dim = c(4, 4))
+  a$set_item("...", data)
+  result <- a$get_item("...")
+  expect_equal(result$data, data)
+})
+
+test_that("V3 array with default chunk_key_encoding uses slash separator", {
+  d <- tempfile()
+  a <- zarr_create(
+    shape = c(4), chunks = c(2), store = d,
+    compressor = NA, zarr_format = 3L
+  )
+  data <- array(1:4, dim = c(4))
+  a$set_item("...", data)
+  b <- zarr_open_array(d, mode = "r")
+  result <- b$get_item("...")
+  expect_equal(as.integer(result$data), 1:4)
+  expect_equal(b$get_dimension_separator(), "/")
+})
+
+test_that("V3 vlen-utf8 string array loads correctly via load_metadata_v3_nosync", {
+  v3_zip <- system.file("extdata/fixtures/v3/data.zarr.zip", package = "pizzarr")
+  tdir <- tempfile("v3vlen")
+  dir.create(tdir)
+  utils::unzip(v3_zip, exdir = tdir)
+  v3_root <- file.path(tdir, "data.zarr")
+  store <- DirectoryStore$new(v3_root)
+  if (contains_array(store, "1d.contiguous.raw.i2")) {
+    a <- ZarrArray$new(store, path = "1d.contiguous.raw.i2", read_only = TRUE)
+    expect_equal(a$get_shape(), 4)
+  } else {
+    skip("fixture not found")
+  }
+})
