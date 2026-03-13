@@ -52,8 +52,6 @@ Suggests:
     future.apply,
     bench,
     bit64,
-    qs,
     withr
-Remotes: qsbase/qs
 Config/testthat/parallel: true
 Config/testthat/edition: 3

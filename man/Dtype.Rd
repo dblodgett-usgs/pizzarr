@@ -96,7 +96,7 @@ Get the R base type for this dtype.
 }
 
 \subsection{Returns}{
-An R prototype value (e.g., \code{integer()}, \code{double()}).
+An R prototype value (e.g., \code{integer()}, \code{double()}, or \code{bit64::integer64()}).
 }
 }
 \if{html}{\out{<hr>}}
