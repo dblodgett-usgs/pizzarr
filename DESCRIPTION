@@ -53,5 +53,5 @@ Suggests:
     bench,
     bit64,
     withr
-Config/testthat/parallel: true
+Config/testthat/parallel: false
 Config/testthat/edition: 3
