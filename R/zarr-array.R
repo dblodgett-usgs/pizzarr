@@ -1562,37 +1562,39 @@ get_parallel_settings <- function(on_windows = (.Platform$OS.type == "windows"),
     
     # check for pbapply
     if(progress & !requireNamespace("pbapply", quietly = TRUE)) {
-      # NOTEST
+      # NOTEST: only reachable when pbapply is not installed
       progress <- FALSE
       warning("progress bar operations requires the 'pbapply' package.")
     }
     
+    # NOTEST: covr instruments function bodies, making body() comparison fail;
+    # get_parallel_settings test uses skip_on_covr(). Covered by testthat only.
     if(isTRUE(cl == "future")) {
-      
+
       if(!requireNamespace("future.apply", quietly = TRUE)) {
-        # NOTEST
+        # NOTEST: only reachable when future.apply is not installed
         warning("cluster options is 'future' but future.apply not available.")
-        
+
       } else { # we can use future
         if(progress) {
           apply_func <- function(X, FUN, ..., cl = NULL) {
-            pbapply::pblapply(X, FUN, ..., 
+            pbapply::pblapply(X, FUN, ...,
                               future.globals = FALSE,
                               future.packages = "blosc",
                               future.seed = TRUE, cl = cl)
           }
         } else {
           apply_func <- function(X, FUN, ..., cl = NULL) {
-            future.apply::future_lapply(X, FUN, ..., 
+            future.apply::future_lapply(X, FUN, ...,
                                         future.globals = FALSE,
                                         future.packages = "blosc",
                                         future.seed=TRUE)
           }
         } }
     } else {
-      
+
       if(!requireNamespace("parallel", quietly = TRUE)) {
-        # NOTEST
+        # NOTEST: only reachable when parallel is not installed (it's a base pkg)
         warning("Parallel operations require the 'parallel' or 'future' package.")
       } else {
         if(is.integer(cl) & on_windows) {
@@ -1600,7 +1602,7 @@ get_parallel_settings <- function(on_windows = (.Platform$OS.type == "windows"),
           cl <- parallel::makeCluster(cl)
           close <- TRUE
         }
-        
+
         if(progress) {
           apply_func <- function(X, FUN, ..., cl = NULL) {
             pbapply::pblapply(X, FUN, ..., cl = cl)
