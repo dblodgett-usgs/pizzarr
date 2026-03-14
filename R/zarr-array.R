@@ -796,9 +796,19 @@ ZarrArray <- R6::R6Class("ZarrArray",
           as_dtype_func <- private$dtype$get_asrtype()
           coerced_data <- as_dtype_func(value$data)
           dim(coerced_data) <- dim(value$data)
+          # Use actual data shape, not private$chunks: boundary chunks may be
+          # smaller than the nominal chunk size so value$data won't fill a
+          # full-sized chunk and would cause a recycling warning.
+          chunk_shape <- if (!is.null(dim(coerced_data)) &&
+                             !identical(as.integer(dim(coerced_data)),
+                                        as.integer(private$chunks))) {
+            dim(coerced_data)
+          } else {
+            private$chunks
+          }
           chunk <- NestedArray$new(
             coerced_data,
-            shape = private$chunks,
+            shape = chunk_shape,
             dtype = private$dtype,
             order = private$order
           )
