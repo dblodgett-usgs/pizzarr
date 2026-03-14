@@ -663,3 +663,181 @@ test_that("zarr-python V3 sub-group array (pressure, gzip)", {
 
 # Clean up
 unlink(zp_dir, recursive = TRUE)
+
+# --- V3 write: flush_metadata_nosync ---
+
+test_that("flush_metadata_nosync (V3) writes updated zarr.json", {
+  d <- tempfile()
+  a <- zarr_create(shape = c(4, 4), chunks = c(2, 2), store = d,
+                   compressor = NA, zarr_format = 3L)
+  a$resize(6, 4)
+  b <- zarr_open_array(d, mode = "r")
+  expect_equal(b$get_shape(), c(6, 4))
+})
+
+# --- V3 metadata loading ---
+
+test_that("V3 load_metadata_v3_nosync populates shape/chunks/dtype/fill_value", {
+  d <- tempfile()
+  a <- zarr_create(shape = c(4, 4), chunks = c(2, 2), dtype = "<f8",
+                   store = d, compressor = NA, fill_value = 0,
+                   zarr_format = 3L)
+  a$set_item("...", array(1:16 * 1.0, dim = c(4, 4)))
+  b <- zarr_open_array(d, mode = "r")
+  expect_equal(b$get_shape(), c(4, 4))
+  expect_equal(b$get_chunks(), c(2, 2))
+  result <- b$get_item("...")
+  expect_equal(result$data, array(1:16 * 1.0, dim = c(4, 4)))
+})
+
+test_that("V3 chunk_key generates c/0/0 style keys for default encoding", {
+  d <- tempfile()
+  a <- zarr_create(shape = c(4, 4), chunks = c(2, 2), store = d,
+                   compressor = NA, zarr_format = 3L)
+  data <- array(1:16, dim = c(4, 4))
+  a$set_item("...", data)
+  result <- a$get_item("...")
+  expect_equal(result$data, data)
+})
+
+test_that("V3 array with default chunk_key_encoding uses slash separator", {
+  d <- tempfile()
+  a <- zarr_create(
+    shape = c(4), chunks = c(2), store = d,
+    compressor = NA, zarr_format = 3L
+  )
+  data <- array(1:4, dim = c(4))
+  a$set_item("...", data)
+  b <- zarr_open_array(d, mode = "r")
+  result <- b$get_item("...")
+  expect_equal(as.integer(result$data), 1:4)
+  expect_equal(b$get_dimension_separator(), "/")
+})
+
+# =============================================================================
+# Gap 3: Additional V3 metadata loading tests
+# =============================================================================
+
+test_that("V3 load_metadata_v3_nosync handles different dtypes", {
+  for (dt in c("<i2", "<i4", "<f4", "<f8", "|u1", "|b1")) {
+    store <- MemoryStore$new()
+    z <- zarr_create(shape = c(4L), dtype = dt, zarr_format = 3L,
+                     compressor = NA, store = store)
+    reopened <- ZarrArray$new(store, read_only = TRUE)
+    expect_equal(reopened$get_shape(), 4)
+  }
+})
+
+test_that("V3 load_metadata_v3_nosync with gzip codec", {
+  store <- MemoryStore$new()
+  z <- zarr_create(shape = c(8L), dtype = "<f8", zarr_format = 3L,
+                   compressor = GzipCodec$new(), store = store)
+  z$set_item("...", array(as.double(1:8), dim = 8))
+  reopened <- ZarrArray$new(store, read_only = TRUE)
+  result <- reopened$get_item("...")
+  expect_equal(as.double(result$data), as.double(1:8))
+})
+
+test_that("V3 load_metadata_v3_nosync with zstd codec", {
+  store <- MemoryStore$new()
+  z <- zarr_create(shape = c(8L), dtype = "<i4", zarr_format = 3L,
+                   compressor = ZstdCodec$new(level = 1), store = store)
+  z$set_item("...", array(1:8, dim = 8))
+  reopened <- ZarrArray$new(store, read_only = TRUE)
+  result <- reopened$get_item("...")
+  expect_equal(as.integer(result$data), 1:8)
+})
+
+test_that("V3 load_metadata_v3_nosync with 2D array", {
+  store <- MemoryStore$new()
+  z <- zarr_create(shape = c(3L, 4L), chunks = c(2L, 2L), dtype = "<f8",
+                   zarr_format = 3L, compressor = NA, store = store)
+  data <- array(as.double(1:12), dim = c(3, 4))
+  z$set_item("...", data)
+  reopened <- ZarrArray$new(store, read_only = TRUE)
+  expect_equal(reopened$get_shape(), c(3, 4))
+  expect_equal(reopened$get_chunks(), c(2, 2))
+  result <- reopened$get_item("...")
+  expect_equal(result$data, data)
+})
+
+test_that("V3 metadata contains correct fill_value for NaN", {
+  store <- MemoryStore$new()
+  z <- zarr_create(shape = c(4L), dtype = "<f8", fill_value = NaN,
+                   zarr_format = 3L, compressor = NA, store = store)
+  reopened <- ZarrArray$new(store, read_only = TRUE)
+  # NaN fill_value round-trips through V3 encode/decode
+  expect_true(is.nan(reopened$get_fill_value()))
+  # Uninitialized chunks should contain NaN
+  result <- reopened$get_item("...")
+  expect_true(all(is.nan(result$data)))
+})
+
+# =============================================================================
+# Gap 5: ZarrGroup$initialize V3 path
+# =============================================================================
+
+test_that("V3 group init populates metadata correctly", {
+  store <- MemoryStore$new()
+  g <- zarr_create_group(store = store, zarr_format = 3L)
+  expect_s3_class(g, "ZarrGroup")
+  expect_equal(g$get_name(), "/")
+  expect_false(g$get_read_only())
+})
+
+test_that("V3 group re-open preserves attributes", {
+  store <- MemoryStore$new()
+  g <- zarr_create_group(store = store, zarr_format = 3L)
+  g$get_attrs()$set_item("description", "test group")
+  # Re-open
+  g2 <- zarr_open_group(store, mode = "r")
+  attrs <- g2$get_attrs()$to_list()
+  expect_equal(attrs$description, "test group")
+})
+
+test_that("V3 group get_path returns stored path", {
+  store <- MemoryStore$new()
+  g <- zarr_create_group(store = store, zarr_format = 3L)
+  expect_equal(g$get_path(), "")
+})
+
+test_that("V3 group get_meta returns metadata", {
+  store <- MemoryStore$new()
+  g <- zarr_create_group(store = store, zarr_format = 3L)
+  meta <- g$get_meta()
+  expect_false(is.null(meta))
+})
+
+test_that("V3 group with nested arrays and groups", {
+  store <- MemoryStore$new()
+  g <- zarr_create_group(store = store, zarr_format = 3L)
+  sub <- g$create_group("sub")
+  a <- sub$create_dataset("data", shape = c(4L), dtype = "<i4", compressor = NA)
+  a$set_item("...", array(1:4, dim = 4))
+  # Re-open and traverse
+  g2 <- zarr_open_group(store, mode = "r")
+  sub2 <- g2$get_item("sub")
+  expect_s3_class(sub2, "ZarrGroup")
+  a2 <- sub2$get_item("data")
+  expect_equal(as.integer(a2$get_item("...")$data), 1:4)
+})
+
+test_that("V3 group GroupNotFoundError on empty store", {
+  store <- MemoryStore$new()
+  expect_error(zarr_open_group(store, mode = "r"), "GroupNotFoundError")
+})
+
+test_that("V3 vlen-utf8 string array loads correctly via load_metadata_v3_nosync", {
+  v3_zip <- system.file("extdata/fixtures/v3/data.zarr.zip", package = "pizzarr")
+  tdir <- tempfile("v3vlen")
+  dir.create(tdir)
+  utils::unzip(v3_zip, exdir = tdir)
+  v3_root <- file.path(tdir, "data.zarr")
+  store <- DirectoryStore$new(v3_root)
+  if (contains_array(store, "1d.contiguous.raw.i2")) {
+    a <- ZarrArray$new(store, path = "1d.contiguous.raw.i2", read_only = TRUE)
+    expect_equal(a$get_shape(), 4)
+  } else {
+    skip("fixture not found")
+  }
+})

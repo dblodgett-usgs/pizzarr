@@ -99,11 +99,11 @@ test_that("can run get_item() and set_item in parallel", {
   expect_equal(unlist(bench_df$result), rep(134538481, 2))
   
   testthat::skip_on_covr()
-  testthat::skip_on_os("windows") 
+  testthat::skip_on_os("windows")
   # injecting parallel workers this way on windows doesn't work
 
   expect_equal(bench_df$total_time[[1]] > bench_df$total_time[[2]], TRUE)
-  
+
 })
 
 test_that("can run set_item() in parallel", {
@@ -119,7 +119,7 @@ test_that("can run set_item() in parallel", {
   expect_equal(unlist(bench_df$result), rep(134538481*2.0, 2))
   
   testthat::skip_on_covr()
-  testthat::skip_on_os("windows") 
+  testthat::skip_on_os("windows")
   # injecting parallel workers this way on windows doesn't work
 
   expect_equal(bench_df$total_time[[1]] > bench_df$total_time[[2]], TRUE)
@@ -154,136 +154,143 @@ test_that("is_truthy_parallel_option works as expected", {
 })
 
 test_that("get_parallel_settings", {
-  testthat::skip_on_covr() # need to debug why this breaks covr run
-  
+  # covr instruments production code by injecting counter calls into function
+  # bodies, making body() comparison unreliable. Skip under covr; the parallel
+  # get/set tests above already exercise the actual dispatch paths.
+  testthat::skip_on_covr()
+
+  expect_func_equal <- function(f1, f2) {
+    expect_equal(format(f1), format(f2))
+  }
+
   # Case 1: not parallel
   ps <- get_parallel_settings(parallel_option = NA)
-  
-  expect_equal(format(ps$apply_func), 
-               format(function(X, FUN, ..., cl = NULL) {
-                 lapply(X, FUN, ...)
-               }))
-  
+
+  expect_func_equal(ps$apply_func,
+                    function(X, FUN, ..., cl = NULL) {
+                      lapply(X, FUN, ...)
+                    })
+
   expect_equal(ps$cl, NA)
-  
+
   # Case 2a1: Future, progress
   ps <- get_parallel_settings(parallel_option = "future",
                               progress = TRUE)
-  
-  expect_equal(format(ps$apply_func), 
-               format(function(X, FUN, ..., cl = NULL) {
-                 pbapply::pblapply(X, FUN, ..., 
-                                   future.globals = FALSE,
-                                   future.packages = "blosc",
-                                   future.seed = TRUE, cl = cl)
-               }))
-  
+
+  expect_func_equal(ps$apply_func,
+                    function(X, FUN, ..., cl = NULL) {
+                      pbapply::pblapply(X, FUN, ...,
+                                        future.globals = FALSE,
+                                        future.packages = "blosc",
+                                        future.seed = TRUE, cl = cl)
+                    })
+
   expect_equal(ps$cl, "future")
-  
+
   # Case 2a2: Future, no progress
-  
+
   ps <- get_parallel_settings(parallel_option = "future",
                               progress = FALSE)
-  
-  expect_equal(format(ps$apply_func), 
-               format(function(X, FUN, ..., cl = NULL) {
-                 future.apply::future_lapply(X, FUN, ..., 
-                                             future.globals = FALSE,
-                                             future.packages = "blosc",
-                                             future.seed=TRUE)
-               }))
-  
+
+  expect_func_equal(ps$apply_func,
+                    function(X, FUN, ..., cl = NULL) {
+                      future.apply::future_lapply(X, FUN, ...,
+                                                  future.globals = FALSE,
+                                                  future.packages = "blosc",
+                                                  future.seed=TRUE)
+                    })
+
   expect_equal(ps$cl, "future")
-  
+
   # Case 2b1: cl = integer > 1, windows, progress = TRUE
-  
-  ps <- get_parallel_settings(on_windows = TRUE, 
+
+  ps <- get_parallel_settings(on_windows = TRUE,
                               parallel_option = 2,
                               progress = TRUE)
-  
-  expect_equal(format(ps$apply_func), 
-               format(function(X, FUN, ..., cl = NULL) {
-                 pbapply::pblapply(X, FUN, ..., cl = cl)
-               }))
-  
+
+  expect_func_equal(ps$apply_func,
+                    function(X, FUN, ..., cl = NULL) {
+                      pbapply::pblapply(X, FUN, ..., cl = cl)
+                    })
+
   expect_true(inherits(ps$cl, "cluster"))
-  
+
   # Case 2b2: cl = 1, progress = TRUE, windows doesn't matter
-  
+
   ps <- get_parallel_settings(parallel_option = 1,
                               progress = TRUE)
-  
-  expect_equal(format(ps$apply_func), 
-               format(function(X, FUN, ..., cl = NULL) {
-                 pbapply::pblapply(X, FUN, ..., cl = cl)
-               }))
-  
+
+  expect_func_equal(ps$apply_func,
+                    function(X, FUN, ..., cl = NULL) {
+                      pbapply::pblapply(X, FUN, ..., cl = cl)
+                    })
+
   expect_equal(ps$cl, NULL)
-  
+
   # Case 2b3: cl = 2, progress = TRUE, not windows
-  
+
   ps <- get_parallel_settings(on_windows = FALSE,
                               parallel_option = 2,
                               progress = TRUE)
-  
-  expect_equal(format(ps$apply_func), 
-               format(function(X, FUN, ..., cl = NULL) {
-                 pbapply::pblapply(X, FUN, ..., cl = cl)
-               }))
-  
+
+  expect_func_equal(ps$apply_func,
+                    function(X, FUN, ..., cl = NULL) {
+                      pbapply::pblapply(X, FUN, ..., cl = cl)
+                    })
+
   expect_equal(ps$cl, 2)
-  
+
   # Case 2b4: cl = 2, not windows, progress
-  
+
   ps <- get_parallel_settings(on_windows = FALSE,
                               parallel_option = 2,
                               progress = TRUE)
-  
-  expect_equal(format(ps$apply_func), 
-               format(function(X, FUN, ..., cl = NULL) {
-                 pbapply::pblapply(X, FUN, ..., cl = cl)
-               }))
-  
+
+  expect_func_equal(ps$apply_func,
+                    function(X, FUN, ..., cl = NULL) {
+                      pbapply::pblapply(X, FUN, ..., cl = cl)
+                    })
+
   expect_equal(ps$cl, 2)
-  
+
   # case 2b5 cl = 1, no progress
-  
+
   ps <- get_parallel_settings(parallel_option = 1,
                               progress = FALSE)
-  
-  expect_equal(format(ps$apply_func), 
-               format(function(X, FUN, ..., cl = NULL) {
-                 lapply(X, FUN, ...)
-               }))
-  
+
+  expect_func_equal(ps$apply_func,
+                    function(X, FUN, ..., cl = NULL) {
+                      lapply(X, FUN, ...)
+                    })
+
   expect_equal(ps$cl, NULL)
-  
+
   # Case 2b6: cl = 2, no progress, on windows
-  
+
   ps <- get_parallel_settings(on_windows = TRUE,
                               parallel_option = 2,
                               progress = FALSE)
-  
-  expect_equal(format(ps$apply_func), 
-               format(function(X, FUN, ..., cl = NULL) {
-                 parallel::parLapply(cl, X, FUN, ...)
-               }))
-  
+
+  expect_func_equal(ps$apply_func,
+                    function(X, FUN, ..., cl = NULL) {
+                      parallel::parLapply(cl, X, FUN, ...)
+                    })
+
   expect_true(inherits(ps$cl, "cluster"))
-  
+
   # Case 2b7: cl = 2, no progress, not windows
-  
+
   ps <- get_parallel_settings(on_windows = FALSE,
                               parallel_option = 2,
                               progress = FALSE)
-  
-  expect_equal(format(ps$apply_func), 
-               format(function(X, FUN, ..., cl = NULL) {
-                 parallel::mclapply(X, FUN, ..., mc.cores = cl)
-               }))
-  
+
+  expect_func_equal(ps$apply_func,
+                    function(X, FUN, ..., cl = NULL) {
+                      parallel::mclapply(X, FUN, ..., mc.cores = cl)
+                    })
+
   expect_equal(ps$cl, 2)
-    
+
 })
 
 parallel::stopCluster(cl1)

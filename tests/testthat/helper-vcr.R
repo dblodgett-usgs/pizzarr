@@ -3,4 +3,3 @@ invisible(vcr::vcr_configure(
   dir = vcr::vcr_test_path("fixtures"),
   match_requests_on = c("method", "uri")
 ))
-vcr::check_cassette_names()

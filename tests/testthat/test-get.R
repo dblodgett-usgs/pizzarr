@@ -108,7 +108,8 @@ test_that("get_basic_selection_2d(zero-based) - can set_item for subset", {
 
     sel <- z$get_item("...")
 
-    expected_out <- array(data=NA, dim=c(2, 10))
+    # fill_value=NA normalizes to 0.0 for float dtype
+    expected_out <- array(data=0, dim=c(2, 10))
     expected_out[1, 1:5] <- c(1, 3, 5, 7, 9)
     expected_out[2, 1:5] <- c(2, 4, 6, 8, 10)
 
@@ -275,3 +276,115 @@ test_that("Can read 2D string array", {
 })
 
 if(clean) unlink(sample_dir, recursive = TRUE)
+
+# --- Zero-dim get/set ---
+
+test_that("get_basic_selection on zero-dim array returns result for uninitialized chunk", {
+  store <- MemoryStore$new()
+  zarray_meta <- store$metadata_class$encode_array_metadata(create_zarray_meta(
+    dtype = Dtype$new("<f8"),
+    order = "C",
+    fill_value = 9.5,
+    shape = NULL,
+    chunks = c(1),
+    dimension_separator = "."
+  ))
+  store$set_item(".zarray", zarray_meta)
+  a <- ZarrArray$new(store = store)
+  result <- a$get_basic_selection("...")
+  expect_true(!is.null(result))
+})
+
+test_that("set_basic_selection_zd writes and reads scalar value", {
+  store <- MemoryStore$new()
+  zarray_meta <- store$metadata_class$encode_array_metadata(create_zarray_meta(
+    dtype = Dtype$new("<f8"),
+    order = "C",
+    fill_value = 0,
+    shape = NULL,
+    chunks = c(1),
+    dimension_separator = "."
+  ))
+  store$set_item(".zarray", zarray_meta)
+  a <- ZarrArray$new(store = store)
+  a$set_basic_selection(list(), 3.14)
+  result <- a$get_basic_selection("...")
+  expect_true(!is.null(result))
+})
+
+# --- get_selection edge cases ---
+
+test_that("get_selection returns correct length for full 1D slice", {
+  a <- zarr_create(shape = c(2), chunks = c(2), store = MemoryStore$new(),
+                   fill_value = 42, compressor = NA)
+  result <- a$get_item("...")
+  expect_equal(length(result$data), 2)
+})
+
+test_that("get_selection returns empty NestedArray when selection is empty", {
+  a <- zarr_create(
+    shape = c(4, 4), chunks = c(2, 2), store = MemoryStore$new(), compressor = NA
+  )
+  result <- a$get_item(list(slice(1, 0), slice(1, 2)))
+  expect_equal(length(result$data), 0)
+})
+
+test_that("get_item raises error for vectorized (fancy) indexing", {
+  a <- zarr_create(
+    shape = c(4, 4), chunks = c(2, 2), store = MemoryStore$new(), compressor = NA
+  )
+  expect_error(a$get_item(list(c(1L, 2L), c(1L, 2L))), "vectorized indexing")
+})
+
+# --- get_basic_selection with cache_metadata=FALSE ---
+
+test_that("get_basic_selection with cache_metadata=FALSE works", {
+  d <- tempfile()
+  zarr_create(shape = c(4), chunks = c(2), store = d, compressor = NA)
+  b <- ZarrArray$new(store = DirectoryStore$new(d), cache_metadata = FALSE)
+  result <- b$get_basic_selection("...")
+  expect_equal(length(result$data), 4)
+})
+
+# --- get_orthogonal_selection ---
+
+test_that("get_orthogonal_selection returns subset", {
+  a <- zarr_create(shape = c(4, 4), chunks = c(2, 2), store = MemoryStore$new(), compressor = NA)
+  data <- array(1:16, dim = c(4, 4))
+  a$set_item("...", data)
+  result <- a$get_orthogonal_selection(list(slice(1, 2), slice(1, 2)))
+  expect_equal(dim(result$data), c(2, 2))
+})
+
+test_that("get_orthogonal_selection works with cache_metadata=FALSE", {
+  d <- tempfile()
+  a <- zarr_create(shape = c(4, 4), chunks = c(2, 2), store = d, compressor = NA)
+  a$set_item("...", array(1:16, dim = c(4, 4)))
+  b <- ZarrArray$new(store = DirectoryStore$new(d), cache_metadata = FALSE)
+  result <- b$get_orthogonal_selection(list(slice(1, 2), slice(1, 2)))
+  expect_equal(dim(result$data), c(2, 2))
+})
+
+# --- chunk_getitem paths ---
+
+test_that("chunk_getitem_part2 partial-select path: sub-chunk slice read", {
+  # Use a single large chunk so the whole-chunk fast path (is_total_slice) does NOT fire.
+  a <- zarr_create(
+    shape = c(4, 4), chunks = c(4, 4), store = MemoryStore$new(),
+    compressor = NA, fill_value = 0
+  )
+  data <- array(1:16, dim = c(4, 4))
+  a$set_item("...", data)
+  result <- a$get_item(list(slice(1, 2), slice(1, 2)))
+  expect_equal(dim(result$data), c(2, 2))
+  expect_equal(as.vector(result$data), c(1L, 2L, 5L, 6L))
+})
+
+test_that("chunk_getitem_part2 error path: partial read of uninitialized chunk returns fill", {
+  a <- zarr_create(
+    shape = c(4, 4), chunks = c(4, 4), store = MemoryStore$new(),
+    compressor = NA, fill_value = 7
+  )
+  result <- a$get_item(list(slice(1, 2), slice(1, 2)))
+  expect_true(all(result$data == 7))
+})

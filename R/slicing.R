@@ -169,7 +169,7 @@ is_basic_selection <- function(selection) {
   selection <- ensure_list(selection)
   # Reference: https://github.com/gzuidhof/zarr.js/blob/master/src/core/indexing.ts#L170
   for(i in seq_along(selection)) {
-    s <- selection[i]
+    s <- selection[[i]]
     if(!(is.numeric(s) || is_positive_slice(s))) {
       return(FALSE)
     }
@@ -237,7 +237,7 @@ is_total_slice <- function(item, shape) {
   }
 
   for (i in seq_len(min(length(item), length(shape)))) {
-    it <- item[i]
+    it <- item[[i]]
 
     if (is.null(it) || is_na(it)) {
       # continue
@@ -278,7 +278,7 @@ is_contiguous_selection <- function(selection) {
   selection <- ensure_list(selection)
   for(i in seq_len(length(selection))) {
     s <- selection[[i]]
-    if(!(is_integer_vec(s) || is_contiguous_slice(s) || s == "...")) {
+    if(!(is_integer_vec(s) || is_contiguous_slice(s) || (is.character(s) && s == "..."))) {
       return(FALSE)
     }
   }
