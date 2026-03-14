@@ -286,20 +286,28 @@ create_zarray_meta <- function(shape = NA, chunks = NA, dtype = NA, compressor =
       }
     }
     if(dtype_basictype == "S" && !is.na(fill_value)) {
-      # TODO: validate that fill_value is encoded as an ASCII string using the standard Base64 alphabet.
+      if(!is.character(fill_value)) {
+        stop("fill_value must be a character string for string dtype")
+      }
     }
   } else {
-    # TODO: validate structured dtypes
+    # Structured dtypes are not yet supported for validation.
   }
 
   if(is.null(shape)) {
     shape <-jsonlite::unbox(NA)
   }
 
-
-  # TODO: validate shape param
-  # TODO: validate chunks param
-  # TODO: validate filters param
+  if(!is.null(shape) && !all(is.na(shape))) {
+    if(!is.numeric(shape) || any(shape < 0)) {
+      stop("shape must be a numeric vector with non-negative values")
+    }
+  }
+  if(!is.null(chunks) && !all(is.na(chunks))) {
+    if(!is.numeric(chunks) || any(chunks <= 0)) {
+      stop("chunks must be a numeric vector with positive values")
+    }
+  }
   zarray_meta <- list(
     zarr_format = jsonlite::unbox(2),
     shape = shape,

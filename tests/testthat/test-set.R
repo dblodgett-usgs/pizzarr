@@ -133,6 +133,12 @@ test_that("get_chunk_value returns scalar when value is scalar", {
   expect_true(all(result$data == 7))
 })
 
+test_that("set_item rejects unsupported value types with helpful error", {
+  z <- zarr_create(shape = c(4L), chunks = c(4L), dtype = "<f4",
+                   fill_value = 0, store = MemoryStore$new())
+  expect_error(z$set_item("...", list(1, 2, 3, 4)), "object_codec")
+})
+
 test_that("encode_chunk runs without error for compressor=NA", {
   a <- zarr_create(shape = c(2), chunks = c(2), store = MemoryStore$new(), compressor = NA)
   a$set_item("...", array(c(1L, 2L), dim = c(2)))

@@ -100,6 +100,34 @@ test_that("chunk_setitem: partial write to uninitialized chunk uses fill_value",
 # End chunk I/O tests
 # =============================================================================
 
+test_that("resize smaller deletes out-of-range chunks from DirectoryStore", {
+  tmp <- tempfile()
+  dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE))
+  store <- DirectoryStore$new(tmp)
+  z <- zarr_create(shape = c(10L), chunks = c(5L), dtype = "<i4",
+                   fill_value = 0L, store = store)
+  z$set_item("...", array(1:10, dim = 10))
+  # Two chunks: 0, 1
+  expect_true(store$contains_item("0"))
+  expect_true(store$contains_item("1"))
+  z$resize(5L)
+  # Chunk 1 should be deleted after resize
+  expect_true(store$contains_item("0"))
+  expect_false(store$contains_item("1"))
+})
+
+test_that("resize smaller deletes out-of-range chunks from MemoryStore", {
+  store <- MemoryStore$new()
+  z <- zarr_create(shape = c(10L), chunks = c(5L), dtype = "<i4",
+                   fill_value = 0L, store = store)
+  z$set_item("...", array(1:10, dim = 10))
+  z$resize(5L)
+  result <- z$get_item("...")
+  expect_equal(length(result$data), 5)
+  expect_equal(as.integer(result$data), 1:5)
+})
+
 test_that("can get array where shape is not a multiple of chunk size", {
     a <- array(data=1:100, dim=c(10, 10))
     #      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]

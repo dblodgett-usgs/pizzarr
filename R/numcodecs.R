@@ -785,9 +785,21 @@ resolve_v3_codecs <- function(codecs_list) {
       }
     } else if (codec_name == "transpose") {
       # array-to-array codec: specifies memory layout.
-      # order="F" means Fortran (column-major) ordering.
-      if (!is.null(config$order) && config$order == "F") {
-        order <- "F"
+      # zarr-python uses permutation arrays (e.g., [1, 0] for 2D F-order).
+      # Legacy/zarrita may use string "F" or "C".
+      if (!is.null(config$order)) {
+        ord <- config$order
+        if (is.character(ord) && ord == "F") {
+          order <- "F"
+        } else if (is.numeric(ord) || is.integer(ord)) {
+          # Permutation array: reverse of 0:(n-1) means F-order
+          n <- length(ord)
+          if (identical(as.integer(ord), rev(seq.int(0L, n - 1L)))) {
+            order <- "F"
+          } else if (!identical(as.integer(ord), seq.int(0L, n - 1L))) {
+            warning("Arbitrary transpose permutations not supported; using C-order")
+          }
+        }
       }
     } else {
       # bytes-to-bytes codec: compression.

@@ -134,3 +134,32 @@ test_that("v3_codec_to_v2_config round-trips zstd (strips checksum)", {
   expect_equal(as.character(v2_config$id), "zstd")
   expect_null(v2_config$checksum)
 })
+
+# --- resolve_v3_codecs transpose handling ---
+
+test_that("resolve_v3_codecs handles transpose permutation array [1,0] as F-order", {
+  codecs <- list(
+    list(name = "transpose", configuration = list(order = c(1L, 0L))),
+    list(name = "bytes", configuration = list(endian = "little"))
+  )
+  result <- resolve_v3_codecs(codecs)
+  expect_equal(result$order, "F")
+})
+
+test_that("resolve_v3_codecs handles transpose permutation array [0,1] as C-order", {
+  codecs <- list(
+    list(name = "transpose", configuration = list(order = c(0L, 1L))),
+    list(name = "bytes", configuration = list(endian = "little"))
+  )
+  result <- resolve_v3_codecs(codecs)
+  expect_equal(result$order, "C")
+})
+
+test_that("resolve_v3_codecs handles transpose string 'F'", {
+  codecs <- list(
+    list(name = "transpose", configuration = list(order = "F")),
+    list(name = "bytes", configuration = list(endian = "little"))
+  )
+  result <- resolve_v3_codecs(codecs)
+  expect_equal(result$order, "F")
+})
