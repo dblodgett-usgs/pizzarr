@@ -129,6 +129,13 @@ Store <- R6::R6Class("Store",
 
      },
     #' @description
+    #' Delete an item from the store.
+    #' @param key The item key.
+    #' @return `NULL` (called for side effects).
+    delete_item = function(key) {
+      stop("NotImplementedError(delete_item)")
+    },
+    #' @description
     #' Get consolidated metadata if it exists.
     #' @return A list or `NULL`.
     get_consolidated_metadata = function() {
@@ -200,6 +207,16 @@ DirectoryStore <- R6::R6Class("DirectoryStore",
     contains_item = function(key) {
       fp <- file.path(self$root, key)
       return(file.exists(fp))
+    },
+    #' @description
+    #' Delete an item from the store.
+    #' @param key The item key.
+    #' @return `NULL` (called for side effects).
+    delete_item = function(key) {
+      fp <- file.path(self$root, key)
+      if(file.exists(fp)) {
+        file.remove(fp)
+      }
     },
     #' @description
     #' Remove a path within a Store.
@@ -352,6 +369,13 @@ MemoryStore <- R6::R6Class("MemoryStore",
         stop("KeyError:", key)
       }
       return(sort(names(item)))
+     },
+     #' @description
+     #' Delete an item from the store.
+     #' @param key The item key.
+     #' @return `NULL` (called for side effects).
+     delete_item = function(key) {
+      self$set_item(key, NULL)
      },
      #' @description
      #' Remove a path within a Store.

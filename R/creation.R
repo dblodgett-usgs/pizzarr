@@ -431,7 +431,6 @@ zarr_create_empty <- function(shape, ...) {
 zarr_create_array <- function(data, ...) {
     z <- zarr_create(...)
     z$set_item("...", data)
-    # TODO: set as read_only = TRUE for array
     return(z)
 }
 

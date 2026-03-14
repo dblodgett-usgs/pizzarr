@@ -8,7 +8,11 @@
 \link[R6:R6Class]{R6::R6Class} inheriting from \link{Codec}.
 }
 \description{
-Class representing a gzip compressor
+Class representing a gzip compressor.
+
+Gzip encoding uses temporary files because R's \code{memCompress()} produces
+zlib framing rather than gzip framing. This makes \code{GzipCodec} slower than
+\link{ZstdCodec} for writes. Prefer \code{ZstdCodec} when performance matters.
 }
 \details{
 Gzip compressor for Zarr

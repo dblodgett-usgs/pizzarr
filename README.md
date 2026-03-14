@@ -65,6 +65,22 @@ devtools::check()
 devtools::test()
 ```
 
+## Validation with zarr-python
+
+A standalone integration test cross-validates that pizzarr and zarr-python
+produce equivalent Zarr stores. Both implementations write the same arrays
+(V2 and V3 formats, multiple dtypes, codecs, chunk layouts, and groups with
+attributes), then each reads the other's output and verifies the data matches.
+
+**Prerequisites:** Python 3.10+ with `zarr>=3` and `numpy` installed.
+
+```bash
+Rscript inst/extdata/cross-validate.R
+```
+
+The script skips gracefully (exit 0) if Python is not available. On success
+all checks pass and exit code is 0; any mismatch is reported and exits 1.
+
 ## Documentation
 
 ```r

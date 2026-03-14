@@ -131,7 +131,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
       if("dimension_separator" %in% names(meta) && !is.na(meta$dimension_separator) && !is.null(meta$dimension_separator)) {
         private$dimension_separator <- meta$dimension_separator
       } else {
-        # TODO: check whether store has a dimension separator before reverting to "."
+        # V2 stores don't carry dimension separators; "." is the spec default.
         private$dimension_separator <- "."
       }
       if(is_na(meta$compressor) || is.null(meta$compressor)) {
@@ -391,8 +391,12 @@ ZarrArray <- R6::R6Class("ZarrArray",
           # pass; keep the chunk
         } else {
           key <- private$chunk_key(cidx)
-          # TODO: try to delete the key from chunk_store
-          message(paste("TODO: delete chunk", jsonlite::toJSON(cidx)))
+          tryCatch(
+            chunk_store$delete_item(key),
+            error = function(e) {
+              warning(paste("Failed to delete chunk", key, ":", e$message))
+            }
+          )
         }
       }
     },
@@ -594,8 +598,7 @@ ZarrArray <- R6::R6Class("ZarrArray",
             stop("Shape mismatch in source NestedArray and set selection: ${value.shape} and ${selectionShape}")
           }
         } else {
-          # // TODO(zarr.js) support TypedArrays, buffers, etc
-          stop("Unknown data type for setting :(")
+          stop("UnsupportedOperation(object dtype requires object_codec in filters for set_item)")
         }
 
         par_opt <- NA
@@ -675,27 +678,19 @@ ZarrArray <- R6::R6Class("ZarrArray",
       if(part1_result$status == "success") {
         chunk_nested_arr <- part1_result$value
 
-        if("NestedArray" %in% class(out)) {
-          if(is_contiguous_selection(out_selection) && is_total_slice(chunk_selection, private$chunks) && is.null(private$filters)) {
-            out$set(out_selection, chunk_nested_arr)
-            return(TRUE)
-          }
-
-          # Decode chunk
-          chunk <- chunk_nested_arr
-          tmp <- chunk$get(chunk_selection)
-
-          if(!is_na(drop_axes)) {
-            stop("Drop axes is not supported yet")
-          }
-          out$set(out_selection, tmp)
-        } else {
-          # RawArray
-          # Copies chunk by index directly into output. Doesn't matter if selection is contiguous
-          # since store/output are different shapes/strides.
-          #out$set(out_selection, private$chunk_buffer_to_raw_array(decoded_chunk), chunk_selection)
-          stop("TODO: support out for chunk_getitem")
+        if(is_contiguous_selection(out_selection) && is_total_slice(chunk_selection, private$chunks) && is.null(private$filters)) {
+          out$set(out_selection, chunk_nested_arr)
+          return(TRUE)
         }
+
+        # Decode chunk
+        chunk <- chunk_nested_arr
+        tmp <- chunk$get(chunk_selection)
+
+        if(!is_na(drop_axes)) {
+          stop("Drop axes is not supported yet")
+        }
+        out$set(out_selection, tmp)
       } else {
         # There was an error - this corresponds to the Catch statement in the non-parallel version.
         cond <- part1_result$value
@@ -727,27 +722,19 @@ ZarrArray <- R6::R6Class("ZarrArray",
         c_data <- self$get_chunk_store()$get_item(c_key)
         decoded_chunk <- private$decode_chunk(c_data)
 
-        if("NestedArray" %in% class(out)) {
-          if(is_contiguous_selection(out_selection) && is_total_slice(chunk_selection, private$chunks) && is.null(private$filters)) {
-            out$set(out_selection, NestedArray$new(decoded_chunk, shape=private$chunks, dtype=private$dtype, order = private$order))
-            return(TRUE)
-          }
-
-          # Decode chunk
-          chunk <- NestedArray$new(decoded_chunk, shape=private$chunks, dtype=private$dtype, order = private$order)
-          tmp <- chunk$get(chunk_selection)
-
-          if(!is_na(drop_axes)) {
-            stop("Drop axes is not supported yet")
-          }
-          out$set(out_selection, tmp)
-        } else {
-          # RawArray
-          # Copies chunk by index directly into output. Doesn't matter if selection is contiguous
-          # since store/output are different shapes/strides.
-          #out$set(out_selection, private$chunk_buffer_to_raw_array(decoded_chunk), chunk_selection)
-          stop("TODO: support out for chunk_getitem")
+        if(is_contiguous_selection(out_selection) && is_total_slice(chunk_selection, private$chunks) && is.null(private$filters)) {
+          out$set(out_selection, NestedArray$new(decoded_chunk, shape=private$chunks, dtype=private$dtype, order = private$order))
+          return(TRUE)
         }
+
+        # Decode chunk
+        chunk <- NestedArray$new(decoded_chunk, shape=private$chunks, dtype=private$dtype, order = private$order)
+        tmp <- chunk$get(chunk_selection)
+
+        if(!is_na(drop_axes)) {
+          stop("Drop axes is not supported yet")
+        }
+        out$set(out_selection, tmp)
       }, error = function(cond) {
         if(is_key_error(cond)) {
           # fill with scalar if cKey doesn't exist in store
@@ -880,12 +867,13 @@ ZarrArray <- R6::R6Class("ZarrArray",
       # TODO
     },
     chunk_delitem = function(ckey) {
-      # TODO
+      self$get_chunk_store()$delete_item(ckey)
     },
     # method_description
-    # TODO
     chunk_delitems = function(ckeys) {
-      # TODO
+      for(ckey in ckeys) {
+        private$chunk_delitem(ckey)
+      }
     },
     # method_description
     # TODO

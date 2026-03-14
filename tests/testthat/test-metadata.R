@@ -117,6 +117,30 @@ test_that("create_zarray_meta rejects invalid order", {
   )
 })
 
+test_that("create_zarray_meta rejects negative shape values", {
+  dtype <- Dtype$new("<i4")
+  expect_error(
+    create_zarray_meta(
+      shape = c(10, -1), chunks = c(5, 5), dtype = dtype,
+      compressor = NA, fill_value = 0, order = "C",
+      filters = NA, dimension_separator = "."
+    ),
+    "shape"
+  )
+})
+
+test_that("create_zarray_meta rejects non-positive chunks", {
+  dtype <- Dtype$new("<i4")
+  expect_error(
+    create_zarray_meta(
+      shape = c(10), chunks = c(0), dtype = dtype,
+      compressor = NA, fill_value = 0, order = "C",
+      filters = NA, dimension_separator = "."
+    ),
+    "chunks"
+  )
+})
+
 test_that("create_zarray_meta validates float fill_value", {
   dtype <- Dtype$new("<f4")
   # Valid fill values for float dtype

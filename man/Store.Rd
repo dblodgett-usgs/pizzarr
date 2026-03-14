@@ -43,6 +43,7 @@ Other Store classes:
 \item \href{#method-Store-get_item}{\code{Store$get_item()}}
 \item \href{#method-Store-set_item}{\code{Store$set_item()}}
 \item \href{#method-Store-contains_item}{\code{Store$contains_item()}}
+\item \href{#method-Store-delete_item}{\code{Store$delete_item()}}
 \item \href{#method-Store-get_consolidated_metadata}{\code{Store$get_consolidated_metadata()}}
 \item \href{#method-Store-clone}{\code{Store$clone()}}
 }
@@ -244,6 +245,26 @@ Determine whether the store contains an item.
 }
 \subsection{Returns}{
 A boolean value.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Store-delete_item"></a>}}
+\if{latex}{\out{\hypertarget{method-Store-delete_item}{}}}
+\subsection{Method \code{delete_item()}}{
+Delete an item from the store.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Store$delete_item(key)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{key}}{The item key.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
