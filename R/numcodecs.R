@@ -280,7 +280,11 @@ ZlibCodec <- R6::R6Class("ZlibCodec",
 #' @title GzipCodec Class
 #' @docType class
 #' @description
-#' Class representing a gzip compressor
+#' Class representing a gzip compressor.
+#'
+#' Gzip encoding uses temporary files because R's `memCompress()` produces
+#' zlib framing rather than gzip framing. This makes `GzipCodec` slower than
+#' [ZstdCodec] for writes. Prefer `ZstdCodec` when performance matters.
 #'
 #' @format [R6::R6Class] inheriting from [Codec].
 #' @family Codec classes
@@ -312,10 +316,15 @@ GzipCodec <- R6::R6Class("GzipCodec",
       if(self$level != 6) {
         stop("Only system default compression level (normally 6) is enabled for writing.")
       }
-       # References:
-       # - https://github.com/grimbough/Rarr/blob/684541a86b0313a6f354282b60a08dd0ea0a747d/R/read_data.R#L356C5-L370C6
-       # - https://stat.ethz.ch/R-manual/R-devel/library/base/html/memCompress.html
-      result <- memCompress(buf, type = "gzip")
+      # memCompress(type="gzip") produces zlib (RFC 1950), not gzip (RFC 1952).
+      # Use gzfile() to produce real gzip output for interoperability with
+      # zarr-python and other implementations that expect gzip framing.
+      tmp <- tempfile()
+      on.exit(unlink(tmp), add = TRUE)
+      con <- gzfile(tmp, open = "wb")
+      writeBin(buf, con)
+      close(con)
+      result <- readBin(tmp, "raw", file.info(tmp)$size)
       return(result)
      },
      #' @description
@@ -326,6 +335,9 @@ GzipCodec <- R6::R6Class("GzipCodec",
     #'   The ZarrArray instance.
      #' @return Un-compressed data.
      decode = function(buf, zarr_arr) {
+      # memDecompress handles both gzip (RFC 1952) and zlib (RFC 1950),
+      # so this remains backward-compatible with stores written before
+      # the gzip fix.
       result <- memDecompress(buf, type = "gzip", asChar = FALSE)
       return(result)
      },

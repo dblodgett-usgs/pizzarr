@@ -12,3 +12,4 @@ r6-roxygen-convention.md
 .claude
 ^CLAUDE\.md$
 ^TODO\.md$
+cran-comments.md

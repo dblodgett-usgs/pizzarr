@@ -38,6 +38,7 @@ Other Store classes:
 \item \href{#method-DirectoryStore-get_item}{\code{DirectoryStore$get_item()}}
 \item \href{#method-DirectoryStore-set_item}{\code{DirectoryStore$set_item()}}
 \item \href{#method-DirectoryStore-contains_item}{\code{DirectoryStore$contains_item()}}
+\item \href{#method-DirectoryStore-delete_item}{\code{DirectoryStore$delete_item()}}
 \item \href{#method-DirectoryStore-rmdir}{\code{DirectoryStore$rmdir()}}
 \item \href{#method-DirectoryStore-listdir}{\code{DirectoryStore$listdir()}}
 \item \href{#method-DirectoryStore-clone}{\code{DirectoryStore$clone()}}
@@ -136,6 +137,26 @@ Determine whether the store contains an item.
 }
 \subsection{Returns}{
 A boolean value.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DirectoryStore-delete_item"></a>}}
+\if{latex}{\out{\hypertarget{method-DirectoryStore-delete_item}{}}}
+\subsection{Method \code{delete_item()}}{
+Delete an item from the store.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DirectoryStore$delete_item(key)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{key}}{The item key.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}

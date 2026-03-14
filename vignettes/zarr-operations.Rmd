@@ -85,6 +85,10 @@ z_zstd$get_compressor()$get_config()
 
 ### Gzip
 
+Gzip compression is interoperable with zarr-python and other implementations,
+but is slower than Zstandard because R lacks an in-memory gzip API.
+For best write performance, prefer `ZstdCodec`.
+
 ```{r}
 z_gzip <- zarr_create(
   shape = c(100, 100), dtype = "<f4",

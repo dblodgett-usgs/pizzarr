@@ -41,6 +41,7 @@ Other Store classes:
 \item \href{#method-MemoryStore-set_item}{\code{MemoryStore$set_item()}}
 \item \href{#method-MemoryStore-contains_item}{\code{MemoryStore$contains_item()}}
 \item \href{#method-MemoryStore-listdir}{\code{MemoryStore$listdir()}}
+\item \href{#method-MemoryStore-delete_item}{\code{MemoryStore$delete_item()}}
 \item \href{#method-MemoryStore-rmdir}{\code{MemoryStore$rmdir()}}
 \item \href{#method-MemoryStore-clone}{\code{MemoryStore$clone()}}
 }
@@ -171,6 +172,26 @@ List the store directory.
 }
 \subsection{Returns}{
 \code{character()} vector of entries.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-MemoryStore-delete_item"></a>}}
+\if{latex}{\out{\hypertarget{method-MemoryStore-delete_item}{}}}
+\subsection{Method \code{delete_item()}}{
+Delete an item from the store.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{MemoryStore$delete_item(key)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{key}}{The item key.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+\code{NULL} (called for side effects).
 }
 }
 \if{html}{\out{<hr>}}
