@@ -18,15 +18,15 @@ Store <- R6::R6Class("Store",
       zmetadata = NULL,
       #' @keywords internal
       listdir_from_keys = function(path) {
-        # TODO
+        stop("NotImplementedError(listdir_from_keys)")
       },
       #' @keywords internal
-      rename_from_keys = function() {
-        # TODO
+      rename_from_keys = function(src_path, dst_path) {
+        stop("NotImplementedError(rename_from_keys)")
       },
       #' @keywords internal
       rmdir_from_keys = function(path) {
-        # TODO
+        stop("NotImplementedError(rmdir_from_keys)")
       }
    ),
    public = list(

@@ -1262,11 +1262,11 @@ ZarrArray <- R6::R6Class("ZarrArray",
     #' @param other Other object to check.
     #' @return `logical(1)`.
     equals = function(other) {
+      if (!inherits(other, "ZarrArray")) return(FALSE)
       return(all(c(
-        class(other)[[1]] == "Array",
-        # TODO: check store equality also
-        private$read_only == other$get_read_only(),
-        private$path == other$get_path(),
+        identical(private$store, other$get_store()),
+        identical(private$read_only, other$get_read_only()),
+        identical(private$path, other$get_path()),
         !private$is_view
       )))
     },
