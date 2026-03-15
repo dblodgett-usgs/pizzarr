@@ -53,7 +53,7 @@ init_array_metadata <- function(
     # normalize metadata
     dtype <- normalize_dtype(dtype, object_codec = object_codec)
 
-    # object_codec <- normalize_object_codec(dtype, object_codec) # TODO
+    object_codec <- normalize_object_codec(dtype, object_codec)
 
     # shape = normalize_shape(shape) + dtype.shape
     # dtype = dtype.base
@@ -84,11 +84,10 @@ init_array_metadata <- function(
     # obtain compressor config
     compressor_config = NA
     if(!is_na(compressor)) {
-        # TODO: wrap in try/catch
-        # try
-        compressor_config <- compressor$get_config()
-        # catch
-        #   stop("BadCompressorError(compressor)")
+        compressor_config <- tryCatch(
+            compressor$get_config(),
+            error = function(e) stop("BadCompressorError(compressor)")
+        )
     }
 
     # obtain filters config
@@ -99,22 +98,9 @@ init_array_metadata <- function(
         }
     }
 
-    # Check object codec
-    if(dtype$is_object) {
-        if(is_na(object_codec)) {
-            if(length(filters_config) == 0) {
-                # there are no filters so we can be sure there is no object codec
-                stop("missing object_codec for object array")
-            } else {
-                # one of the filters may be an object codec, issue a warning rather
-                # than raise an error to maintain backwards-compatibility
-                stop("missing object_codec for object array")
-            }
-        } else {
-            filters_config <- append(filters_config, list(object_codec$get_config()))
-        }
-    } else if(!is_na(object_codec)) {
-        warning("an object_codec is only needed for object arrays")
+    # Append object codec config to filters (validation already done above)
+    if (dtype$is_object && !is_na(object_codec)) {
+        filters_config <- append(filters_config, list(object_codec$get_config()))
     }
 
     # use null to indicate no filters
