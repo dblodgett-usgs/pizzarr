@@ -291,6 +291,18 @@ normalize_order <- function(order) {
 }
 
 #' @keywords internal
+normalize_object_codec <- function(dtype, object_codec) {
+  if (dtype$is_object) {
+    if (is_na(object_codec)) {
+      stop("missing object_codec for object array")
+    }
+  } else if (!is_na(object_codec)) {
+    warning("an object_codec is only needed for object arrays")
+  }
+  return(object_codec)
+}
+
+#' @keywords internal
 normalize_fill_value <- function(fill_value, dtype) {
   if (is_na(fill_value)) { # or dtype.hasobject:
         # no fill value

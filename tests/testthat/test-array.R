@@ -315,11 +315,22 @@ test_that("equals FALSE for read_only mismatch between two arrays", {
   expect_false(a$equals(b))
 })
 
-test_that("equals returns FALSE when other is not class 'Array'", {
+test_that("equals returns TRUE for self-equality", {
   store <- MemoryStore$new()
   a <- zarr_create(shape = c(4), chunks = c(2), store = store, compressor = NA)
-  # ZarrArray class is "ZarrArray", not "Array", so equals() returns FALSE
-  expect_false(a$equals(a))
+  expect_true(a$equals(a))
+})
+
+test_that("equals returns FALSE for different stores", {
+  a <- zarr_create(shape = c(4), chunks = c(2), store = MemoryStore$new(), compressor = NA)
+  b <- zarr_create(shape = c(4), chunks = c(2), store = MemoryStore$new(), compressor = NA)
+  expect_false(a$equals(b))
+})
+
+test_that("equals returns FALSE for non-ZarrArray object", {
+  store <- MemoryStore$new()
+  a <- zarr_create(shape = c(4), chunks = c(2), store = store, compressor = NA)
+  expect_false(a$equals("not an array"))
 })
 
 test_that("length returns first dimension size", {

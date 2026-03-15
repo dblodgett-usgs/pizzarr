@@ -32,7 +32,7 @@ char_vec_to_raw <- function(char_vec, basic_type, num_chars, byte_order) {
     offset_i_start <- (i-1) * num_bytes + 1
     offset_i_stop <- offset_i_start + length(raw_vec_i) - 1
 
-    # TODO: take into account byte_order?
+    # Byte order is already handled by iconv via UTF-32LE/UTF-32BE selection above.
     buf[offset_i_start:offset_i_stop] <- raw_vec_i
   }
 

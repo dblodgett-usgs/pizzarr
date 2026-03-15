@@ -536,7 +536,9 @@ BloscCodec <- R6::R6Class("BloscCodec",
       self$cname <- cname
       self$clevel <- clevel
       self$shuffle <- shuffle
-      self$blocksize <- blocksize # TODO: use
+      # R's blosc package does not expose a blocksize parameter, so we cannot
+      # pass it through to blosc_compress(). Store it for metadata fidelity.
+      self$blocksize <- if (is.na(blocksize)) 0L else as.integer(blocksize)
       # No config options for blosc.
       if (!requireNamespace("blosc", quietly = TRUE)) {
         stop("blosc package must be installed to use the Blosc codec. Install with install.packages('blosc')")
@@ -585,7 +587,8 @@ BloscCodec <- R6::R6Class("BloscCodec",
          id = jsonlite::unbox("blosc"),
          cname = jsonlite::unbox(as.character(self$cname)),
          clevel = jsonlite::unbox(as.integer(self$clevel)),
-         shuffle = jsonlite::unbox(as.integer(self$shuffle))
+         shuffle = jsonlite::unbox(as.integer(self$shuffle)),
+         blocksize = jsonlite::unbox(as.integer(self$blocksize))
        )
        return(meta)
     }

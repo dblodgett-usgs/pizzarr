@@ -95,3 +95,10 @@ test_that("MemoryStore contains_item returns FALSE for missing key", {
   store <- MemoryStore$new()
   expect_false(store$contains_item("nonexistent"))
 })
+
+test_that("bare Store stubs raise NotImplementedError", {
+  store <- Store$new()
+  expect_error(store$listdir(), "NotImplementedError\\(listdir_from_keys\\)")
+  expect_error(store$rename("a", "b"), "NotImplementedError\\(rename_from_keys\\)")
+  expect_error(store$rmdir("a"), "NotImplementedError\\(rmdir_from_keys\\)")
+})

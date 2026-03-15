@@ -76,7 +76,6 @@ Metadata2 <- R6::R6Class("Metadata2",
         encode_array_metadata = function(meta) {
             clean_meta <- meta
             clean_meta[['zarr_format']] <- jsonlite::unbox(private$ZARR_FORMAT)
-            # TODO: clean up meta even further
             return(self$encode_metadata(clean_meta))
         },
         #' @description

@@ -305,3 +305,23 @@ test_that("Array round-trip with no compressor", {
   result <- a$get_item("...")
   expect_equal(result$data, data)
 })
+
+test_that("BloscCodec get_config includes blocksize and round-trips", {
+  skip_if_not_installed("blosc")
+  codec <- BloscCodec$new(cname = "lz4", clevel = 5, shuffle = TRUE, blocksize = 512)
+  config <- codec$get_config()
+  expect_equal(as.integer(config$blocksize), 512L)
+
+  # round-trip through get_codec
+  restored <- get_codec(config)
+  expect_s3_class(restored, "BloscCodec")
+  expect_equal(restored$blocksize, 512L)
+})
+
+test_that("BloscCodec NA blocksize normalizes to 0", {
+  skip_if_not_installed("blosc")
+  codec <- BloscCodec$new(blocksize = NA)
+  expect_equal(codec$blocksize, 0L)
+  config <- codec$get_config()
+  expect_equal(as.integer(config$blocksize), 0L)
+})
