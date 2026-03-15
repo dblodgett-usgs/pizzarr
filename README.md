@@ -81,6 +81,13 @@ Rscript inst/extdata/cross-validate.R
 The script skips gracefully (exit 0) if Python is not available. On success
 all checks pass and exit code is 0; any mismatch is reported and exits 1.
 
+## Zarr Conformance Tests
+
+pizzarr participates in the [zarr-conformance-tests](https://github.com/Bisaloo/zarr-conformance-tests)
+framework, which validates that Zarr implementations can correctly read
+standard test arrays (V2 and V3 formats, multiple dtypes). These tests run
+automatically in CI on every push and pull request to `main`.
+
 ## Documentation
 
 ```r
